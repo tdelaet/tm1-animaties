@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tm1",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\u0046457\\AppData\\Local\\Temp\\claude\\a0629c867da9c8b3\\1eccc9ac-2289-4d24-aaa4-416dcc9f56c8\\scratchpad\\serve.ps1", "-Root", "C:\\Users\\u0046457\\gitlab\\tm1-animaties"],
+      "port": 8765
+    }
+  ]
+}
