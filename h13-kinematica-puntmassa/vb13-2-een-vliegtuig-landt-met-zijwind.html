@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 13.2 – Een vliegtuig landt met zijwind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* snelheid van de lucht t.o.v. de baan: eigen tint, zodat de drie snelheden uit elkaar te houden zijn */
+  :root{ --cw:#0e7490; --cvl:#6aa2ea; }
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .seg button{border:0;border-radius:0;padding:7px 12px}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--accent);color:#fff}
+  .chk{display:flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer;margin:2px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 13.2 — Een vliegtuig landt met zijwind</h1>
+    <span class="kicker">Kinematica van een puntmassa · relatieve snelheid: <span class="v">v</span><sub>vliegtuig/baan</sub> = <span class="v">v</span><sub>vliegtuig/lucht</sub> + <span class="v">v</span><sub>lucht/baan</sub></span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Bovenaanzicht van een vliegtuig dat met zijwind op een landingsbaan aanvliegt, met snelheidsvectoren"></canvas>
+      <div class="hint" id="hint">Bovenaanzicht · bekeken vanuit de baan</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="stepb" title="0.5 s terug">◂ Stap</button>
+          <button id="stepf" title="0.5 s vooruit">Stap ▸</button>
+          <button id="reset">↺ t = 0</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
+          <input type="range" id="tslider" min="0" max="2000" value="0">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Afspeelsnelheid (vertraging)</span><b id="spval"></b></div>
+          <input type="range" id="speed" min="0.1" max="1" step="0.05" value="0.5">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Landingssnelheid |<span class="v">v</span><sub>vliegtuig/baan</sub>|</span><b id="Vval"></b></div>
+          <input type="range" id="V" min="50" max="100" step="1" value="83">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Windsnelheid |<span class="v">v</span><sub>lucht/baan</sub>|</span><b id="wval"></b></div>
+          <input type="range" id="w" min="0" max="30" step="0.5" value="11">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Windrichting <span class="i">φ</span> t.o.v. de baan</span><b id="phival"></b></div>
+          <input type="range" id="phi" min="0" max="180" step="5" value="90">
+        </div>
+        <div class="btnrow" style="margin:0"><button id="boek">Waarden uit het handboek</button></div>
+      </div>
+
+      <div class="card panel">
+        <h2>Bekijken vanuit</h2>
+        <div class="seg">
+          <button id="fr_baan" class="on">de baan (grond)</button>
+          <button id="fr_lucht">de lucht (meebewegen met de wind)</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="correct" checked> Piloot corrigeert voor de wind (neus schuin tegen de wind in)</label>
+        <div class="note" id="frnote"></div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_vg" checked> <span class="sw" style="background:var(--cv)"></span><span><span class="v">v</span><sub>vliegtuig/baan</sub></span></label>
+          <label><input type="checkbox" id="t_va" checked> <span class="sw d" style="color:var(--cvl)"></span><span><span class="v">v</span><sub>vliegtuig/lucht</sub></span></label>
+          <label><input type="checkbox" id="t_vw" checked> <span class="sw" style="background:var(--cw)"></span><span><span class="v">v</span><sub>lucht/baan</sub></span></label>
+          <label><input type="checkbox" id="t_air" checked> <span class="sw" style="background:#9fc3cf"></span><span>luchtdeeltjes</span></label>
+          <label><input type="checkbox" id="t_lines" checked> <span class="sw d" style="color:#7a828c"></span><span>koers en spoor</span></label>
+          <label><input type="checkbox" id="t_strobe"> <span class="sw" style="background:#9aa3ad"></span><span>stroboscoop</span></label>
+          <label><input type="checkbox" id="t_axes" checked> <span class="sw" style="background:#7a828c"></span><span>assenstelsel</span></label>
+        </div>
+        <div class="note">Stroboscoop: de stand van het vliegtuig elke seconde. Koers = de richting van de neus, spoor = de richting waarin het vliegtuig werkelijk beweegt.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Vectordriehoek</h3>
+      <div class="sub" id="g1sub"></div>
+      <canvas id="g1" style="cursor:default"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Correctiehoek <span class="i">β</span> in functie van de windsnelheid</h3>
+      <div class="legend"><span><span class="sw" style="background:var(--accent)"></span><span>exact</span></span><span id="lg_approx"><span class="sw d" style="color:#7a828c"></span><span>benadering kleine hoek <span class="i">β</span> ≈ <span class="i">w</span>/<span class="i">v</span> (rad)</span></span></div>
+      <canvas id="g2"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="eq"><span class="v">v</span><sub>vliegtuig/baan</sub> = <span class="v">v</span><sub>vliegtuig/lucht</sub> + <span class="v">v</span><sub>lucht/baan</sub>&nbsp;&nbsp;<span style="font-family:Inter;font-size:13px;color:var(--muted)">(definitie 13.5: <span class="v">v</span><sub>B/A</sub> = <span class="v">v</span><sub>B</sub> − <span class="v">v</span><sub>A</sub>)</span></div>
+      <div class="eq"><span class="v">v</span><sub>vliegtuig/baan</sub> = <span class="col"><span>83</span><span>0</span></span> m/s,&nbsp; <span class="v">v</span><sub>lucht/baan</sub> = <span class="col"><span>0</span><span>11</span></span> m/s &nbsp;⇒&nbsp; <span class="v">v</span><sub>vliegtuig/lucht</sub> = <span class="col"><span>83</span><span>−11</span></span> m/s</div>
+      <div class="eq"><span class="i">β</span> = atan(11/83) = 7.55°&nbsp; tussen de neus en de baan, tegen de wind in</div>
+      <p class="fn">Beide snelheden worden in hetzelfde assenstelsel uitgedrukt: <span class="i">x</span> langs de baan, <span class="i">y</span> dwars erop, in de zin waarin de wind waait. Met de schuifregelaars kan je ook een schuine wind (<span class="i">φ</span> ≠ 90°) kiezen: dan is <span class="v">v</span><sub>lucht/baan</sub> = <span class="i">w</span>(cos <span class="i">φ</span>, sin <span class="i">φ</span>) en <span class="i">β</span> = atan2(<span class="i">w</span> sin <span class="i">φ</span>, <span class="i">v</span> − <span class="i">w</span> cos <span class="i">φ</span>). Zonder correctie houdt de piloot de neus langs de baan en vliegt hij met dezelfde snelheid <span class="i">v</span> t.o.v. de lucht.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Zet de correctie uit. In welke richting beweegt het vliegtuig nu t.o.v. de baan? Hoe ver is het na 5 s zijdelings afgedreven? Controleer met <span class="i">w</span>·<span class="i">t</span>.</li>
+        <li>Bekijk de beweging vanuit de lucht. Welke snelheid heeft het vliegtuig in dat assenstelsel? Waarom lijkt de baan nu te bewegen, en met welke snelheid?</li>
+        <li>In welke richting wijst de neus, en in welke richting beweegt het vliegtuig? Welke van de drie snelheden heeft dezelfde richting als de neus?</li>
+        <li>Is |<span class="v">v</span><sub>vliegtuig/lucht</sub>| groter of kleiner dan 83 m/s? Bereken en controleer in de tabel.</li>
+        <li>Verdubbel de windsnelheid. Verdubbelt de hoek <span class="i">β</span> ook? Tot welke windsnelheid is de benadering <span class="i">β</span> ≈ <span class="i">w</span>/<span class="i">v</span> goed?</li>
+        <li>Draai de wind naar <span class="i">φ</span> = 180° (tegenwind) en <span class="i">φ</span> = 0° (wind in de rug). Hoe groot is <span class="i">β</span> dan? Hoe snel moet het vliegtuig t.o.v. de lucht vliegen?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt, deg, rad, niceNum, schaalLegende } = TM1;
+const C = TM1.kleuren();
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const CW = css('--cw'), CVL = css('--cvl');
+
+// ---------- toestand ----------
+let V = 83, w = 11, phi = 90, correct = true, fr = 'baan';
+let t = 0, speed = 0.5, playing = true;
+const show = { vg: true, va: true, vw: true, air: true, lines: true, strobe: false, axes: true };
+const W = 760;            // zichtbare breedte van de scène [m]
+const XSTART = -W / 2 - 40, XEND = W / 2 + 40;
+const RW0 = -110, RHALF = 24;   // begin van de baan en halve baanbreedte [m]
+
+function snelheden(Vv = V, ww = w, ph = phi, corr = correct) {
+  const wind = { x: ww * Math.cos(rad(ph)), y: ww * Math.sin(rad(ph)) };
+  let vg, va;
+  if (corr) { vg = { x: Vv, y: 0 }; va = { x: vg.x - wind.x, y: vg.y - wind.y }; }
+  else { va = { x: Vv, y: 0 }; vg = { x: va.x + wind.x, y: va.y + wind.y }; }
+  return { wind, vg, va, psi: Math.atan2(va.y, va.x), track: Math.atan2(vg.y, vg.x) };
+}
+const S = () => snelheden();
+const Tc = () => (XEND - XSTART) / S().vg.x;
+// positie van het vliegtuig t.o.v. de baan, en de verschuiving van het gekozen assenstelsel
+function posBaan(tt) { const s = S(); return { x: XSTART + s.vg.x * tt, y: s.vg.y * tt }; }
+function offset(tt) { const s = S(); return fr === 'lucht' ? { x: -s.wind.x * tt, y: -s.wind.y * tt } : { x: 0, y: 0 }; }
+
+// luchtdeeltjes: vaste plaatsen in de lucht (pseudo-willekeurig, steeds dezelfde)
+const deeltjes = [];
+{ let z = 12345; const rnd = () => (z = (z * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 140; i++) deeltjes.push({ x: rnd(), y: rnd() }); }
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function vliegtuig(ctx, x, y, psi, alpha = 1, kleur = C.ink) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-psi); ctx.globalAlpha = alpha;
+  ctx.fillStyle = kleur; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round';
+  const k = 1.15;
+  ctx.beginPath();
+  // romp met vleugels en staart, neus naar +x
+  const P = [[31, 0], [27, -3], [8, -3.5], [-3, -31], [-10, -31], [-5, -3.5], [-22, -3], [-28, -12], [-32, -12], [-30, -2.5], [-33, 0]];
+  P.forEach(([a, b], i) => i ? ctx.lineTo(a * k, b * k) : ctx.moveTo(a * k, b * k));
+  P.slice().reverse().forEach(([a, b]) => ctx.lineTo(a * k, -b * k));
+  ctx.closePath(); ctx.stroke(); ctx.fill();
+  ctx.restore();
+}
+function drawScene() {
+  const ctx = sc.ctx, wpx = sc.w, h = sc.h; ctx.clearRect(0, 0, wpx, h);
+  const s = wpx / W, ox = wpx / 2, oy = h / 2;
+  const sp = S(), off = offset(t);
+  const X = x => ox + (x + off.x) * s, Y = y => oy - (y + off.y) * s;   // baancoördinaten → scherm
+  const Hm = h / s;
+
+  // ondergrond
+  ctx.fillStyle = '#eef2ea'; ctx.fillRect(0, 0, wpx, h);
+
+  // landingsbaan
+  ctx.save();
+  ctx.fillStyle = '#5b6168';
+  ctx.fillRect(X(RW0), Y(RHALF), X(W) - X(RW0), 2 * RHALF * s);
+  ctx.fillStyle = '#fff';
+  for (let i = 0; i < 6; i++) { const yy = -RHALF + 5 + i * (2 * RHALF - 10) / 5.5; ctx.fillRect(X(RW0 + 6), Y(yy + 2.6), 26 * s, 5.2 * s); }
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([16 * s, 12 * s]);
+  ctx.beginPath(); ctx.moveTo(X(RW0 + 45), Y(0)); ctx.lineTo(X(W), Y(0)); ctx.stroke();
+  ctx.restore();
+  // verlengde as van de baan
+  ctx.save(); ctx.setLineDash([5, 6]); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(X(-W), Y(0)); ctx.lineTo(X(RW0), Y(0)); ctx.stroke(); ctx.restore();
+
+  // luchtdeeltjes
+  if (show.air) {
+    const DX = W + 80, DY = Hm + 80;
+    const shift = fr === 'baan' ? { x: sp.wind.x * t, y: sp.wind.y * t } : { x: 0, y: 0 };
+    ctx.save(); ctx.lineCap = 'round';
+    deeltjes.forEach(d => {
+      // plaats in schermmeters t.o.v. het midden, periodiek over het zichtbare gebied
+      let mx = ((d.x * DX + shift.x) % DX + DX) % DX - DX / 2;
+      let my = ((d.y * DY + shift.y) % DY + DY) % DY - DY / 2;
+      const px = ox + mx * s, py = oy - my * s;
+      if (fr === 'baan' && w > 0.2) {
+        const L = 1.4;   // staart = afgelegde weg in 1.4 s
+        ctx.strokeStyle = 'rgba(14,116,144,0.28)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(px - sp.wind.x * L * s, py + sp.wind.y * L * s); ctx.lineTo(px, py); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(14,116,144,0.55)'; ctx.beginPath(); ctx.arc(px, py, 1.8, 0, 2 * Math.PI); ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  // assenstelsel (vast aan de baan)
+  if (show.axes) {
+    const ax0 = wpx - 90, ay0 = h - 24;   // richting van de assen ligt vast aan de baan
+    arrow(ctx, ax0, ay0, ax0 + 54, ay0, '#4f5862', { w: 1.4, head: 9 });
+    arrow(ctx, ax0, ay0, ax0, ay0 - 54, '#4f5862', { w: 1.4, head: 9 });
+    label(ctx, 'x', '', ax0 + 58, ay0 + 5, '#4f5862', { vec: false, size: 15 });
+    label(ctx, 'y', '', ax0 - 4, ay0 - 60, '#4f5862', { vec: false, size: 15 });
+  }
+
+  const p = posBaan(t), px = X(p.x), py = Y(p.y);
+  const vrel = fr === 'lucht' ? sp.va : sp.vg;   // snelheid t.o.v. het gekozen assenstelsel
+
+  // koers en spoor
+  if (show.lines) {
+    ctx.save(); ctx.lineWidth = 1.2;
+    ctx.setLineDash([2, 5]); ctx.strokeStyle = '#4f5862';
+    const Lk = 2000;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.cos(sp.psi) * Lk, py - Math.sin(sp.psi) * Lk); ctx.stroke();
+    // spoor: afgelegde weg in het gekozen assenstelsel
+    const tr = Math.atan2(vrel.y, vrel.x);
+    ctx.setLineDash([8, 5]); ctx.strokeStyle = '#9aa1aa';
+    ctx.beginPath(); ctx.moveTo(px - Math.cos(tr) * Lk, py + Math.sin(tr) * Lk); ctx.lineTo(px, py); ctx.stroke();
+    ctx.restore();
+  }
+
+  // stroboscoop
+  if (show.strobe) {
+    for (let k = 0; k < t - 1e-9; k += 1) {
+      // plaats op tijdstip k in het gekozen assenstelsel (de lucht schuift mee als we vanuit de lucht kijken)
+      const q = posBaan(k), o = offset(k);
+      vliegtuig(ctx, ox + (q.x + o.x) * s, oy - (q.y + o.y) * s, sp.psi, 0.18);
+    }
+  }
+
+  vliegtuig(ctx, px, py, sp.psi);
+
+  // snelheidsvectoren: kop-aan-staart zoals in het handboek
+  const kv = Math.min(3.6, 0.42 * wpx / 100);   // px per m/s
+  const A = { x: px + sp.va.x * kv, y: py - sp.va.y * kv };
+  const B = { x: px + sp.vg.x * kv, y: py - sp.vg.y * kv };
+  // labels aan de buitenkant van de driehoek: v_vliegtuig/lucht onder of boven, v_vliegtuig/baan aan de andere kant
+  const Aonder = A.y >= B.y;
+  if (show.va && arrow(ctx, px, py, A.x, A.y, CVL, { w: 2.6, dash: [7, 4] }))
+    label(ctx, 'v', 'vliegtuig/lucht', px + (A.x - px) * 0.62, py + (A.y - py) * 0.62 + (Aonder ? 26 : -12), CVL, { align: 'center', size: 15 });
+  if (show.vw && show.va && arrow(ctx, A.x, A.y, B.x, B.y, CW, { w: 2.6, head: 10 }))
+    label(ctx, 'v', 'lucht/baan', Math.max(A.x, B.x) + 12, (A.y + B.y) / 2 + 6, CW, { size: 15 });
+  if (show.vg && arrow(ctx, px, py, B.x, B.y, C.v, { w: 3.2, head: 13 }))
+    label(ctx, 'v', 'vliegtuig/baan', px + (B.x - px) * 0.62, py + (B.y - py) * 0.62 + (Aonder ? -12 : 26), C.v, { align: 'center', size: 15 });
+
+  // windaanduiding linksboven
+  if (w > 0.2) {
+    const cx = 64, cy = 54, L = 34, ux = Math.cos(rad(phi)), uy = Math.sin(rad(phi));
+    ctx.save(); ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.strokeStyle = C.line;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx - 52, cy - 44, 104, 102, 8) : ctx.rect(cx - 52, cy - 44, 104, 102); ctx.fill(); ctx.stroke(); ctx.restore();
+    arrow(ctx, cx - ux * L / 2, cy + uy * L / 2, cx + ux * L / 2, cy - uy * L / 2, CW, { w: 3, head: 11 });
+    ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center';
+    ctx.fillText('wind', cx, cy + 34); ctx.fillText(`${w.toFixed(1)} m/s`, cx, cy + 49); ctx.restore();
+  }
+
+  schaalLegende(ctx, h, [[20 * kv, C.v, '20 m/s']]);
+}
+
+// ---------- vectordriehoek ----------
+const G1 = setup(document.getElementById('g1'));
+function drawTriangle() {
+  const ctx = G1.ctx, wpx = G1.w, h = G1.h; ctx.clearRect(0, 0, wpx, h);
+  const sp = S();
+  const pts = [{ x: 0, y: 0 }, sp.va, sp.vg];
+  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x));
+  const ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
+  const m = { l: 60, r: 150, t: 40, b: 42 };
+  const k = Math.min((wpx - m.l - m.r) / Math.max(xmax - xmin, 1), (h - m.t - m.b) / Math.max(ymax - ymin, 1));
+  const cy = (m.t + h - m.b) / 2 + (ymax + ymin) / 2 * k;
+  const X = x => m.l + (x - xmin) * k, Y = y => cy - y * k;
+  const O = { x: X(0), y: Y(0) }, A = { x: X(sp.va.x), y: Y(sp.va.y) }, B = { x: X(sp.vg.x), y: Y(sp.vg.y) };
+
+  // assen
+  arrow(ctx, 14, h - 14, 50, h - 14, '#6b737d', { w: 1.3, head: 8 });
+  arrow(ctx, 14, h - 14, 14, h - 50, '#6b737d', { w: 1.3, head: 8 });
+  label(ctx, 'x', '', 52, h - 9, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'y', '', 19, h - 46, '#6b737d', { vec: false, size: 14 });
+  // baanrichting
+  ctx.save(); ctx.setLineDash([3, 5]); ctx.strokeStyle = '#b9bec5'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(wpx - 10, O.y); ctx.stroke(); ctx.restore();
+
+  // hoek tussen de twee snelheden van het vliegtuig
+  const a1 = Math.atan2(-(A.y - O.y), A.x - O.x), a2 = Math.atan2(-(B.y - O.y), B.x - O.x);
+  const hoek = Math.abs(a1 - a2);
+  if (hoek > 0.003) {
+    const r = Math.min(0.25 * Math.hypot(A.x - O.x, A.y - O.y), 80);
+    ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.arc(O.x, O.y, r, -Math.max(a1, a2), -Math.min(a1, a2)); ctx.stroke(); ctx.restore();
+    // tekst net onder de onderste of boven de bovenste lijn, aan de kant van de kleinste hoek (vrij van de labels rechts)
+    const aLaag = Math.min(a1, a2), aHoog = Math.max(a1, a2), onder = Math.abs(aLaag) >= Math.abs(aHoog);
+    const aT = onder ? aLaag : aHoog;
+    ctx.save(); ctx.font = 'italic 14px "Source Serif 4", Georgia, serif'; ctx.fillStyle = C.ink; ctx.textAlign = 'center';
+    ctx.fillText(`${correct ? 'β' : 'drifthoek'} = ${deg(hoek).toFixed(2)}°`, O.x + Math.cos(aT) * r + 10, O.y - Math.sin(aT) * r + (onder ? 20 : -10));
+    ctx.restore();
+  }
+
+  // label met waarde erachter; de breedte van het label wordt gemeten zodat niets overlapt
+  const serif = '"Source Serif 4", Georgia, serif';
+  function labVal(sub, waarde, x, y, col, rechts = false) {
+    ctx.save();
+    ctx.font = `italic 600 15px ${serif}`; let b = ctx.measureText('v').width;
+    ctx.font = `italic 500 ${15 * 0.68}px ${serif}`; b += ctx.measureText(sub).width + 6;
+    ctx.font = '13px Inter, sans-serif'; const wv = ctx.measureText(`= ${waarde}`).width;
+    ctx.restore();
+    if (rechts) x -= b + wv;
+    label(ctx, 'v', sub, x, y, col, { size: 15 });
+    ctx.save(); ctx.font = '13px Inter, sans-serif'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineJoin = 'round';
+    ctx.strokeText(`= ${waarde}`, x + b, y); ctx.fillStyle = col; ctx.fillText(`= ${waarde}`, x + b, y); ctx.restore();
+  }
+  // labels bij de punten van de pijlen: de bovenste pijl krijgt zijn label erboven, de onderste eronder
+  const Aonder = A.y >= B.y;
+  const yBoven = p => Math.min(O.y, p.y) - 12, yOnder = p => Math.max(O.y, p.y) + 26;
+  if (arrow(ctx, O.x, O.y, B.x, B.y, C.v, { w: 3, head: 12 }))
+    labVal('vliegtuig/baan', `${Math.hypot(sp.vg.x, sp.vg.y).toFixed(2)} m/s`, B.x - 16, Aonder ? yBoven(B) : yOnder(B), C.v, true);
+  if (arrow(ctx, O.x, O.y, A.x, A.y, CVL, { w: 2.4, dash: [7, 4] }))
+    labVal('vliegtuig/lucht', `${Math.hypot(sp.va.x, sp.va.y).toFixed(2)} m/s`, A.x - 16, Aonder ? yOnder(A) : yBoven(A), CVL, true);
+  if (arrow(ctx, A.x, A.y, B.x, B.y, CW, { w: 2.4, head: 10 }))
+    labVal('lucht/baan', `${w.toFixed(1)} m/s`, Math.max(A.x, B.x) + 10, (A.y + B.y) / 2 + 5, CW);
+  document.getElementById('g1sub').textContent = correct
+    ? 'De snelheid t.o.v. de baan ligt langs de baan; de neus wijst langs de snelheid t.o.v. de lucht.'
+    : 'Zonder correctie wijst de neus langs de baan, maar de snelheid t.o.v. de baan niet.';
+}
+
+// ---------- β(w) ----------
+const G2 = setup(document.getElementById('g2'));
+let F2;
+const beta = ww => { const s = snelheden(V, ww, phi, true); return Math.abs(deg(s.psi)); };
+function drawBeta() {
+  let ym = 0; for (let i = 0; i <= 60; i++) ym = Math.max(ym, beta(i * 0.5));
+  ym = Math.max(2, ym * 1.15);
+  F2 = frame(G2, [0, 30], [0, ym], 'windsnelheid w [m/s]', 'β [°]');
+  const ctx = G2.ctx;
+  const toonBenadering = phi === 90;
+  document.getElementById('lg_approx').style.visibility = toonBenadering ? 'visible' : 'hidden';
+  if (toonBenadering) {
+    ctx.save(); ctx.setLineDash([5, 4]);
+    curve(ctx, F2, 60, 0, 30, u => u, u => Math.min(deg(u / V), ym), '#7a828c', 1.5);
+    ctx.restore();
+  }
+  curve(ctx, F2, 120, 0, 30, u => u, beta, C.accent, 2.2);
+  TM1.cursor(ctx, F2, w);
+  dot(ctx, F2.X(w), F2.Y(beta(w)), C.accent);
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.textAlign = w > 20 ? 'right' : 'left';
+  ctx.fillText(`β = ${beta(w).toFixed(2)}°`, F2.X(w) + (w > 20 ? -8 : 8), F2.Y(beta(w)) - 10); ctx.restore();
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = (v, d = 2) => `(${fmt(v.x, d)}, ${fmt(v.y, d)}) m/s`;
+function drawReadout() {
+  const sp = S(), p = posBaan(t);
+  const naast = Math.abs(p.y) > RHALF;
+  TM1.uitlezing(ro, [
+    ['t', `${fmt(t, 2)} s`],
+    ['plaats t.o.v. de baan (x, y)', `(${fmt(p.x, 0)}, ${fmt(p.y, 1)}) m`, true],
+    ['<span class="v">v</span><sub>vliegtuig/baan</sub>', vec(sp.vg), true],
+    ['|<span class="v">v</span><sub>vliegtuig/baan</sub>|', `${fmt(Math.hypot(sp.vg.x, sp.vg.y), 2)} m/s`],
+    ['<span class="v">v</span><sub>lucht/baan</sub>', vec(sp.wind), true],
+    ['|<span class="v">v</span><sub>lucht/baan</sub>|', `${fmt(w, 2)} m/s`],
+    ['<span class="v">v</span><sub>vliegtuig/lucht</sub>', vec(sp.va), true],
+    ['|<span class="v">v</span><sub>vliegtuig/lucht</sub>|', `${fmt(Math.hypot(sp.va.x, sp.va.y), 2)} m/s`],
+    ['koers (neus) t.o.v. baan', `${fmt(deg(sp.psi), 2)}°`],
+    ['spoor t.o.v. baan', `${fmt(deg(sp.track), 2)}°`],
+    ['zijdelingse afwijking', `${fmt(p.y, 1)} m${naast ? ' · naast de baan!' : ''}`, true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), tsl = $('tslider');
+function setPlaying(pl) { playing = pl; playBtn.textContent = pl ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('Vval').textContent = `${V.toFixed(0)} m/s`;
+  $('wval').textContent = `${w.toFixed(1)} m/s`;
+  $('phival').textContent = `${phi.toFixed(0)}°${phi === 90 ? ' (dwars)' : phi === 180 ? ' (tegenwind)' : phi === 0 ? ' (wind in de rug)' : ''}`;
+  $('spval').textContent = `${speed.toFixed(2)}×`;
+  $('tval').textContent = `${t.toFixed(2)} s`;
+  tsl.value = Math.round(t / Tc() * 2000);
+  $('V').value = V; $('w').value = w; $('phi').value = phi;
+  $('fr_baan').classList.toggle('on', fr === 'baan'); $('fr_lucht').classList.toggle('on', fr === 'lucht');
+  $('hint').textContent = `Bovenaanzicht · bekeken vanuit ${fr === 'baan' ? 'de baan' : 'de lucht'}`;
+  $('frnote').innerHTML = fr === 'baan'
+    ? 'De baan staat stil, de lucht stroomt met <span class="v">v</span><sub>lucht/baan</sub> voorbij. Het vliegtuig beweegt met <span class="v">v</span><sub>vliegtuig/baan</sub>.'
+    : 'De lucht staat stil, de baan schuift met −<span class="v">v</span><sub>lucht/baan</sub> weg. Het vliegtuig beweegt met <span class="v">v</span><sub>vliegtuig/lucht</sub>, in de richting van zijn neus.';
+}
+function render() { drawScene(); drawTriangle(); drawBeta(); drawReadout(); syncLabels(); }
+function behoudFase(f) { const fase = t / Tc(); f(); t = Math.min(fase, 0.9999) * Tc(); render(); }
+
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { t = 0; render(); };
+$('stepf').onclick = () => { setPlaying(false); t = Math.min(t + 0.5, Tc() - 1e-6); render(); };
+$('stepb').onclick = () => { setPlaying(false); t = Math.max(t - 0.5, 0); render(); };
+tsl.oninput = () => { setPlaying(false); t = tsl.value / 2000 * Tc(); render(); };
+$('speed').oninput = e => { speed = +e.target.value; syncLabels(); };
+$('V').oninput = e => behoudFase(() => { V = +e.target.value; });
+$('w').oninput = e => behoudFase(() => { w = +e.target.value; });
+$('phi').oninput = e => behoudFase(() => { phi = +e.target.value; });
+$('boek').onclick = () => behoudFase(() => { V = 83; w = 11; phi = 90; correct = true; $('correct').checked = true; });
+$('correct').onchange = e => behoudFase(() => { correct = e.target.checked; });
+$('fr_baan').onclick = () => { fr = 'baan'; render(); };
+$('fr_lucht').onclick = () => { fr = 'lucht'; render(); };
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G2, () => F2, x => behoudFase(() => { w = Math.round(x * 2) / 2; }));
+
+TM1.bijGrootte([sc, G1, G2], render);
+TM1.lus(dt => { t += dt * speed; if (t >= Tc()) t = 0; render(); }, () => playing);
+})();
+</script>
+</body>
+</html>

@@ -77,7 +77,7 @@ TM1.catalogus = [
     { nr: 12, titel: 'Inleiding', map: 'h12-inleiding-kinematica', items: [] },
     { nr: 13, titel: 'Kinematica van een puntmassa', map: 'h13-kinematica-puntmassa', items: [
       { id: '13.1', titel: 'Kind op een schommel', status: 'klaar' },
-      { id: '13.2', titel: 'Een vliegtuig landt met zijwind' },
+      { id: '13.2', titel: 'Een vliegtuig landt met zijwind', status: 'klaar' },
       { id: '13.3', titel: 'Kind op een schommel (versnelling)', status: 'klaar',
         pad: 'h13-kinematica-puntmassa/vb13-1-kind-op-een-schommel.html', opmerking: 'zit in de pagina van Vb. 13.1: zet de versnelling aan' },
       { id: '13.4', titel: 'Versnellende auto' },
