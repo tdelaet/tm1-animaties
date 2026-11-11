@@ -63,14 +63,15 @@
 
       <div class="card panel">
         <h2>Tonen</h2>
-        <div class="toggles">
+        <!-- linkerkolom: de vectoren (versnellingen, snelheid, positie), rechterkolom: hulpmiddelen -->
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(5,auto)">
           <label><input type="checkbox" id="t_a"> <span class="sw" style="background:var(--ca)"></span><span>versnelling <span class="v">a</span><sub>P</sub></span></label>
-          <label><input type="checkbox" id="t_v"> <span class="sw" style="background:var(--cv)"></span><span>snelheid <span class="v">v</span><sub>P</sub></span></label>
           <label><input type="checkbox" id="t_at"> <span class="sw d" style="color:var(--cat)"></span><span>tangentieel <span class="v">a</span><sub>Pt</sub></span></label>
           <label><input type="checkbox" id="t_an"> <span class="sw d" style="color:var(--can)"></span><span>normaal <span class="v">a</span><sub>Pn</sub></span></label>
+          <label><input type="checkbox" id="t_v"> <span class="sw" style="background:var(--cv)"></span><span>snelheid <span class="v">v</span><sub>P</sub></span></label>
+          <label><input type="checkbox" id="t_r"> <span class="sw" style="background:var(--cr)"></span><span>positie <span class="v">r</span><sub>P</sub></span></label>
           <label><input type="checkbox" id="t_e"> <span class="sw" style="background:#4f5862"></span><span><span class="v">e</span><sub>t</sub>, <span class="v">e</span><sub>n</sub></span></label>
           <label><input type="checkbox" id="t_strobe"> <span class="sw" style="background:#9aa3ad"></span><span>stroboscoop</span></label>
-          <label><input type="checkbox" id="t_r"> <span class="sw" style="background:var(--cr)"></span><span>positie <span class="v">r</span><sub>P</sub></span></label>
           <label><input type="checkbox" id="t_traj"> <span class="sw d" style="color:#7a828c"></span><span>traject</span></label>
         </div>
         <div class="note">Stroboscoop: de versnelling op gelijke tijdsintervallen Δ<span class="i">t</span> = <span class="i">T</span>/20 tijdens de huidige zwaai. <span class="v">e</span><sub>t</sub> wijst langs de snelheid, <span class="v">e</span><sub>n</sub> naar het middelpunt van de cirkel (het ophangpunt O).</div>
