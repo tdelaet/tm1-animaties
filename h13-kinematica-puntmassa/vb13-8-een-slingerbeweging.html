@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 13.8 – Een slingerbeweging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* hoogte van de scène volgt de breedte (vaste schaal tot R = 5 m) */
+  .scene canvas{height:auto;aspect-ratio:25/15;max-height:500px}
+  .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
+  .fasen{margin:10px 0 0;padding-left:20px;font-family:Inter,sans-serif;font-size:14px}
+  .fasen li{margin:0 0 6px}
+  .fasen .tag{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 13.8 — Een slingerbeweging</h1>
+    <span class="kicker">Kinematica van een puntmassa · snelheid en versnelling, natuurlijke ontbinding en het teken van <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span></span>
+  </header>
+  <div class="vervolg">Dezelfde slinger als in <a href="vb13-1-kind-op-een-schommel.html">Voorbeeld 13.1</a> en <a href="vb13-3-kind-op-een-schommel.html">13.3</a>, maar nu met <span class="i">θ</span>(<span class="i">t</span>) = <span class="i">θ</span><sub>0</sub> sin(<span class="i">p</span>·<span class="i">t</span>): op <span class="i">t</span> = 0 hangt het punt in de verticale stand en beweegt het naar rechts.</div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Slinger met de positie-, snelheids- en versnellingsvector en de natuurlijke ontbinding van de versnelling"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar dat tijdstip te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="stepb" title="Een stap terug (T/40)">◂ Stap</button>
+          <button id="stepf" title="Een stap vooruit (T/40)">Stap ▸</button>
+          <button id="reset">↺ t = 0</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
+          <input type="range" id="tslider" min="0" max="2000" value="0">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Straal <span class="i">R</span></span><b id="Rval"></b></div>
+          <input type="range" id="R" min="1" max="5" step="0.1" value="3">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Maximale uitwijking <span class="i">θ</span><sub>0</sub></span><b id="th0val"></b></div>
+          <input type="range" id="th0" min="5" max="75" step="1" value="30">
+        </div>
+        <div class="note">Pulsatie <span class="i">p</span> = √(<span class="i k-a">g</span>/<span class="i">R</span>) met <span class="i k-a">g</span> = 10 m/s². De animatie loopt half zo snel als in werkelijkheid.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(5,auto)">
+          <label><input type="checkbox" id="t_a"> <span class="sw" style="background:var(--ca)"></span><span>versnelling <span class="k-a"><span class="v">a</span></span></span></label>
+          <label><input type="checkbox" id="t_at"> <span class="sw d" style="color:var(--cat)"></span><span>tangentieel <span class="k-at"><span class="v">a</span><sub>t</sub></span></span></label>
+          <label><input type="checkbox" id="t_an"> <span class="sw d" style="color:var(--can)"></span><span>normaal <span class="k-an"><span class="v">a</span><sub>n</sub></span></span></label>
+          <label><input type="checkbox" id="t_v"> <span class="sw" style="background:var(--cv)"></span><span>snelheid <span class="k-v"><span class="v">v</span></span></span></label>
+          <label><input type="checkbox" id="t_r"> <span class="sw" style="background:var(--cr)"></span><span>positie <span class="k-r"><span class="v">r</span></span></span></label>
+          <label><input type="checkbox" id="t_strobe"> <span class="sw" style="background:#9aa3ad"></span><span>stroboscoop</span></label>
+          <label><input type="checkbox" id="t_traj"> <span class="sw d" style="color:#7a828c"></span><span>baan</span></label>
+        </div>
+        <div class="note">Stroboscoop: de plaats op gelijke tijdsintervallen Δ<span class="i">t</span> = <span class="i">T</span>/20 tijdens de huidige zwaai.</div>
+      </div>
+
+      <div class="card panel q1">
+        <h2>Spring naar een stand</h2>
+        <div class="btnrow">
+          <button id="j_vert">verticale stand · <span class="i">t</span> = π/<span class="i">p</span></button>
+          <button id="j_uit">uiterste stand · <span class="i">t</span> = 0.5π/<span class="i">p</span></button>
+          <button id="j_op">oplopend · <span class="i">t</span> = 0.25π/<span class="i">p</span></button>
+          <button id="j_af">aflopend · <span class="i">t</span> = 0.75π/<span class="i">p</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3>Hoek <span class="i">θ</span>(<span class="i">t</span>) = <span class="i">θ</span><sub>0</sub> sin(<span class="i">p t</span>)</h3>
+      <div class="sub">Verticale stand bij <span class="i">t</span> = <span class="i">n</span>π/<span class="i">p</span>, uiterste standen bij <span class="i">t</span> = (<span class="i">n</span> + 0.5)π/<span class="i">p</span>.</div>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Natuurlijke componenten <span class="i k-at">a<sub>t</sub></span> en <span class="i k-an">a<sub>n</sub></span></h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cat)"></span><span class="i">a<sub>t</sub></span></span><span><span class="sw" style="background:var(--can)"></span><span class="i">a<sub>n</sub></span></span></div>
+      <canvas id="g2"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Scalair product <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span> in functie van de tijd</h3>
+      <div class="legend"><span><span class="sw" style="background:#cdebd3"></span><span>&gt; 0: ‖<span class="v">v</span>‖ neemt toe</span></span><span><span class="sw" style="background:#f6d4d4"></span><span>&lt; 0: ‖<span class="v">v</span>‖ neemt af</span></span></div>
+      <canvas id="g3"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\theta(t) = \theta_0\sin(p\,t), \qquad \omega(t) = \frac{\mathrm{d}\theta(t)}{\mathrm{d}t} = \theta_0\,p\cos(p\,t), \qquad p = \sqrt{\frac{\ka{g}}{R}}</div>
+      <div class="tex">\left\{\begin{aligned} \ka{\vec a}(t) &amp;= \ubat{R\,\theta_0\,p^2\sin(p\,t)\begin{Bmatrix}-\cos\theta(t)\\ -\sin\theta(t)\end{Bmatrix}}{\kat{\vec a_t}} + \uban{R\,\theta_0^2\,p^2\cos^2(p\,t)\begin{Bmatrix}-\sin\theta(t)\\ \cos\theta(t)\end{Bmatrix}}{\kan{\vec a_n}} \\[4pt] \kv{\vec v}(t) &amp;= R\,\frac{\mathrm{d}\theta(t)}{\mathrm{d}t}\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix} = R\,\theta_0\,p\cos(p\,t)\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix} \\[4pt] \kr{\vec r}(t) &amp;= R\sin\theta(t)\,\ke{\vec e_x} - R\cos\theta(t)\,\ke{\vec e_y} \end{aligned}\right.</div>
+      <div class="tex">\|\kat{\vec a_t}\| = R\,\theta_0\,p^2\,|\sin(p\,t)|, \qquad \|\kan{\vec a_n}\| = R\,\theta_0^2\,p^2\cos^2(p\,t)</div>
+      <p class="fn" style="margin-top:4px">‖<span class="k-at"><span class="v">a</span><sub>t</sub></span>‖ is maximaal in de uiterste standen en nul in de verticale stand; ‖<span class="k-an"><span class="v">a</span><sub>n</sub></span>‖ is nul in de uiterste standen en maximaal in de verticale stand, en wijst steeds naar het centrum van de boog.</p>
+      <h2 style="margin-top:14px">Interpretatie van <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span> (stelling 13.6)</h2>
+      <ul class="fasen">
+        <li><span class="tag" style="background:#f6d4d4"></span><span class="i">t</span> ∈ ]<span class="i">n</span>π/<span class="i">p</span>, (<span class="i">n</span>+0.5)π/<span class="i">p</span>[ — oplopend van de verticale stand naar een uiterste stand: <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span> &lt; 0, de grootte van de snelheid neemt af.</li>
+        <li><span class="i">t</span> = (<span class="i">n</span>+0.5)π/<span class="i">p</span> — uiterste stand: de snelheid is ogenblikkelijk nul, en dus ook <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span>.</li>
+        <li><span class="tag" style="background:#cdebd3"></span><span class="i">t</span> ∈ ](<span class="i">n</span>+0.5)π/<span class="i">p</span>, (<span class="i">n</span>+1)π/<span class="i">p</span>[ — aflopend van een uiterste stand naar de verticale stand: <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span> &gt; 0, de grootte van de snelheid neemt toe.</li>
+        <li><span class="i">t</span> = <span class="i">n</span>π/<span class="i">p</span> — verticale stand: <span class="k-v"><span class="v">v</span></span> ⊥ <span class="k-a"><span class="v">a</span></span>, <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span> = 0 en ‖<span class="k-v"><span class="v">v</span></span>‖ is maximaal.</li>
+      </ul>
+      <p class="fn"><span class="i">θ</span> wordt gemeten vanaf de negatieve <span class="i">y</span>-as, in tegenwijzerzin. In de uitdrukking voor de versnelling gebruikt het handboek <span class="i">ω</span> voor de pulsatie; hier staat overal <span class="i">p</span>, om verwarring met de rotatiesnelheid <span class="i">ω</span>(<span class="i">t</span>) = d<span class="i">θ</span>/d<span class="i">t</span> te vermijden. De beweging is opgelegd (kinematica).</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Spring naar de verticale stand. Welke component van de versnelling is er dan, en welke is nul? Hoe staan <span class="k-v"><span class="v">v</span></span> en <span class="k-a"><span class="v">a</span></span> ten opzichte van elkaar?</li>
+        <li>Spring naar een uiterste stand. Is de versnelling daar nul? In welke richting wijst ze?</li>
+        <li>Volg de grafiek van <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span>. Klopt het teken met wat je in de animatie ziet gebeuren met de lengte van <span class="k-v"><span class="v">v</span></span>?</li>
+        <li>Waarom heeft <span class="i k-an">a<sub>n</sub></span> een periode die half zo lang is als die van <span class="i">θ</span>?</li>
+        <li>Verdubbel <span class="i">θ</span><sub>0</sub>. Hoe veranderen de maxima van ‖<span class="k-at"><span class="v">a</span><sub>t</sub></span>‖ en ‖<span class="k-an"><span class="v">a</span><sub>n</sub></span>‖? Verklaar met de uitdrukkingen.</li>
+        <li>Vergelijk met <a href="vb13-3-kind-op-een-schommel.html">Voorbeeld 13.3</a>. Wat is het enige verschil in de beschrijving, en wat betekent dat voor de beginstand?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const g = 10;                 // zoals in de cursus
+const TEMPO = 0.5;            // half zo snel als in werkelijkheid
+const RMAX = 5;               // grootste straal: vaste schaal van de figuur
+const KV = 0.3, KA = 0.2;     // vectorschaal: m per (m/s) en m per (m/s²), vast
+const { setup, arrow, label, tipLabel, frame, curve, dot, fmt, deg } = TM1;
+const C = TM1.kleuren();
+let R = 3, th0 = 30 * Math.PI / 180, t = 0, playing = true;
+const show = { a: true, at: true, an: true, v: true, r: false, strobe: false, traj: true };
+
+const p = () => Math.sqrt(g / R);
+const Tp = () => 2 * Math.PI / p();
+function state(tt) {
+  const P = p(), s1 = Math.sin(P * tt), c1 = Math.cos(P * tt);
+  const th = th0 * s1, w = th0 * P * c1, al = -th0 * P * P * s1;   // θ, ω = dθ/dt, α = d²θ/dt²
+  const s = Math.sin(th), c = Math.cos(th);
+  const at = R * al, an = R * w * w;                                // a_t langs e_t = (cos θ, sin θ), a_n naar O
+  const ax = at * c - an * s, ay = at * s + an * c;
+  const vx = R * w * c, vy = R * w * s;
+  return { th, w, x: R * s, y: -R * c, vx, vy, speed: Math.abs(R * w), at, an, ax, ay, va: vx * ax + vy * ay };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, w = sc.w, h = sc.h; ctx.clearRect(0, 0, w, h);
+  const s = Math.min(w / (2.5 * RMAX), h / (1.42 * RMAX)), ox = w / 2, oy = Math.max(60, h * 0.13);
+  const X = x => ox + x * s, Y = y => oy - y * s;
+  const st = state(t), Rp = R * s;
+
+  // ophanging
+  ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(ox - 60, oy - 18); ctx.lineTo(ox + 60, oy - 18); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#9aa1aa';
+  for (let i = -60; i < 60; i += 10) { ctx.beginPath(); ctx.moveTo(ox + i, oy - 18); ctx.lineTo(ox + i + 10, oy - 28); ctx.stroke(); }
+  ctx.fillStyle = '#eef0f2'; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox - 11, oy - 18); ctx.lineTo(ox + 11, oy - 18); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  // baan (boog van −θ0 tot θ0) en verticale stand
+  if (show.traj) {
+    ctx.save(); ctx.setLineDash([3, 6]); ctx.strokeStyle = '#c9ccd1'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(ox, oy, Rp, 0, Math.PI); ctx.stroke();
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(ox, oy, Rp, Math.PI / 2 - th0, Math.PI / 2 + th0); ctx.stroke(); ctx.restore();
+  }
+  ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#b5bac1'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox, oy + Rp * 1.08); ctx.stroke(); ctx.restore();
+
+  // assen
+  arrow(ctx, ox, oy, ox + 60, oy, '#6b737d', { w: 1.3, head: 8 });
+  arrow(ctx, ox, oy, ox, oy - 50, '#6b737d', { w: 1.3, head: 8 });
+  label(ctx, 'x', '', ox + 63, oy + 5, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'y', '', ox - 16, oy - 40, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'O', '', ox - 20, oy + 4, C.ink, { vec: false, size: 14 });
+
+  // stroboscoop
+  if (show.strobe) {
+    const half = Tp() / 2, ts = Math.floor(t / half) * half;
+    for (let k = 0; k <= 10; k++) {
+      const tk = ts + k * half / 10; if (tk > t + 1e-9) break;
+      const q = state(tk);
+      ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+    }
+  }
+
+  const px = X(st.x), py = Y(st.y);
+  ctx.save(); ctx.strokeStyle = '#8a9099'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(px, py); ctx.stroke(); ctx.restore();
+
+  // hoek θ
+  if (Math.abs(st.th) > 0.01) {
+    const ra = Math.min(0.3 * Rp, 60);
+    ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.arc(ox, oy, ra, Math.PI / 2, Math.PI / 2 - st.th, st.th > 0); ctx.stroke(); ctx.restore();
+    const mid = Math.PI / 2 - st.th / 2;
+    label(ctx, 'θ', '', ox + Math.cos(mid) * (ra + 13), oy + Math.sin(mid) * (ra + 13) + 5, C.ink, { vec: false, size: 14, align: 'center' });
+  }
+  if (!show.r) label(ctx, 'R', '', (ox + px) / 2 + (st.th >= 0 ? -16 : 8), (oy + py) / 2, C.muted, { vec: false, size: 14 });
+
+  // positievector, van O tot de rand van het bolletje
+  if (show.r) {
+    const Lr = Math.hypot(px - ox, py - oy), kr = Math.max(0, (Lr - 9) / Lr);
+    arrow(ctx, ox, oy, ox + (px - ox) * kr, oy + (py - oy) * kr, C.r, { w: 2.4 });
+    const nx = Math.cos(st.th) * 7, ny = Math.sin(st.th) * 7;
+    label(ctx, 'r', '', ox + (px - ox) * 0.6 + nx * 2.4, oy + (py - oy) * 0.6 + ny * 2.4 + 6, C.r, { align: st.th >= 0 ? 'left' : 'right' });
+  }
+
+  // snelheid
+  if (show.v) {
+    const ex = X(st.x + st.vx * KV), ey = Y(st.y + st.vy * KV);
+    if (arrow(ctx, px, py, ex, ey, C.v, { w: 2.8, head: 12 })) tipLabel(ctx, px, py, ex, ey, 'v', '', C.v);
+  }
+  // versnelling en natuurlijke ontbinding
+  const ax = X(st.x + st.ax * KA), ay = Y(st.y + st.ay * KA);
+  const tX = X(st.x + st.at * Math.cos(st.th) * KA), tY = Y(st.y + st.at * Math.sin(st.th) * KA);
+  const nX = X(st.x - st.an * Math.sin(st.th) * KA), nY = Y(st.y + st.an * Math.cos(st.th) * KA);
+  if (show.a && show.at && show.an) {
+    ctx.save(); ctx.setLineDash([2, 4]); ctx.strokeStyle = '#d3a9a0'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(tX, tY); ctx.lineTo(ax, ay); ctx.lineTo(nX, nY); ctx.stroke(); ctx.restore();
+  }
+  if (show.at && arrow(ctx, px, py, tX, tY, C.at, { w: 2.4, dash: [6, 4] })) tipLabel(ctx, px, py, tX, tY, 'a', 't', C.at);
+  if (show.an && arrow(ctx, px, py, nX, nY, C.an, { w: 2.4, dash: [6, 4] })) tipLabel(ctx, px, py, nX, nY, 'a', 'n', C.an);
+  if (show.a && arrow(ctx, px, py, ax, ay, C.a, { w: 3.2, head: 13 })) tipLabel(ctx, px, py, ax, ay, 'a', '', C.a);
+
+  // punt P
+  ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(px, py, 8, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  label(ctx, 'P', '', px + (st.th >= 0 ? -24 : 12), py + 22, C.ink, { vec: false, size: 14 });
+
+  const bars = [];
+  if (show.v) bars.push([1 * KV * s, C.v, '1 m/s']);
+  if (show.a || show.at || show.an) bars.push([2 * KA * s, C.a, '2 m/s²']);
+  TM1.schaalLegende(ctx, h, bars);
+}
+
+// ---------- grafieken ----------
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+const G3 = setup(document.getElementById('g3'));
+let F1, F2, F3;
+function kwartLijnen(ctx, F, yr) {
+  // verticale standen (nπ/p) en uiterste standen ((n+0.5)π/p)
+  const P = p(), T2 = 2 * Tp();
+  ctx.save(); ctx.strokeStyle = '#d5d8dd'; ctx.lineWidth = 1;
+  for (let k = 1; k * Math.PI / (2 * P) < T2 - 1e-9; k++) {
+    const x = F.X(k * Math.PI / (2 * P));
+    ctx.setLineDash(k % 2 ? [2, 4] : [6, 4]);
+    ctx.beginPath(); ctx.moveTo(x, F.Y(yr[0])); ctx.lineTo(x, F.Y(yr[1])); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawGraphs() {
+  const T2 = 2 * Tp(), tt = t % T2, st = state(t);
+  // θ(t)
+  const d0 = deg(th0) * 1.2;
+  F1 = frame(G1, [0, T2], [-d0, d0], '$t$ [s]', '$\\theta$ [°]');
+  kwartLijnen(G1.ctx, F1, [-d0, d0]);
+  curve(G1.ctx, F1, 400, 0, T2, u => u, u => deg(state(u).th), C.ink, 2.2);
+  TM1.cursor(G1.ctx, F1, tt); dot(G1.ctx, F1.X(tt), F1.Y(deg(st.th)), C.ink);
+  // a_t en a_n
+  const A = Math.max(g * th0, g * th0 * th0) * 1.15;
+  F2 = frame(G2, [0, T2], [-A, A], '$t$ [s]', '$a_t$, $a_n$ [m/s²]');
+  kwartLijnen(G2.ctx, F2, [-A, A]);
+  curve(G2.ctx, F2, 400, 0, T2, u => u, u => state(u).at, C.at, 2.2);
+  curve(G2.ctx, F2, 400, 0, T2, u => u, u => state(u).an, C.an, 2.2);
+  TM1.cursor(G2.ctx, F2, tt); dot(G2.ctx, F2.X(tt), F2.Y(st.at), C.at); dot(G2.ctx, F2.X(tt), F2.Y(st.an), C.an);
+  // v·a met gekleurde fasen
+  let M = 0; for (let i = 0; i <= 200; i++) M = Math.max(M, Math.abs(state(i * Tp() / 200).va));
+  M = Math.max(M * 1.2, 1e-6);
+  F3 = frame(G3, [0, T2], [-M, M], '$t$ [s]', '$\\vec{v}\\cdot\\vec{a}$ [m²/s³]');
+  {
+    const ctx = G3.ctx, P = p();
+    for (let k = 0; k * Math.PI / (2 * P) < T2 - 1e-9; k++) {
+      const x0 = F3.X(k * Math.PI / (2 * P)), x1 = F3.X(Math.min((k + 1) * Math.PI / (2 * P), T2));
+      ctx.save(); ctx.globalAlpha = 0.55; ctx.fillStyle = k % 2 === 0 ? '#f6d4d4' : '#cdebd3';
+      ctx.fillRect(x0, F3.Y(M), x1 - x0, F3.Y(-M) - F3.Y(M)); ctx.restore();
+    }
+  }
+  kwartLijnen(G3.ctx, F3, [-M, M]);
+  curve(G3.ctx, F3, 400, 0, T2, u => u, u => state(u).va, C.ink, 2.2);
+  TM1.cursor(G3.ctx, F3, tt); dot(G3.ctx, F3.X(tt), F3.Y(st.va), C.ink);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const V = '<span class="k-v"><span class="v">v</span></span>', A = '<span class="k-a"><span class="v">a</span></span>', NV = `‖${V}‖`;
+function fase(st) {
+  const P = p(), u = ((t % (Math.PI / P)) + Math.PI / P) % (Math.PI / P) / (Math.PI / P);   // positie binnen een halve periode
+  if (st.speed < 1e-3 * R * th0 * P) return 'uiterste stand';
+  if (u < 1e-3 || u > 1 - 1e-3) return 'verticale stand';
+  return u < 0.5 ? 'oplopend (naar een uiterste stand)' : 'aflopend (naar de verticale stand)';
+}
+function drawReadout() {
+  const s = state(t);
+  const tr = s.speed < 1e-3 * R * th0 * p() ? `${NV} = 0: keert om`
+    : Math.abs(s.va) < 1e-6 ? `${V}·${A} = 0: ${NV} maximaal`
+    : s.va > 0 ? `${V}·${A} &gt; 0: ${NV} neemt toe` : `${V}·${A} &lt; 0: ${NV} neemt af`;
+  TM1.uitlezing(ro, [
+    ['t', `${fmt(t % (2 * Tp()), 3)} s`],
+    ['θ', `${fmt(deg(s.th), 1)}° (${fmt(s.th, 3)} rad)`, true],
+    ['p = √(g/R)', `${fmt(p(), 3)} rad/s`],
+    [`${V} = (<span class="i k-vx">v<sub>x</sub></span>, <span class="i k-vy">v<sub>y</sub></span>)`, `(${fmt(s.vx, 3)}, ${fmt(s.vy, 3)}) m/s`, true],
+    [`${NV}`, `${fmt(s.speed, 3)} m/s`],
+    [`${A} = (<span class="i k-a">a<sub>x</sub></span>, <span class="i k-a">a<sub>y</sub></span>)`, `(${fmt(s.ax, 3)}, ${fmt(s.ay, 3)}) m/s²`, true],
+    ['<span class="i k-at">a<sub>t</sub></span>', `${fmt(s.at, 3)} m/s²`],
+    ['<span class="i k-an">a<sub>n</sub></span>', `${fmt(s.an, 3)} m/s²`],
+    ['fase', fase(s), true],
+    ['stelling 13.6', tr, true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), tsl = $('tslider');
+function setPlaying(pl) { playing = pl; playBtn.textContent = pl ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('Rval').textContent = `${R.toFixed(1)} m`;
+  $('th0val').textContent = `${deg(th0).toFixed(0)}° (${th0.toFixed(3)} rad)`;
+  const T = Tp();
+  $('tval').textContent = `${(t % (2 * T)).toFixed(2)} s`;
+  tsl.value = Math.round((t % (2 * T)) / (2 * T) * 2000);
+}
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+const spring = k => { setPlaying(false); t = k * Math.PI / p(); render(); };   // t = k·π/p
+
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { t = 0; render(); };
+$('stepf').onclick = () => { setPlaying(false); t = (t + Tp() / 40) % (2 * Tp()); render(); };
+$('stepb').onclick = () => { setPlaying(false); t = ((t - Tp() / 40) % (2 * Tp()) + 2 * Tp()) % (2 * Tp()); render(); };
+tsl.oninput = () => { setPlaying(false); t = tsl.value / 2000 * 2 * Tp(); render(); };
+$('R').oninput = e => { const fase = t / Tp(); R = +e.target.value; t = fase * Tp(); render(); };
+$('th0').oninput = e => { th0 = +e.target.value * Math.PI / 180; render(); };
+$('j_vert').onclick = () => spring(1);
+$('j_uit').onclick = () => spring(0.5);
+$('j_op').onclick = () => spring(0.25);
+$('j_af').onclick = () => spring(0.75);
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+const naarT = x => { t = x; setPlaying(false); render(); };
+TM1.scrub(G1, () => F1, naarT);
+TM1.scrub(G2, () => F2, naarT);
+TM1.scrub(G3, () => F3, naarT);
+
+TM1.bijGrootte([sc, G1, G2, G3], render);
+TM1.lus(dt => { t = (t + dt * TEMPO) % (2 * Tp()); render(); }, () => playing);
+})();
+</script>
+</body>
+</html>

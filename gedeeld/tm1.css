@@ -42,6 +42,8 @@ h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:28px;mar
 .side{display:flex;flex-direction:column;gap:16px}
 .panel{padding:14px 16px}
 .panel h2,.formulas h2{font:600 13px/1.2 Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
+/* symbolen in zulke titels nooit in hoofdletters: v blijft v, niet V */
+.panel h2 :is(.v,.i,sub),.formulas h2 :is(.v,.i,sub),details summary :is(.v,.i,sub){text-transform:none;letter-spacing:0}
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 button{font:500 14px Inter,sans-serif;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer}
 button:hover{border-color:#c9c5ba;background:#fbfaf7}

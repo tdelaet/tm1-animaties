@@ -84,7 +84,7 @@ TM1.catalogus = [
       { id: '13.5', titel: 'Katapult slingert kei weg', status: 'klaar' },
       { id: '13.6', titel: 'Cirkelbeweging met constante grootte van de snelheid', status: 'klaar' },
       { id: '13.7', titel: 'Een rechtlijnige beweging' },
-      { id: '13.8', titel: 'Een slingerbeweging' },
+      { id: '13.8', titel: 'Een slingerbeweging', status: 'klaar' },
       { id: '13.9', titel: 'Plooiladder' }]},
     { nr: 14, titel: 'Kinematica van een lichaam', map: 'h14-kinematica-lichaam', items: [
       { id: '14.1', titel: 'Reuzenrad: translatie van de gondel' },
