@@ -213,8 +213,10 @@ function drawScene() {
 
   // position vector
   if (show.r) {
-    const nx = Math.cos(st.th) * 7, ny = Math.sin(st.th) * 7; // perpendicular offset (screen)
-    arrow(ctx, ox + nx, oy + ny, px + nx, py + ny, C.r, { w: 2.4 });
+    // van O tot P: de punt stopt aan de rand van het bolletje (straal 8 px), zodat ze zichtbaar blijft
+    const nx = Math.cos(st.th) * 7, ny = Math.sin(st.th) * 7;   // enkel voor het label, naast het touw
+    const Lr = Math.hypot(px - ox, py - oy), kr = Math.max(0, (Lr - 9) / Lr);
+    arrow(ctx, ox, oy, ox + (px - ox) * kr, oy + (py - oy) * kr, C.r, { w: 2.4 });
     label(ctx, 'r', 'P', ox + (px - ox) * 0.62 + nx * 2.6, oy + (py - oy) * 0.62 + ny * 2.6 + 6, C.r, { align: st.th >= 0 ? 'left' : 'right' });
   }
 
