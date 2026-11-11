@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 13.1 – Kind op een schommel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 13.1 — Kind op een schommel</h1>
+    <span class="kicker">Kinematica van een puntmassa · positie, snelheid en (uit Vb. 13.3) versnelling, vectorieel bekeken</span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Animatie van de schommel met vectoren"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar dat tijdstip te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="stepb" title="Een stap terug (T/40)">◂ Stap</button>
+          <button id="stepf" title="Een stap vooruit (T/40)">Stap ▸</button>
+          <button id="reset">↺ t = 0</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
+          <input type="range" id="tslider" min="0" max="2000" value="0">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Afspeelsnelheid (vertraging)</span><b id="spval"></b></div>
+          <input type="range" id="speed" min="0.05" max="1" step="0.05" value="0.5">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Lengte <span class="i">l</span></span><b id="lval"></b></div>
+          <input type="range" id="len" min="1" max="5" step="0.1" value="3">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Amplitude <span class="i">θ</span><sub>0</sub></span><b id="aval"></b></div>
+          <input type="range" id="amp" min="5" max="75" step="1" value="40">
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_v" checked> <span class="sw" style="background:var(--cv)"></span><span>snelheid <span class="v">v</span><sub>P</sub></span></label>
+          <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:var(--cvx)"></span><span>componenten <span class="i">v<sub>x</sub>, v<sub>y</sub></span></span></label>
+          <label><input type="checkbox" id="t_r" checked> <span class="sw" style="background:var(--cr)"></span><span>positie <span class="v">r</span><sub>P</sub></span></label>
+          <label><input type="checkbox" id="t_strobe"> <span class="sw" style="background:#9aa3ad"></span><span>stroboscoop</span></label>
+          <label><input type="checkbox" id="t_a"> <span class="sw" style="background:var(--ca)"></span><span>versnelling <span class="v">a</span><sub>P</sub></span></label>
+          <label><input type="checkbox" id="t_atn"> <span class="sw d" style="color:var(--can)"></span><span><span class="i">a<sub>Pt</sub>, a<sub>Pn</sub></span></span></label>
+          <label><input type="checkbox" id="t_axes" checked> <span class="sw" style="background:#7a828c"></span><span>assenstelsel</span></label>
+          <label><input type="checkbox" id="t_traj" checked> <span class="sw d" style="color:#7a828c"></span><span>traject</span></label>
+        </div>
+        <div class="note">Stroboscoop: posities en snelheden op gelijke tijdsintervallen Δ<span class="i">t</span> = <span class="i">T</span>/20 tijdens de huidige zwaai.</div>
+      </div>
+
+      <div class="card panel q1">
+        <h2>Vraag 1 · <span class="i" style="text-transform:none">θ</span> = π/6</h2>
+        <p>Spring naar de stand θ = π/6 = 30° en vergelijk de snelheid bij de neerwaartse en de opwaartse beweging.</p>
+        <div class="btnrow">
+          <button id="pi6n">neerwaarts · <span class="v">v</span><sub>n</sub> (dθ/dt &lt; 0)</button>
+          <button id="pi6o">opwaarts · <span class="v">v</span><sub>o</sub> (dθ/dt &gt; 0)</button>
+        </div>
+        <div class="note" id="pi6note"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3>Grootte van de snelheid |<span class="v">v</span><sub>P</sub>| in functie van de tijd</h3>
+      <div class="sub" id="g1sub"></div>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Componenten <span class="i">v<sub>x</sub></span> en <span class="i">v<sub>y</sub></span> in functie van de tijd</h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cvx)"></span><span class="i">v<sub>x</sub></span></span><span><span class="sw" style="background:var(--cvy)"></span><span class="i">v<sub>y</sub></span></span><span><span class="sw" style="background:#c5d6ee"></span><span>|<span class="v">v</span><sub>P</sub>|</span></span></div>
+      <canvas id="g2"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Grootte van de snelheid |<span class="v">v</span><sub>P</sub>| in functie van de hoek θ</h3>
+      <div class="sub">Elke stand wordt twee keer doorlopen, met dezelfde snelheidsgrootte maar tegengestelde zin.</div>
+      <canvas id="g3"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="eq"><span class="i">θ</span>(<span class="i">t</span>) = <span class="i">θ</span><sub>0</sub> cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>),&nbsp;&nbsp; <span class="i">ω</span>(<span class="i">t</span>) = d<span class="i">θ</span>/d<span class="i">t</span> = −<span class="i">θ</span><sub>0</sub>√(<span class="i">g</span>/<span class="i">l</span>) sin(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>)</div>
+      <div class="eq"><span class="v">r</span><sub>P</sub>(<span class="i">t</span>) = <span class="col"><span><span class="i">l</span> sin <span class="i">θ</span>(<span class="i">t</span>)</span><span>−<span class="i">l</span> cos <span class="i">θ</span>(<span class="i">t</span>)</span></span></div>
+      <div class="eq"><span class="v">v</span><sub>P</sub>(<span class="i">t</span>) = <span class="i">l ω</span>(<span class="i">t</span>) <span class="col"><span>cos <span class="i">θ</span>(<span class="i">t</span>)</span><span>sin <span class="i">θ</span>(<span class="i">t</span>)</span></span>&nbsp; ⊥ <span class="v">r</span><sub>P</sub></div>
+      <div class="eq"><span class="v">a</span><sub>P</sub>(<span class="i">t</span>) = <span class="i">l ω</span><sup>2</sup> <span class="col"><span>−sin <span class="i">θ</span></span><span>cos <span class="i">θ</span></span></span> + <span class="i">l α</span> <span class="col"><span>cos <span class="i">θ</span></span><span>sin <span class="i">θ</span></span></span>&nbsp;&nbsp;<span style="font-family:Inter;font-size:13px;color:var(--muted)">(Vb. 13.3: <span class="i">a<sub>Pn</sub></span> = <span class="i">lω</span>², <span class="i">a<sub>Pt</sub></span> = <span class="i">lα</span>)</span></div>
+      <p class="fn">De beweging θ(t) is hier opgelegd: we beschrijven ze enkel (kinematica). De uitdrukking voor θ(t) is de oplossing voor kleine uitwijkingen; bij grote θ<sub>0</sub> wijkt een echte schommel daar wat van af. Dat volgt pas uit de dynamica. Getallen met <span class="i">g</span> = 9.81 m/s².</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Waar langs het traject is |<span class="v">v</span><sub>P</sub>| maximaal en waar is ze nul? Lees het af in de grafieken en controleer met de stroboscoop.</li>
+        <li>Waarom staat <span class="v">v</span><sub>P</sub> altijd loodrecht op <span class="v">r</span><sub>P</sub>? Kijk naar de waarde van <span class="v">r</span><sub>P</sub>·<span class="v">v</span><sub>P</sub> in de tabel.</li>
+        <li>Wanneer is <span class="i">v<sub>y</sub></span> positief? Wat betekent dat voor de beweging van het kind?</li>
+        <li>Waarom heeft |<span class="v">v</span><sub>P</sub>| een periode die half zo lang is als die van θ, terwijl <span class="i">v<sub>x</sub></span> dezelfde periode heeft als θ?</li>
+        <li>Zet de versnelling aan. Is <span class="v">a</span><sub>P</sub> nul in de onderste stand? En in de uiterste standen? Verklaar met <span class="i">a<sub>Pt</sub></span> en <span class="i">a<sub>Pn</sub></span>.</li>
+        <li>Volg het teken van <span class="v">v</span><sub>P</sub>·<span class="v">a</span><sub>P</sub> (stelling 13.6). Klopt dat met wat de grafiek van |<span class="v">v</span><sub>P</sub>| doet?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const g = 9.81;
+const { setup, arrow, label, tipLabel, niceStep, niceNum, frame, curve, dot, fmt, deg } = TM1;
+const C = TM1.kleuren();
+let l = 3, th0 = 40 * Math.PI / 180, speed = 0.5, t = 0, playing = true;
+const show = { v: true, comp: false, r: true, strobe: false, a: false, atn: false, axes: true, traj: true };
+
+const Om = () => Math.sqrt(g / l);
+const Tp = () => 2 * Math.PI / Om();
+const vmax = () => l * Om() * th0;
+const amaxEst = () => { // max |a| over one period (sampled)
+  let m = 0; const T = Tp();
+  for (let i = 0; i <= 200; i++) { const s = state(i * T / 200); m = Math.max(m, Math.hypot(s.ax, s.ay)); }
+  return m;
+};
+function state(tt) {
+  const W = Om();
+  const th = th0 * Math.cos(W * tt);
+  const w = -th0 * W * Math.sin(W * tt);
+  const al = -th0 * W * W * Math.cos(W * tt);
+  const s = Math.sin(th), c = Math.cos(th);
+  return {
+    th, w, al, x: l * s, y: -l * c,
+    vx: l * w * c, vy: l * w * s, speed: Math.abs(l * w),
+    at: l * al, an: l * w * w,
+    ax: -l * w * w * s + l * al * c, ay: l * w * w * c + l * al * s
+  };
+}
+
+// ---------- scene ----------
+const sc = setup(document.getElementById('scene'));
+function geom() {
+  const s = Math.min(sc.w / (2.5 * l), sc.h / (1.42 * l));
+  return { s, ox: sc.w / 2, oy: Math.max(70, sc.h * 0.15) };
+}
+function drawScene() {
+  const ctx = sc.ctx, w = sc.w, h = sc.h; ctx.clearRect(0, 0, w, h);
+  const { s, ox, oy } = geom();
+  const X = x => ox + x * s, Y = y => oy - y * s;
+  const st = state(t);
+  const kv = 0.5 * l / vmax();               // m per (m/s)
+  const ka = 0.42 * l / amaxEst();            // m per (m/s²)
+  const R = l * s;
+
+  // support
+  ctx.save();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(ox - 70, oy - 22); ctx.lineTo(ox + 70, oy - 22); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#9aa1aa';
+  for (let i = -70; i < 70; i += 10) { ctx.beginPath(); ctx.moveTo(ox + i, oy - 22); ctx.lineTo(ox + i + 10, oy - 34); ctx.stroke(); }
+  ctx.fillStyle = '#eef0f2'; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox - 13, oy - 22); ctx.lineTo(ox + 13, oy - 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  // trajectory
+  if (show.traj) {
+    ctx.save(); ctx.setLineDash([3, 6]); ctx.strokeStyle = '#c9ccd1'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(ox, oy, R, 0, Math.PI); ctx.stroke();
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(ox, oy, R, Math.PI / 2 - th0, Math.PI / 2 + th0); ctx.stroke();
+    ctx.restore();
+  }
+  // vertical reference
+  ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#b5bac1'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox, oy + R * 1.08); ctx.stroke(); ctx.restore();
+
+  // axes
+  if (show.axes) {
+    const la = Math.min(0.42 * R, 110);
+    arrow(ctx, ox, oy, ox + la, oy, '#6b737d', { w: 1.4, head: 9 });
+    arrow(ctx, ox, oy, ox, oy - Math.min(oy - 8, 60), '#6b737d', { w: 1.4, head: 9 });
+    label(ctx, 'x', '', ox + la + 4, oy + 5, '#6b737d', { vec: false, size: 15 });
+    label(ctx, 'y', '', ox + 8, oy - Math.min(oy - 8, 60) + 10, '#6b737d', { vec: false, size: 15 });
+  }
+  label(ctx, 'O', '', ox - 22, oy + 4, C.ink, { vec: false, size: 15 });
+
+  // stroboscope
+  if (show.strobe) {
+    const half = Tp() / 2, ts = Math.floor(t / half) * half;
+    for (let k = 0; k <= 10; k++) {
+      const tk = ts + k * half / 10; if (tk > t + 1e-9) break;
+      const q = state(tk);
+      ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = C.ink;
+      ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), 5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+      if (show.v) arrow(ctx, X(q.x), Y(q.y), X(q.x + q.vx * kv), Y(q.y + q.vy * kv), C.v, { w: 1.6, head: 8, alpha: 0.35 });
+    }
+  }
+
+  const px = X(st.x), py = Y(st.y);
+  // rope
+  ctx.save(); ctx.strokeStyle = '#8a9099'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(px, py); ctx.stroke(); ctx.restore();
+
+  // angle
+  if (Math.abs(st.th) > 0.01) {
+    const ra = Math.min(0.3 * R, 70);
+    ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(ox, oy, ra, Math.PI / 2, Math.PI / 2 - st.th, st.th > 0); ctx.stroke(); ctx.restore();
+    const mid = Math.PI / 2 - st.th / 2;
+    label(ctx, 'θ', '', ox + Math.cos(mid) * (ra + 14), oy + Math.sin(mid) * (ra + 14) + 5, C.ink, { vec: false, size: 15, align: 'center' });
+  }
+  label(ctx, 'l', '', (ox + px) / 2 + (st.th >= 0 ? -16 : 10) * Math.cos(st.th), (oy + py) / 2 + 5 + 10 * Math.sin(st.th) * (st.th >= 0 ? 1 : -1), C.muted, { vec: false, size: 15 });
+
+  // position vector
+  if (show.r) {
+    const nx = Math.cos(st.th) * 7, ny = Math.sin(st.th) * 7; // perpendicular offset (screen)
+    arrow(ctx, ox + nx, oy + ny, px + nx, py + ny, C.r, { w: 2.4 });
+    label(ctx, 'r', 'P', ox + (px - ox) * 0.62 + nx * 2.6, oy + (py - oy) * 0.62 + ny * 2.6 + 6, C.r, { align: st.th >= 0 ? 'left' : 'right' });
+  }
+
+  // right angle marker r ⟂ v
+  if (show.r && show.v && st.speed > 0.03 * vmax()) {
+    const rx = -Math.sin(st.th), ry = -Math.cos(st.th); // screen unit towards O
+    const sgn = Math.sign(st.w);
+    const vxu = Math.cos(st.th) * sgn, vyu = -Math.sin(st.th) * sgn; // screen unit along v
+    const q = 11;
+    ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px + rx * q, py + ry * q); ctx.lineTo(px + rx * q + vxu * q, py + ry * q + vyu * q); ctx.lineTo(px + vxu * q, py + vyu * q); ctx.stroke(); ctx.restore();
+  }
+
+  // velocity
+  if (show.v) {
+    const ex = X(st.x + st.vx * kv), ey = Y(st.y + st.vy * kv);
+    if (show.comp) {
+      const hx = X(st.x + st.vx * kv), vy_ = Y(st.y + st.vy * kv);
+      ctx.save(); ctx.setLineDash([2, 4]); ctx.strokeStyle = '#a3aab3'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hx, py); ctx.lineTo(ex, ey); ctx.lineTo(px, vy_); ctx.stroke(); ctx.restore();
+      if (arrow(ctx, px, py, hx, py, C.vx, { w: 2.2, dash: [6, 4] })) tipLabel(ctx, px, py, hx, py, 'v', 'x', C.vx, false);
+      if (arrow(ctx, px, py, px, vy_, C.vy, { w: 2.2, dash: [6, 4] })) tipLabel(ctx, px, py, px, vy_, 'v', 'y', C.vy, false);
+    }
+    if (arrow(ctx, px, py, ex, ey, C.v, { w: 3.2, head: 13 })) {
+      const atPi6 = Math.abs(Math.abs(st.th) - Math.PI / 6) < 2e-3;
+      tipLabel(ctx, px, py, ex, ey, 'v', atPi6 ? (st.w > 0 ? 'o' : 'n') : 'P', C.v);
+    }
+  }
+
+  // acceleration
+  if (show.a || show.atn) {
+    const ax = X(st.x + st.ax * ka), ay = Y(st.y + st.ay * ka);
+    if (show.atn) {
+      const tx = st.at * Math.cos(st.th), ty = st.at * Math.sin(st.th);
+      const nx = -st.an * Math.sin(st.th), ny = st.an * Math.cos(st.th);
+      const tX = X(st.x + tx * ka), tY = Y(st.y + ty * ka), nX = X(st.x + nx * ka), nY = Y(st.y + ny * ka);
+      ctx.save(); ctx.setLineDash([2, 4]); ctx.strokeStyle = '#d3a9a0'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(tX, tY); ctx.lineTo(ax, ay); ctx.lineTo(nX, nY); ctx.stroke(); ctx.restore();
+      if (arrow(ctx, px, py, tX, tY, C.at, { w: 2.2, dash: [6, 4] })) tipLabel(ctx, px, py, tX, tY, 'a', 'Pt', C.at);
+      if (arrow(ctx, px, py, nX, nY, C.an, { w: 2.2, dash: [6, 4] })) tipLabel(ctx, px, py, nX, nY, 'a', 'Pn', C.an);
+    }
+    if (show.a && arrow(ctx, px, py, ax, ay, C.a, { w: 3, head: 12 })) tipLabel(ctx, px, py, ax, ay, 'a', 'P', C.a);
+  }
+
+  // mass point
+  ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(px, py, 8, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  label(ctx, 'P', '', px + (st.th >= 0 ? -24 : 12), py + 22, C.ink, { vec: false, size: 15 });
+
+  // scale bars
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textBaseline = 'middle';
+  let yb = h - 18;
+  const bars = [];
+  if (show.v) { const q = niceNum(vmax() / 2); bars.push([q * kv * s, C.v, `${q} m/s`]); }
+  if (show.a || show.atn) { const q = niceNum(amaxEst() / 2); bars.push([q * ka * s, C.a, `${q} m/s²`]); }
+  bars.reverse().forEach(([len, col, txt]) => {
+    ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(14, yb); ctx.lineTo(14 + len, yb); ctx.stroke();
+    ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(14, yb - 5); ctx.lineTo(14, yb + 5); ctx.moveTo(14 + len, yb - 5); ctx.lineTo(14 + len, yb + 5); ctx.stroke();
+    ctx.fillText(txt, 22 + len, yb); yb -= 20;
+  });
+  if (bars.length) ctx.fillText('vectorschaal', 14, yb);
+  ctx.restore();
+}
+
+// ---------- graphs ----------
+function tLines(ctx, F, T, ymin, ymax) {
+  ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = '#c7cbd1'; ctx.font = '11px Inter'; ctx.fillStyle = C.muted; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  for (let k = 1; k <= 3; k++) { const x = F.X(k * T / 2); ctx.beginPath(); ctx.moveTo(x, F.Y(ymax)); ctx.lineTo(x, F.Y(ymin)); ctx.stroke(); }
+  ctx.fillText('T', F.X(T) + 3, F.Y(ymax) + 1); ctx.fillText('T/2', F.X(T / 2) + 3, F.Y(ymax) + 1); ctx.restore();
+}
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+const G3 = setup(document.getElementById('g3'));
+let F1, F2;
+function drawGraphs() {
+  const T = Tp(), vm = vmax(), tt = t % (2 * T), st = state(t);
+  // G1
+  F1 = frame(G1, [0, 2 * T], [0, vm * 1.15], 't [s]', '|v_P| [m/s]');
+  tLines(G1.ctx, F1, T, 0, vm * 1.15);
+  curve(G1.ctx, F1, 400, 0, 2 * T, u => u, u => state(u).speed, C.v, 2.2);
+  G1.ctx.save(); G1.ctx.strokeStyle = C.ink; G1.ctx.lineWidth = 1; G1.ctx.beginPath(); G1.ctx.moveTo(F1.X(tt), F1.Y(0)); G1.ctx.lineTo(F1.X(tt), F1.Y(vm * 1.15)); G1.ctx.stroke(); G1.ctx.restore();
+  dot(G1.ctx, F1.X(tt), F1.Y(st.speed), C.v);
+  // G2
+  F2 = frame(G2, [0, 2 * T], [-vm * 1.15, vm * 1.15], 't [s]', 'v [m/s]');
+  tLines(G2.ctx, F2, T, -vm * 1.15, vm * 1.15);
+  curve(G2.ctx, F2, 400, 0, 2 * T, u => u, u => state(u).speed, '#c5d6ee', 1.6);
+  curve(G2.ctx, F2, 400, 0, 2 * T, u => u, u => state(u).vx, C.vx, 2.2);
+  curve(G2.ctx, F2, 400, 0, 2 * T, u => u, u => state(u).vy, C.vy, 2.2);
+  G2.ctx.save(); G2.ctx.strokeStyle = C.ink; G2.ctx.lineWidth = 1; G2.ctx.beginPath(); G2.ctx.moveTo(F2.X(tt), F2.Y(-vm * 1.15)); G2.ctx.lineTo(F2.X(tt), F2.Y(vm * 1.15)); G2.ctx.stroke(); G2.ctx.restore();
+  dot(G2.ctx, F2.X(tt), F2.Y(st.vx), C.vx); dot(G2.ctx, F2.X(tt), F2.Y(st.vy), C.vy);
+  // G3
+  const d0 = deg(th0);
+  const F3 = frame(G3, [-d0 * 1.15, d0 * 1.15], [0, vm * 1.15], 'θ [°]', '|v_P| [m/s]');
+  curve(G3.ctx, F3, 300, 0, T, u => deg(state(u).th), u => state(u).speed, C.v, 2.2);
+  if (Math.PI / 6 < th0) {
+    G3.ctx.save(); G3.ctx.setLineDash([3, 4]); G3.ctx.strokeStyle = '#c7cbd1';
+    [-30, 30].forEach(a => { G3.ctx.beginPath(); G3.ctx.moveTo(F3.X(a), F3.Y(0)); G3.ctx.lineTo(F3.X(a), F3.Y(vm * 1.15)); G3.ctx.stroke(); });
+    G3.ctx.restore();
+  }
+  dot(G3.ctx, F3.X(deg(st.th)), F3.Y(st.speed), C.v);
+  // direction hint arrow near dot
+  if (st.speed > 0.05 * vm) {
+    const dir = Math.sign(st.w), x0 = F3.X(deg(st.th)), y0 = F3.Y(st.speed) - 14;
+    arrow(G3.ctx, x0 - dir * 10, y0, x0 + dir * 12, y0, C.ink, { w: 1.4, head: 7 });
+  }
+  document.getElementById('g1sub').textContent = `Periode van θ: T = 2π√(l/g) = ${T.toFixed(2)} s; maximum |v_P| = l·θ₀·√(g/l) = ${vm.toFixed(2)} m/s`;
+}
+
+// ---------- readout ----------
+const ro = document.getElementById('readout');
+function cell(k, v, wide) { return `<div class="ro${wide ? ' wide' : ''}"><div class="k">${k}</div><div class="val">${v}</div></div>`; }
+function drawReadout() {
+  const s = state(t);
+  const rv = s.x * s.vx + s.y * s.vy;
+  const turning = s.speed < 1e-3 * vmax() + 1e-9;
+  const mot = turning ? 'omkeerpunt (|v| = 0)' : (s.vy > 1e-9 ? 'opwaarts (v_y > 0)' : (s.vy < -1e-9 ? 'neerwaarts (v_y < 0)' : 'onderste stand'));
+  let html = '';
+  html += cell('t', `${fmt(t % (2 * Tp()), 3)} s`);
+  html += cell('θ', `${fmt(deg(s.th), 1)}° (${fmt(s.th, 3)} rad)`, true);
+  html += cell('ω = dθ/dt', `${fmt(s.w, 3)} rad/s`);
+  html += cell('<span class="v">r</span><sub>P</sub> = (x, y)', `(${fmt(s.x, 3)}, ${fmt(s.y, 3)}) m`, true);
+  html += cell('<span class="v">v</span><sub>P</sub> = (v<sub>x</sub>, v<sub>y</sub>)', `(${fmt(s.vx, 3)}, ${fmt(s.vy, 3)}) m/s`, true);
+  html += cell('|<span class="v">v</span><sub>P</sub>| = l|ω|', `${fmt(s.speed, 3)} m/s`);
+  html += cell('<span class="v">r</span><sub>P</sub>·<span class="v">v</span><sub>P</sub>', `${fmt(rv, 3)} m²/s ⇒ ⊥`);
+  html += cell('beweging', mot, true);
+  if (show.a || show.atn) {
+    const va = s.vx * s.ax + s.vy * s.ay;
+    const tr = turning ? '|v| = 0, keert om' : (Math.abs(va) < 1e-6 ? 'v·a = 0: |v| maximaal' : (va > 0 ? 'v·a > 0: |v| neemt toe' : 'v·a < 0: |v| neemt af'));
+    html += cell('<span class="v">a</span><sub>P</sub> = (a<sub>x</sub>, a<sub>y</sub>)', `(${fmt(s.ax, 3)}, ${fmt(s.ay, 3)}) m/s²`, true);
+    html += cell('a<sub>Pt</sub> = lα', `${fmt(s.at, 3)} m/s²`);
+    html += cell('a<sub>Pn</sub> = lω²', `${fmt(s.an, 3)} m/s²`);
+    html += cell('stelling 13.6', tr, true);
+  }
+  ro.innerHTML = html;
+}
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), tsl = $('tslider');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('lval').textContent = `${l.toFixed(1)} m`;
+  $('aval').textContent = `${deg(th0).toFixed(0)}° (${th0.toFixed(3)} rad)`;
+  $('spval').textContent = `${speed.toFixed(2)}×`;
+  const T = Tp();
+  $('tval').textContent = `${(t % (2 * T)).toFixed(2)} s`;
+  tsl.value = Math.round((t % (2 * T)) / (2 * T) * 2000);
+  const ok = th0 > Math.PI / 6 + 1e-6;
+  $('pi6n').disabled = $('pi6o').disabled = !ok;
+  $('pi6note').textContent = ok ? '' : 'Verhoog θ₀ boven 30°: anders bereikt de schommel de stand π/6 niet.';
+}
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { t = 0; render(); };
+$('stepf').onclick = () => { setPlaying(false); t += Tp() / 40; t %= 2 * Tp(); render(); };
+$('stepb').onclick = () => { setPlaying(false); t -= Tp() / 40; t = ((t % (2 * Tp())) + 2 * Tp()) % (2 * Tp()); render(); };
+tsl.oninput = () => { setPlaying(false); t = tsl.value / 2000 * 2 * Tp(); render(); };
+$('speed').oninput = e => { speed = +e.target.value; syncLabels(); };
+$('len').oninput = e => { const ph = t / Tp(); l = +e.target.value; t = ph * Tp(); render(); };
+$('amp').oninput = e => { th0 = +e.target.value * Math.PI / 180; render(); };
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+function jumpPi6(up) {
+  const c = (Math.PI / 6) / th0; if (c > 1) return;
+  const W = Om(), a = Math.acos(c);
+  t = (up ? 2 * Math.PI - a : a) / W;
+  setPlaying(false);
+  if (!show.v) { show.v = true; $('t_v').checked = true; }
+  render();
+}
+$('pi6n').onclick = () => jumpPi6(false);
+$('pi6o').onclick = () => jumpPi6(true);
+
+const naarT = x => { t = x; setPlaying(false); render(); };
+TM1.scrub(G1, () => F1, naarT);
+TM1.scrub(G2, () => F2, naarT);
+
+function resizeAll() { [sc, G1, G2, G3].forEach(o => o.resize()); render(); }
+new ResizeObserver(resizeAll).observe(document.body);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+
+let last = null;
+function loop(ts) {
+  if (last !== null && playing) {
+    const dt = Math.min((ts - last) / 1000, 0.05);
+    t = (t + dt * speed) % (2 * Tp());
+    render();
+  }
+  last = ts;
+  requestAnimationFrame(loop);
+}
+resizeAll();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

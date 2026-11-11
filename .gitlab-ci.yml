@@ -1,0 +1,15 @@
+# Publiceert de hele map als statische website via GitLab Pages.
+# Elke push naar de standaardbranch zet de nieuwe versie online.
+pages:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - mkdir -p .public
+    - cp -r index.html catalogus.js gedeeld sjabloon h[0-9]* .public/
+    - find .public -name .gitkeep -delete
+    - mv .public public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- PAS AAN: titel zoals in het handboek -->
+<title>Voorbeeld X.Y – Titel van het voorbeeld</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+</head>
+<body>
+<!--
+  SJABLOON voor een animatie van een puntmassa.
+  Gebruik:
+    1. Kopieer dit bestand naar de map van het hoofdstuk, met de naam uit de catalogus
+       (bv. h13-kinematica-puntmassa/vb13-7-een-rechtlijnige-beweging.html).
+    2. Pas alles aan dat met "PAS AAN" gemarkeerd is. Meestal volstaat het om positie(t) te herschrijven:
+       snelheid en versnelling worden numeriek afgeleid. Ken je ze analytisch (zoals in het handboek),
+       vul dan snelheid(t) en versnelling(t) zelf in: dat is nauwkeuriger.
+    3. Zet in catalogus.js de status van het voorbeeld op 'klaar'.
+-->
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld X.Y — Titel van het voorbeeld</h1>
+    <span class="kicker">Hoofdstuk N · korte omschrijving van wat de animatie toont</span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Animatie van de beweging met vectoren"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar dat tijdstip te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="stepb">◂ Stap</button>
+          <button id="stepf">Stap ▸</button>
+          <button id="reset">↺ t = 0</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
+          <input type="range" id="tslider" min="0" max="2000" value="0">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Afspeelsnelheid</span><b id="spval"></b></div>
+          <input type="range" id="speed" min="0.05" max="1" step="0.05" value="0.5">
+        </div>
+        <!-- PAS AAN: één schuifregelaar per parameter in P hieronder (id = naam van de parameter) -->
+        <div class="slider">
+          <div class="lab"><span>Halve as <span class="i">a</span></span><b id="val_a"></b></div>
+          <input type="range" id="par_a" min="0.5" max="3" step="0.1" value="2">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Halve as <span class="i">b</span></span><b id="val_b"></b></div>
+          <input type="range" id="par_b" min="0.5" max="3" step="0.1" value="1">
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_v" checked> <span class="sw" style="background:var(--cv)"></span><span>snelheid <span class="v">v</span><sub>P</sub></span></label>
+          <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:var(--cvx)"></span><span>componenten <span class="i">v<sub>x</sub>, v<sub>y</sub></span></span></label>
+          <label><input type="checkbox" id="t_r" checked> <span class="sw" style="background:var(--cr)"></span><span>positie <span class="v">r</span><sub>P</sub></span></label>
+          <label><input type="checkbox" id="t_a"> <span class="sw" style="background:var(--ca)"></span><span>versnelling <span class="v">a</span><sub>P</sub></span></label>
+          <label><input type="checkbox" id="t_traj" checked> <span class="sw d" style="color:#7a828c"></span><span>traject</span></label>
+          <label><input type="checkbox" id="t_axes" checked> <span class="sw" style="background:#7a828c"></span><span>assenstelsel</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Grootte van de snelheid |<span class="v">v</span><sub>P</sub>| in functie van de tijd</h3>
+      <div class="sub" id="g1sub"></div>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Componenten <span class="i">v<sub>x</sub></span> en <span class="i">v<sub>y</sub></span> in functie van de tijd</h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cvx)"></span><span class="i">v<sub>x</sub></span></span><span><span class="sw" style="background:var(--cvy)"></span><span class="i">v<sub>y</sub></span></span></div>
+      <canvas id="g2"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <!-- PAS AAN -->
+      <div class="eq"><span class="v">r</span><sub>P</sub>(<span class="i">t</span>) = <span class="col"><span><span class="i">a</span> cos <span class="i">t</span></span><span><span class="i">b</span> sin <span class="i">t</span></span></span></div>
+      <div class="eq"><span class="v">v</span><sub>P</sub>(<span class="i">t</span>) = d<span class="v">r</span><sub>P</sub>/d<span class="i">t</span> = <span class="col"><span>−<span class="i">a</span> sin <span class="i">t</span></span><span><span class="i">b</span> cos <span class="i">t</span></span></span></div>
+      <p class="fn">PAS AAN: korte opmerking over aannames of vereenvoudigingen.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <!-- PAS AAN -->
+      <ol>
+        <li>Waar is de grootte van de snelheid maximaal? Waar minimaal?</li>
+        <li>Staat de snelheid altijd rakend aan het traject? Waarom?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, tipLabel, label, frame, curve, dot, cursor, fmt, niceNum } = TM1;
+const C = TM1.kleuren();
+
+/* ================= PAS AAN: het model ================= */
+const P = { a: 2, b: 1 };                 // parameters, gekoppeld aan schuifregelaars met id par_<naam>
+const tEind = () => 2 * Math.PI;          // lengte van het getoonde tijdsinterval (bv. één periode)
+const herhaal = true;                     // na tEind opnieuw beginnen?
+function positie(t) {                     // r_P(t) in meter, x naar rechts, y naar boven
+  return { x: P.a * Math.cos(t), y: P.b * Math.sin(t) };
+}
+const oorsprong = 'O';                    // naam van het referentiepunt
+let snelheid = t => TM1.afgeleide(positie, t);        // of analytisch: t => ({ x: ..., y: ... })
+let versnelling = t => TM1.tweedeAfgeleide(positie, t);
+/* ====================================================== */
+
+let t = 0, playing = true, speed = 0.5;
+const show = { v: true, comp: false, r: true, a: false, traj: true, axes: true };
+
+// extremen over het interval, voor schaal van scène, vectoren en grafieken
+function bereik() {
+  const N = 400, T = tEind(); let xmin = 0, xmax = 0, ymin = 0, ymax = 0, vm = 1e-9, am = 1e-9;
+  for (let i = 0; i <= N; i++) {
+    const u = i * T / N, r = positie(u), v = snelheid(u), a = versnelling(u);
+    xmin = Math.min(xmin, r.x); xmax = Math.max(xmax, r.x); ymin = Math.min(ymin, r.y); ymax = Math.max(ymax, r.y);
+    vm = Math.max(vm, Math.hypot(v.x, v.y)); am = Math.max(am, Math.hypot(a.x, a.y));
+  }
+  return { xmin, xmax, ymin, ymax, vm, am, L: Math.max(xmax - xmin, ymax - ymin, 1e-6) };
+}
+let B = bereik();
+
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, w = sc.w, h = sc.h; ctx.clearRect(0, 0, w, h);
+  const pad = 0.35 * B.L;                                   // ruimte voor vectoren
+  const s = Math.min(w / (B.xmax - B.xmin + 2 * pad), h / (B.ymax - B.ymin + 2 * pad));
+  const cx = (B.xmin + B.xmax) / 2, cy = (B.ymin + B.ymax) / 2;
+  const X = x => w / 2 + (x - cx) * s, Y = y => h / 2 - (y - cy) * s;
+  const kv = 0.3 * B.L / B.vm, ka = 0.25 * B.L / B.am;      // meter per (m/s) en per (m/s²)
+  const r = positie(t), v = snelheid(t), a = versnelling(t), px = X(r.x), py = Y(r.y);
+
+  if (show.axes) {
+    arrow(ctx, X(0), Y(0), X(0) + 80, Y(0), '#6b737d', { w: 1.4, head: 9 });
+    arrow(ctx, X(0), Y(0), X(0), Y(0) - 80, '#6b737d', { w: 1.4, head: 9 });
+    label(ctx, 'x', '', X(0) + 84, Y(0) + 5, '#6b737d', { vec: false, size: 15 });
+    label(ctx, 'y', '', X(0) + 8, Y(0) - 72, '#6b737d', { vec: false, size: 15 });
+  }
+  dot(ctx, X(0), Y(0), C.ink, 3); label(ctx, oorsprong, '', X(0) - 20, Y(0) + 18, C.ink, { vec: false, size: 15 });
+  if (show.traj) {
+    ctx.save(); ctx.setLineDash([6, 5]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let i = 0; i <= 300; i++) { const q = positie(i * tEind() / 300); i ? ctx.lineTo(X(q.x), Y(q.y)) : ctx.moveTo(X(q.x), Y(q.y)); }
+    ctx.stroke(); ctx.restore();
+  }
+  if (show.r && arrow(ctx, X(0), Y(0), px, py, C.r, { w: 2.4 }))
+    label(ctx, 'r', 'P', (X(0) + px) / 2 + 8, (Y(0) + py) / 2 - 6, C.r);
+  if (show.v) {
+    const ex = X(r.x + v.x * kv), ey = Y(r.y + v.y * kv);
+    if (show.comp) {
+      if (arrow(ctx, px, py, ex, py, C.vx, { w: 2.2, dash: [6, 4] })) tipLabel(ctx, px, py, ex, py, 'v', 'x', C.vx, false);
+      if (arrow(ctx, px, py, px, ey, C.vy, { w: 2.2, dash: [6, 4] })) tipLabel(ctx, px, py, px, ey, 'v', 'y', C.vy, false);
+    }
+    if (arrow(ctx, px, py, ex, ey, C.v, { w: 3.2, head: 13 })) tipLabel(ctx, px, py, ex, ey, 'v', 'P', C.v);
+  }
+  if (show.a) {
+    const ex = X(r.x + a.x * ka), ey = Y(r.y + a.y * ka);
+    if (arrow(ctx, px, py, ex, ey, C.a, { w: 3, head: 12 })) tipLabel(ctx, px, py, ex, ey, 'a', 'P', C.a);
+  }
+  dot(ctx, px, py, C.ink, 8);
+  label(ctx, 'P', '', px + 10, py + 22, C.ink, { vec: false, size: 15 });
+
+  const balken = [];
+  if (show.v) { const q = niceNum(B.vm / 2); balken.push([q * kv * s, C.v, `${q} m/s`]); }
+  if (show.a) { const q = niceNum(B.am / 2); balken.push([q * ka * s, C.a, `${q} m/s²`]); }
+  TM1.schaalLegende(ctx, h, balken);
+}
+
+const G1 = setup(document.getElementById('g1')), G2 = setup(document.getElementById('g2'));
+let F1, F2;
+function drawGraphs() {
+  const T = tEind(), v = snelheid(t), vm = B.vm * 1.15;
+  F1 = frame(G1, [0, T], [0, vm], 't [s]', '|v_P| [m/s]');
+  curve(G1.ctx, F1, 400, 0, T, u => u, u => { const q = snelheid(u); return Math.hypot(q.x, q.y); }, C.v, 2.2);
+  cursor(G1.ctx, F1, t); dot(G1.ctx, F1.X(t), F1.Y(Math.hypot(v.x, v.y)), C.v);
+  F2 = frame(G2, [0, T], [-vm, vm], 't [s]', 'v [m/s]');
+  curve(G2.ctx, F2, 400, 0, T, u => u, u => snelheid(u).x, C.vx, 2.2);
+  curve(G2.ctx, F2, 400, 0, T, u => u, u => snelheid(u).y, C.vy, 2.2);
+  cursor(G2.ctx, F2, t); dot(G2.ctx, F2.X(t), F2.Y(v.x), C.vx); dot(G2.ctx, F2.X(t), F2.Y(v.y), C.vy);
+  document.getElementById('g1sub').textContent = `maximum |v_P| = ${B.vm.toFixed(2)} m/s`;
+}
+
+function drawReadout() {
+  const r = positie(t), v = snelheid(t), a = versnelling(t);
+  const cellen = [
+    ['t', `${fmt(t, 3)} s`],
+    ['<span class="v">r</span><sub>P</sub> = (x, y)', `(${fmt(r.x)}, ${fmt(r.y)}) m`, true],
+    ['<span class="v">v</span><sub>P</sub> = (v<sub>x</sub>, v<sub>y</sub>)', `(${fmt(v.x)}, ${fmt(v.y)}) m/s`, true],
+    ['|<span class="v">v</span><sub>P</sub>|', `${fmt(Math.hypot(v.x, v.y))} m/s`]
+  ];
+  if (show.a) cellen.push(['<span class="v">a</span><sub>P</sub> = (a<sub>x</sub>, a<sub>y</sub>)', `(${fmt(a.x)}, ${fmt(a.y)}) m/s²`, true]);
+  TM1.uitlezing(document.getElementById('readout'), cellen);   // PAS AAN: extra grootheden
+}
+
+// ---------- bediening (meestal niet aan te passen) ----------
+const $ = id => document.getElementById(id), playBtn = $('play'), tsl = $('tslider');
+const wrapT = x => herhaal ? ((x % tEind()) + tEind()) % tEind() : Math.min(Math.max(x, 0), tEind());
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('tval').textContent = `${t.toFixed(2)} s`; $('spval').textContent = `${speed.toFixed(2)}×`;
+  tsl.value = Math.round(t / tEind() * 2000);
+  for (const k in P) { const el = $('val_' + k); if (el) el.textContent = P[k]; }
+}
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { t = 0; render(); };
+$('stepf').onclick = () => { setPlaying(false); t = wrapT(t + tEind() / 40); render(); };
+$('stepb').onclick = () => { setPlaying(false); t = wrapT(t - tEind() / 40); render(); };
+tsl.oninput = () => { setPlaying(false); t = tsl.value / 2000 * tEind(); render(); };
+$('speed').oninput = e => { speed = +e.target.value; syncLabels(); };
+for (const k in P) { const el = $('par_' + k); if (el) el.oninput = () => { P[k] = +el.value; B = bereik(); t = wrapT(t); render(); }; }
+for (const k in show) { const el = $('t_' + k); if (el) { el.checked = show[k]; el.onchange = () => { show[k] = el.checked; render(); }; } }
+const naarT = x => { t = x; setPlaying(false); render(); };
+TM1.scrub(G1, () => F1, naarT); TM1.scrub(G2, () => F2, naarT);
+TM1.bijGrootte([sc, G1, G2], render);
+TM1.lus(dt => {
+  t += dt * speed;
+  if (t >= tEind()) { if (herhaal) t = wrapT(t); else { t = tEind(); setPlaying(false); } }
+  render();
+}, () => playing);
+})();
+</script>
+</body>
+</html>

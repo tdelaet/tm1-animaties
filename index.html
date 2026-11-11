@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toegepaste Mechanica 1 – interactieve animaties</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gedeeld/tm1.css">
+<style>
+  .intro{max-width:760px;color:var(--muted);margin:4px 0 18px}
+  .bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:22px}
+  .bar input[type=search]{font:14px Inter,sans-serif;padding:8px 12px;border:1px solid var(--line);border-radius:8px;width:280px;background:#fff}
+  .bar label{font-size:14px;display:flex;align-items:center;gap:6px;cursor:pointer}
+  .progress{font-size:13.5px;color:var(--muted);margin-left:auto}
+  .progress b{color:var(--ink)}
+  .deel{margin:0 0 26px}
+  .deel h2{font:600 13px/1.2 Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .deel h2 span{color:var(--accent)}
+  .chapters{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .ch{padding:14px 16px}
+  .ch .nr{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+  .ch h3{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:18px;margin:2px 0 8px;line-height:1.25}
+  .ch ul{list-style:none;margin:0;padding:0}
+  .ch li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid var(--grid);font-size:14px}
+  .ch li:first-child{border-top:0}
+  .ch li .id{font:500 12.5px "JetBrains Mono",monospace;color:var(--muted);min-width:58px}
+  .ch li .t{flex:1}
+  .ch li.gepland .t{color:#8b929b}
+  .ch li a{text-decoration:none;font-weight:500}
+  .ch li a:hover{text-decoration:underline}
+  .ch li .op{font-size:12.5px;color:var(--muted);display:block}
+  .badge{font:500 11px Inter,sans-serif;padding:1px 7px;border-radius:10px;white-space:nowrap}
+  .badge.klaar{background:#e3f2e6;color:#2f7d3a}
+  .badge.bezig{background:#fff3db;color:#9a6200}
+  .leeg{font-size:13.5px;color:#8b929b;font-style:italic}
+  .geen{color:var(--muted);font-style:italic;margin:20px 0}
+  footer{color:var(--muted);font-size:12.5px;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Toegepaste Mechanica 1 — interactieve animaties</h1>
+    <span class="kicker">bij het handboek <i>Toegepaste Mechanica. Een vectorgebaseerde aanpak</i></span>
+  </header>
+  <p class="intro">Per hoofdstuk vind je hier de voorbeelden uit het handboek als interactieve animatie. Je ziet de beweging, de vectoren (positie, snelheid, versnelling, krachten) en grafieken van hoe ze in de tijd veranderen. De nummering volgt het handboek.</p>
+
+  <div class="bar">
+    <input type="search" id="zoek" placeholder="Zoek een voorbeeld, bv. schommel of 13.1" aria-label="Zoeken">
+    <label><input type="checkbox" id="enkelKlaar"> enkel beschikbare animaties</label>
+    <span class="progress" id="voortgang"></span>
+  </div>
+
+  <main id="lijst"></main>
+  <footer>De volgorde en titels volgen de inhoudstafel van het handboek (voordruk 2026).</footer>
+</div>
+
+<script src="catalogus.js"></script>
+<script>
+(() => {
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const lijst = document.getElementById('lijst'), zoek = document.getElementById('zoek'), enkel = document.getElementById('enkelKlaar');
+  try { enkel.checked = localStorage.getItem('tm1-enkelKlaar') === '1'; } catch (e) {}
+
+  let totaal = 0, klaar = 0;
+  TM1.catalogus.forEach(d => d.hoofdstukken.forEach(h => h.items.forEach(it => {
+    totaal++; if (it.status === 'klaar') klaar++;
+  })));
+  document.getElementById('voortgang').innerHTML = `<b>${klaar}</b> van ${totaal} voorbeelden en opgaven beschikbaar`;
+
+  function render() {
+    const q = zoek.value.trim().toLowerCase(), alleenKlaar = enkel.checked;
+    let html = '', iets = false;
+    for (const d of TM1.catalogus) {
+      let hs = '';
+      for (const h of d.hoofdstukken) {
+        const items = h.items.filter(it =>
+          (!alleenKlaar || it.status === 'klaar') &&
+          (!q || `${it.id} ${it.titel}`.toLowerCase().includes(q) || h.titel.toLowerCase().includes(q)));
+        const hfstMatch = !q || h.titel.toLowerCase().includes(q) || String(h.nr) === q;
+        if (!items.length && (alleenKlaar || !hfstMatch || (q && h.items.length))) continue;
+        const nKlaar = h.items.filter(i => i.status === 'klaar').length;
+        const lis = items.map(it => {
+          const st = it.status || 'gepland';
+          const pre = (it.soort === 'op' ? 'Op. ' : 'Vb. ') + it.id;
+          const titel = st === 'klaar'
+            ? `<a href="${esc(TM1.pad(h, it))}">${esc(it.titel)}</a>` : esc(it.titel);
+          const op = it.opmerking ? `<span class="op">${esc(it.opmerking)}</span>` : '';
+          const badge = st === 'klaar' ? '<span class="badge klaar">beschikbaar</span>'
+                      : st === 'bezig' ? '<span class="badge bezig">in de maak</span>' : '';
+          return `<li class="${st}"><span class="id">${pre}</span><span class="t">${titel}${op}</span>${badge}</li>`;
+        }).join('');
+        hs += `<section class="card ch"><div class="nr"><span>Hoofdstuk ${h.nr}</span>${h.items.length ? `<span>${nKlaar}/${h.items.length}</span>` : ''}</div>
+          <h3>${esc(h.titel)}</h3>${lis ? `<ul>${lis}</ul>` : '<div class="leeg">Geen uitgewerkte voorbeelden in dit hoofdstuk.</div>'}</section>`;
+      }
+      if (hs) { iets = true; html += `<section class="deel"><h2><span>Deel ${d.deel}</span> · ${esc(d.titel)}</h2><div class="chapters">${hs}</div></section>`; }
+    }
+    lijst.innerHTML = iets ? html : '<p class="geen">Geen voorbeelden gevonden.</p>';
+  }
+  zoek.addEventListener('input', render);
+  enkel.addEventListener('change', () => { try { localStorage.setItem('tm1-enkelKlaar', enkel.checked ? '1' : '0'); } catch (e) {} render(); });
+  render();
+})();
+</script>
+</body>
+</html>
