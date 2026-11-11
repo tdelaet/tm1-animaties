@@ -49,12 +49,12 @@
 
   <div class="bar">
     <input type="search" id="zoek" placeholder="Zoek een voorbeeld, bv. schommel of 13.1" aria-label="Zoeken">
-    <label><input type="checkbox" id="enkelKlaar"> enkel beschikbare animaties</label>
+    <label><input type="checkbox" id="enkelKlaar" checked> enkel beschikbare animaties</label>
     <span class="progress" id="voortgang"></span>
   </div>
 
   <main id="lijst"></main>
-  <footer>De volgorde en titels volgen de inhoudstafel van het handboek (voordruk 2026).</footer>
+  <footer>De volgorde en titels volgen de inhoudstafel van het handboek (2026).</footer>
 </div>
 
 <script src="catalogus.js"></script>
@@ -62,7 +62,9 @@
 (() => {
   const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const lijst = document.getElementById('lijst'), zoek = document.getElementById('zoek'), enkel = document.getElementById('enkelKlaar');
-  try { enkel.checked = localStorage.getItem('tm1-enkelKlaar') === '1'; } catch (e) {}
+  // standaard aangevinkt; een bezoeker die het uitzet, behoudt die keuze
+  enkel.checked = true;
+  try { if (localStorage.getItem('tm1-enkelKlaar') === '0') enkel.checked = false; } catch (e) {}
 
   let totaal = 0, klaar = 0;
   TM1.catalogus.forEach(d => d.hoofdstukken.forEach(h => h.items.forEach(it => {

@@ -351,7 +351,7 @@ const beta = ww => { const s = snelheden(V, ww, phi, true); return Math.abs(deg(
 function drawBeta() {
   let ym = 0; for (let i = 0; i <= 60; i++) ym = Math.max(ym, beta(i * 0.5));
   ym = Math.max(2, ym * 1.15);
-  F2 = frame(G2, [0, 30], [0, ym], 'windsnelheid w [m/s]', 'β [°]');
+  F2 = frame(G2, [0, 30], [0, ym], 'windsnelheid $w$ [m/s]', '$\\beta$ [°]');
   const ctx = G2.ctx;
   const toonBenadering = phi === 90;
   document.getElementById('lg_approx').style.visibility = toonBenadering ? 'visible' : 'hidden';

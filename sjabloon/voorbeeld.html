@@ -191,10 +191,10 @@ const G1 = setup(document.getElementById('g1')), G2 = setup(document.getElementB
 let F1, F2;
 function drawGraphs() {
   const T = tEind(), v = snelheid(t), vm = B.vm * 1.15;
-  F1 = frame(G1, [0, T], [0, vm], 't [s]', '|v_P| [m/s]');
+  F1 = frame(G1, [0, T], [0, vm], '$t$ [s]', '$|\\vec{v}_P|$ [m/s]');
   curve(G1.ctx, F1, 400, 0, T, u => u, u => { const q = snelheid(u); return Math.hypot(q.x, q.y); }, C.v, 2.2);
   cursor(G1.ctx, F1, t); dot(G1.ctx, F1.X(t), F1.Y(Math.hypot(v.x, v.y)), C.v);
-  F2 = frame(G2, [0, T], [-vm, vm], 't [s]', 'v [m/s]');
+  F2 = frame(G2, [0, T], [-vm, vm], '$t$ [s]', '$v_x$, $v_y$ [m/s]');
   curve(G2.ctx, F2, 400, 0, T, u => u, u => snelheid(u).x, C.vx, 2.2);
   curve(G2.ctx, F2, 400, 0, T, u => u, u => snelheid(u).y, C.vy, 2.2);
   cursor(G2.ctx, F2, t); dot(G2.ctx, F2.X(t), F2.Y(v.x), C.vx); dot(G2.ctx, F2.X(t), F2.Y(v.y), C.vy);

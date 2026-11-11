@@ -297,7 +297,7 @@ const G3 = setup(document.getElementById('g3'));
 let F1, F2, F3;
 function grafiek(G, yr, yl, f, kleur, waarde) {
   const T = Tp(), tt = t % (2 * T);
-  const F = frame(G, [0, 2 * T], yr, 't [s]', yl);
+  const F = frame(G, [0, 2 * T], yr, '$t$ [s]', yl);
   tLines(G.ctx, F, T, yr[0], yr[1]);
   curve(G.ctx, F, 400, 0, 2 * T, u => u, f, kleur, 2.2);
   TM1.cursor(G.ctx, F, tt);
@@ -306,9 +306,9 @@ function grafiek(G, yr, yl, f, kleur, waarde) {
 }
 function drawGraphs() {
   const A = amaxEst() * 1.15, st = state(t);
-  F1 = grafiek(G1, [-A, A], 'a_Pt [m/s²]', u => state(u).at, C.at, st.at);
-  F2 = grafiek(G2, [-0.05 * A, A], 'a_Pn [m/s²]', u => state(u).an, C.an, st.an);
-  F3 = grafiek(G3, [-0.05 * A, A], '|a_P| [m/s²]', u => state(u).amag, C.a, st.amag);
+  F1 = grafiek(G1, [-A, A], '$a_{Pt}$ [m/s²]', u => state(u).at, C.at, st.at);
+  F2 = grafiek(G2, [-0.05 * A, A], '$a_{Pn}$ [m/s²]', u => state(u).an, C.an, st.an);
+  F3 = grafiek(G3, [-0.05 * A, A], '$|\\vec{a}_P|$ [m/s²]', u => state(u).amag, C.a, st.amag);
 }
 
 // ---------- uitlezing ----------

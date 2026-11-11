@@ -82,6 +82,66 @@
     ctx.restore();
   }
 
+  /** Tekst met wiskunde in LaTeX-stijl, bv. '$|\\vec{v}_P|$ [m/s]' of '$a_{Pt}$ [m/s²]'.
+      Tussen $…$: cursieve serif, \vec{…} (pijl erboven), _x of _{…} (subscript), ^x of ^{…} (superscript),
+      en Griekse letters (\theta, \omega, \alpha, \beta, …). Buiten $…$: gewone tekst.
+      opt: size (px, standaard 12), color, align ('left' | 'center' | 'right'). Basislijn op y. */
+  const GRIEKS = { alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', Delta: 'Δ', theta: 'θ', omega: 'ω', Omega: 'Ω',
+    phi: 'φ', varphi: 'φ', rho: 'ρ', pi: 'π', mu: 'μ', tau: 'τ', psi: 'ψ', cdot: '·' };
+  function formule(ctx, src, x, y, opt = {}) {
+    const size = opt.size ?? 12, color = opt.color ?? css('--muted'), align = opt.align ?? 'left';
+    const serif = '"Source Serif 4", Georgia, serif', sans = 'Inter, sans-serif', ms = size + 2;
+    const runs = [];
+    String(src).split('$').forEach((seg, i) => {
+      if (!seg) return;
+      if (i % 2 === 0) { runs.push({ t: seg, f: `${size}px ${sans}`, dy: 0 }); return; }
+      let k = 0;
+      const groep = () => {
+        if (seg[k] === '{') {
+          let d = 1, j = k + 1;
+          while (j < seg.length && d) { if (seg[j] === '{') d++; else if (seg[j] === '}') d--; j++; }
+          const s = seg.slice(k + 1, j - 1); k = j; return s;
+        }
+        if (seg[k] === '\\') { const m = /^\\[a-zA-Z]+/.exec(seg.slice(k)); k += m[0].length; return m[0]; }
+        return seg[k++];
+      };
+      const sym = s => s.replace(/\\([a-zA-Z]+)/g, (m, n) => GRIEKS[n] ?? n);
+      const stuk = (s, niveau, vec) => {
+        const sz = niveau ? ms * 0.7 : ms, dy = niveau === 'sub' ? ms * 0.3 : niveau === 'sup' ? -ms * 0.42 : 0;
+        const tekst = sym(s);
+        if (vec) { runs.push({ t: tekst, f: `italic 600 ${sz}px ${serif}`, dy, vec: true, sz }); return; }
+        for (const ch of tekst) {
+          const cursief = /[A-Za-zͰ-Ͽ]/.test(ch);
+          runs.push({ t: ch, f: `${cursief ? 'italic ' : ''}500 ${sz}px ${serif}`, dy });
+        }
+      };
+      while (k < seg.length) {
+        const c = seg[k];
+        if (seg.startsWith('\\vec', k)) { k += 4; stuk(groep(), 0, true); continue; }
+        if (c === '_' || c === '^') { k++; stuk(groep(), c === '_' ? 'sub' : 'sup'); continue; }
+        if (c === '\\') { stuk(groep(), 0); continue; }
+        if (c === ' ') { k++; runs.push({ t: ' ', f: `${ms * 0.6}px ${serif}`, dy: 0 }); continue; }
+        stuk(c, 0); k++;
+      }
+    });
+    ctx.save(); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    let W = 0;
+    runs.forEach(r => { ctx.font = r.f; r.w = ctx.measureText(r.t).width + (r.vec ? 1 : 0); W += r.w; });
+    let cx = align === 'center' ? x - W / 2 : align === 'right' ? x - W : x;
+    ctx.fillStyle = color; ctx.strokeStyle = color;
+    runs.forEach(r => {
+      ctx.font = r.f; ctx.fillText(r.t, cx, y + r.dy);
+      if (r.vec) {
+        const ay = y + r.dy - r.sz * 0.82, x0 = cx + 1, x1 = cx + r.w + 1;
+        ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(x0, ay); ctx.lineTo(x1, ay);
+        ctx.moveTo(x1 - 3.5, ay - 2.3); ctx.lineTo(x1, ay); ctx.lineTo(x1 - 3.5, ay + 2.3); ctx.stroke();
+      }
+      cx += r.w;
+    });
+    ctx.restore();
+    return W;
+  }
+
   /** Label net voorbij de punt van een pijl. */
   function tipLabel(ctx, x0, y0, x1, y1, base, sub, color, vec = true) {
     const L = Math.hypot(x1 - x0, y1 - y0); if (L < 6) return;
@@ -121,9 +181,10 @@
       ctx.fillStyle = C.muted; ctx.fillText((Math.abs(y) < 1e-9 ? 0 : y).toFixed(dy).replace('-', '−'), m.l - 6, Y(y));
     }
     ctx.strokeStyle = '#b9bec5'; ctx.beginPath(); ctx.moveTo(m.l, m.t); ctx.lineTo(m.l, h - m.b); ctx.lineTo(w - m.r, h - m.b); ctx.stroke();
-    ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(xl, w - m.r, h - 2);
-    ctx.save(); ctx.translate(11, m.t + (h - m.t - m.b) / 2); ctx.rotate(-Math.PI / 2);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(yl, 0, 0); ctx.restore();
+    // asbijschriften: mogen wiskunde in LaTeX-stijl bevatten, zie formule()
+    formule(ctx, xl, w - m.r, h - 7, { align: 'right', color: C.muted });
+    ctx.save(); ctx.translate(15, m.t + (h - m.t - m.b) / 2); ctx.rotate(-Math.PI / 2);
+    formule(ctx, yl, 0, 0, { align: 'center', color: C.muted }); ctx.restore();
     return { X, Y, m, xr, yr };
   }
 
@@ -212,7 +273,7 @@
   }
 
   global.TM1 = Object.assign(global.TM1 || {}, {
-    kleuren, fmt, deg, rad, setup, arrow, label, tipLabel, niceStep, niceNum,
+    kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
     frame, curve, dot, cursor, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });
 })(window);

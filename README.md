@@ -49,6 +49,8 @@ grafieken, denkvragen).
 - **Vaste kleuren** (in `gedeeld/tm1.css`): positie groen, snelheid blauw, versnelling oranjerood
   (tangentieel oranje, normaal roze), componenten v<sub>x</sub> teal en v<sub>y</sub> paars, krachten bruin,
   momenten paars. Elke vector krijgt daarnaast een label, zodat kleur nooit de enige aanduiding is.
+- **Asbijschriften van grafieken** in LaTeX-stijl: wiskunde tussen `$…$`, bv. `'$|\\vec{v}_P|$ [m/s]'`
+  of `'$a_{Pt}$ [m/s²]'` (zie `TM1.formule` in `gedeeld/tm1.js`). In JavaScript-strings staat de backslash dubbel.
 - **Vectorschaal**: elke scène toont linksonder hoe lang 1 m/s of 1 m/s² is.
 - **Opgelegde beweging**: maak in de tekst duidelijk wanneer de beweging gegeven is (kinematica)
   en wanneer ze volgt uit krachten (dynamica).
