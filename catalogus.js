@@ -80,7 +80,7 @@ TM1.catalogus = [
       { id: '13.2', titel: 'Een vliegtuig landt met zijwind', status: 'klaar' },
       { id: '13.3', titel: 'Kind op een schommel (versnelling)', status: 'klaar',
         pad: 'h13-kinematica-puntmassa/vb13-3-kind-op-een-schommel.html', opmerking: 'bouwt verder op Vb. 13.1' },
-      { id: '13.4', titel: 'Versnellende auto' },
+      { id: '13.4', titel: 'Versnellende auto', status: 'klaar' },
       { id: '13.5', titel: 'Katapult slingert kei weg' },
       { id: '13.6', titel: 'Cirkelbeweging met constante grootte van de snelheid' },
       { id: '13.7', titel: 'Een rechtlijnige beweging' },
