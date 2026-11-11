@@ -9,6 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../gedeeld/tm1.css">
 <style>
+  /* hoogte van de scène volgt de breedte (vaste schaal tot l = 5 m), zodat er geen lege strook onder de figuur blijft */
+  .scene canvas{height:auto;aspect-ratio:25/15;max-height:500px}
+</style>
+<style>
   .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
   /* accolade onder een term, met naam eronder (zoals in het handboek) */
   .ub{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;line-height:1.5}
@@ -54,10 +58,6 @@
         <div class="slider">
           <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
           <input type="range" id="tslider" min="0" max="2000" value="0">
-        </div>
-        <div class="slider">
-          <div class="lab"><span>Afspeelsnelheid (vertraging)</span><b id="spval"></b></div>
-          <input type="range" id="speed" min="0.05" max="1" step="0.05" value="0.4">
         </div>
         <div class="slider">
           <div class="lab"><span>Lengte <span class="i">l</span></span><b id="lval"></b></div>
@@ -135,7 +135,7 @@
       </div>
       <div class="eq"><span class="i">a<sub>Pt</sub></span> = <span class="v">a</span><sub>P</sub> · <span class="v">e</span><sub>t</sub> = <span class="i">l</span> (−<span class="i">θ</span><sub>0</sub> (<span class="i">g</span>/<span class="i">l</span>) cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>)),&nbsp;&nbsp; <span class="v">e</span><sub>t</sub> = <span class="col"><span>cos <span class="i">θ</span></span><span>sin <span class="i">θ</span></span></span></div>
       <div class="eq"><span class="i">a<sub>Pn</sub></span> = ‖<span class="v">a</span><sub>P</sub> − <span class="i">a<sub>Pt</sub></span> <span class="v">e</span><sub>t</sub>‖ = <span class="i">l</span> (−<span class="i">θ</span><sub>0</sub> √(<span class="i">g</span>/<span class="i">l</span>) sin(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>))²,&nbsp;&nbsp; <span class="v">e</span><sub>n</sub> = <span class="col"><span>−sin <span class="i">θ</span></span><span>cos <span class="i">θ</span></span></span></div>
-      <p class="fn"><span class="i">a<sub>Pt</sub></span> = <span class="i">lα</span> ligt evenwijdig met <span class="v">v</span><sub>P</sub> en verandert de <em>grootte</em> van de snelheid; <span class="i">a<sub>Pn</sub></span> = <span class="i">lω</span>² staat loodrecht op <span class="v">v</span><sub>P</sub>, wijst naar het middelpunt van de cirkelbeweging en verandert de <em>richting</em> van de snelheid. Hier is <span class="v">e</span><sub>t</sub> = (cos <span class="i">θ</span>, sin <span class="i">θ</span>) gekozen in de zin van toenemende <span class="i">θ</span>; wanneer het kind naar links zwaait, wijst <span class="v">v</span><sub>P</sub> tegen <span class="v">e</span><sub>t</sub> in. De beweging is opgelegd (kinematica); getallen met <span class="i">g</span> = 9.81 m/s².</p>
+      <p class="fn"><span class="v">a</span><sub>Pt</sub> = <span class="i">lα</span> <span class="v">e</span><sub>t</sub> ligt evenwijdig met <span class="v">v</span><sub>P</sub> en verandert de <em>grootte</em> van de snelheid; <span class="v">a</span><sub>Pn</sub> = <span class="i">lω</span>² <span class="v">e</span><sub>n</sub> staat loodrecht op <span class="v">v</span><sub>P</sub>, wijst naar het middelpunt van de cirkelbeweging en verandert de <em>richting</em> van de snelheid. Hier is <span class="v">e</span><sub>t</sub> = (cos <span class="i">θ</span>, sin <span class="i">θ</span>) gekozen in de zin van toenemende <span class="i">θ</span>; wanneer het kind naar links zwaait, wijst <span class="v">v</span><sub>P</sub> tegen <span class="v">e</span><sub>t</sub> in. De beweging is opgelegd (kinematica); getallen met <span class="i">g</span> = 10 m/s², zoals in de cursus.</p>
     </div>
     <details class="card" open>
       <summary>Denkvragen bij de animatie</summary>
@@ -155,10 +155,12 @@
 <script src="../gedeeld/tm1.js"></script>
 <script>
 (() => {
-const g = 9.81;
+const g = 10;   // zoals in de cursus
 const { setup, arrow, label, tipLabel, niceNum, frame, curve, dot, fmt, deg } = TM1;
 const C = TM1.kleuren();
-let l = 3, th0 = 40 * Math.PI / 180, speed = 0.4, t = 0, playing = true;
+const TEMPO = 0.5;   // vaste afspeelsnelheid: de animatie loopt half zo snel als in werkelijkheid
+const LMAX = 5;      // grootste lengte van de schuifregelaar: bepaalt de vaste schaal van de figuur
+let l = 3, th0 = 40 * Math.PI / 180, t = 0, playing = true;
 const show = { a: true, v: false, at: true, an: true, e: false, strobe: false, r: false, traj: true };
 
 const Om = () => Math.sqrt(g / l);
@@ -186,7 +188,7 @@ function state(tt) {
 // ---------- scène ----------
 const sc = setup(document.getElementById('scene'));
 function geom() {
-  const s = Math.min(sc.w / (2.5 * l), sc.h / (1.42 * l));
+  const s = Math.min(sc.w / (2.5 * LMAX), sc.h / (1.42 * LMAX));
   return { s, ox: sc.w / 2, oy: Math.max(70, sc.h * 0.15) };
 }
 function drawScene() {
@@ -194,8 +196,8 @@ function drawScene() {
   const { s, ox, oy } = geom();
   const X = x => ox + x * s, Y = y => oy - y * s;
   const st = state(t);
-  const kv = 0.5 * l / vmax();               // m per (m/s)
-  const ka = 0.5 * l / amaxEst();            // m per (m/s²)
+  const kv = 0.3;   // m per (m/s), vast: vectoren blijven vergelijkbaar als l of θ0 verandert
+  const ka = 0.2;   // m per (m/s²), vast
   const R = l * s;
 
   // ophanging
@@ -304,8 +306,8 @@ function drawScene() {
 
   // vectorschaal
   const bars = [];
-  if (show.v) { const q = niceNum(vmax() / 2); bars.push([q * kv * s, C.v, `${q} m/s`]); }
-  if (show.a || show.at || show.an) { const q = niceNum(amaxEst() / 2); bars.push([q * ka * s, C.a, `${q} m/s²`]); }
+  if (show.v) bars.push([2 * kv * s, C.v, "2 m/s"]);   // vaste legende, net als de vaste vectorschaal
+  if (show.a || show.at || show.an) bars.push([5 * ka * s, C.a, "5 m/s²"]);
   TM1.schaalLegende(ctx, h, bars);
 }
 
@@ -341,7 +343,11 @@ function drawReadout() {
   const s = state(t);
   const va = s.vx * s.ax + s.vy * s.ay;
   const turning = s.speed < 1e-3 * vmax() + 1e-9;
-  const tr = turning ? '|v| = 0: keert om' : (Math.abs(va) < 1e-6 ? 'v·a = 0: |v| maximaal' : (va > 0 ? 'v·a > 0: |v| neemt toe' : 'v·a < 0: |v| neemt af'));
+  // stelling 13.6, vectorieel geschreven
+  const V = '<span class="v">v</span><sub>P</sub>', A = '<span class="v">a</span><sub>P</sub>', NV = `‖${V}‖`;
+  const tr = turning ? `${NV} = 0: keert om`
+    : Math.abs(va) < 1e-6 ? `${V}·${A} = 0: ${NV} maximaal`
+    : va > 0 ? `${V}·${A} &gt; 0: ${NV} neemt toe` : `${V}·${A} &lt; 0: ${NV} neemt af`;
   TM1.uitlezing(ro, [
     ['t', `${fmt(t % (2 * Tp()), 3)} s`],
     ['θ', `${fmt(deg(s.th), 1)}° (${fmt(s.th, 3)} rad)`, true],
@@ -350,8 +356,8 @@ function drawReadout() {
     ['<span class="v">a</span><sub>P</sub> = (a<sub>x</sub>, a<sub>y</sub>)', `(${fmt(s.ax, 3)}, ${fmt(s.ay, 3)}) m/s²`, true],
     ['a<sub>Pt</sub> = lα', `${fmt(s.at, 3)} m/s²`],
     ['a<sub>Pn</sub> = lω²', `${fmt(s.an, 3)} m/s²`],
-    ['|<span class="v">a</span><sub>P</sub>|', `${fmt(s.amag, 3)} m/s²`],
-    ['|<span class="v">v</span><sub>P</sub>|', `${fmt(s.speed, 3)} m/s`],
+    ['‖<span class="v">a</span><sub>P</sub>‖', `${fmt(s.amag, 3)} m/s²`],
+    ['‖<span class="v">v</span><sub>P</sub>‖', `${fmt(s.speed, 3)} m/s`],
     ['stelling 13.6', tr, true]
   ]);
 }
@@ -363,7 +369,6 @@ function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '�
 function syncLabels() {
   $('lval').textContent = `${l.toFixed(1)} m`;
   $('aval').textContent = `${deg(th0).toFixed(0)}° (${th0.toFixed(3)} rad)`;
-  $('spval').textContent = `${speed.toFixed(2)}×`;
   const T = Tp();
   $('tval').textContent = `${(t % (2 * T)).toFixed(2)} s`;
   tsl.value = Math.round((t % (2 * T)) / (2 * T) * 2000);
@@ -375,7 +380,6 @@ $('reset').onclick = () => { t = 0; render(); };
 $('stepf').onclick = () => { setPlaying(false); t += Tp() / 40; t %= 2 * Tp(); render(); };
 $('stepb').onclick = () => { setPlaying(false); t -= Tp() / 40; t = ((t % (2 * Tp())) + 2 * Tp()) % (2 * Tp()); render(); };
 tsl.oninput = () => { setPlaying(false); t = tsl.value / 2000 * 2 * Tp(); render(); };
-$('speed').oninput = e => { speed = +e.target.value; syncLabels(); };
 $('len').oninput = e => { const ph = t / Tp(); l = +e.target.value; t = ph * Tp(); render(); };
 $('amp').oninput = e => { th0 = +e.target.value * Math.PI / 180; render(); };
 for (const k of Object.keys(show)) {
@@ -395,7 +399,7 @@ TM1.scrub(G2, () => F2, naarT);
 TM1.scrub(G3, () => F3, naarT);
 
 TM1.bijGrootte([sc, G1, G2, G3], render);
-TM1.lus(dt => { t = (t + dt * speed) % (2 * Tp()); render(); }, () => playing);
+TM1.lus(dt => { t = (t + dt * TEMPO) % (2 * Tp()); render(); }, () => playing);
 })();
 </script>
 </body>

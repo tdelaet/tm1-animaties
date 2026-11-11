@@ -8,6 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* hoogte van de scène volgt de breedte (vaste schaal tot l = 5 m), zodat er geen lege strook onder de figuur blijft */
+  .scene canvas{height:auto;aspect-ratio:25/15;max-height:500px}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -36,10 +40,6 @@
         <div class="slider">
           <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
           <input type="range" id="tslider" min="0" max="2000" value="0">
-        </div>
-        <div class="slider">
-          <div class="lab"><span>Afspeelsnelheid (vertraging)</span><b id="spval"></b></div>
-          <input type="range" id="speed" min="0.05" max="1" step="0.05" value="0.5">
         </div>
         <div class="slider">
           <div class="lab"><span>Lengte <span class="i">l</span></span><b id="lval"></b></div>
@@ -100,7 +100,7 @@
       <div class="eq"><span class="i">θ</span>(<span class="i">t</span>) = <span class="i">θ</span><sub>0</sub> cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>),&nbsp;&nbsp; <span class="i">ω</span>(<span class="i">t</span>) = d<span class="i">θ</span>/d<span class="i">t</span> = −<span class="i">θ</span><sub>0</sub>√(<span class="i">g</span>/<span class="i">l</span>) sin(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>)</div>
       <div class="eq"><span class="v">r</span><sub>P</sub>(<span class="i">t</span>) = <span class="col"><span><span class="i">l</span> sin <span class="i">θ</span>(<span class="i">t</span>)</span><span>−<span class="i">l</span> cos <span class="i">θ</span>(<span class="i">t</span>)</span></span></div>
       <div class="eq"><span class="v">v</span><sub>P</sub>(<span class="i">t</span>) = <span class="i">l ω</span>(<span class="i">t</span>) <span class="col"><span>cos <span class="i">θ</span>(<span class="i">t</span>)</span><span>sin <span class="i">θ</span>(<span class="i">t</span>)</span></span>&nbsp; ⊥ <span class="v">r</span><sub>P</sub></div>
-      <p class="fn">De beweging θ(t) is hier opgelegd: we beschrijven ze enkel (kinematica). De uitdrukking voor θ(t) is de oplossing voor kleine uitwijkingen; bij grote θ<sub>0</sub> wijkt een echte schommel daar wat van af. Dat volgt pas uit de dynamica. Getallen met <span class="i">g</span> = 9.81 m/s².</p>
+      <p class="fn">De beweging θ(t) is hier opgelegd: we beschrijven ze enkel (kinematica). De uitdrukking voor θ(t) is de oplossing voor kleine uitwijkingen; bij grote θ<sub>0</sub> wijkt een echte schommel daar wat van af. Dat volgt pas uit de dynamica. Getallen met <span class="i">g</span> = 10 m/s², zoals in de cursus.</p>
     </div>
     <details class="card" open>
       <summary>Denkvragen bij de animatie</summary>
@@ -118,10 +118,12 @@
 <script src="../gedeeld/tm1.js"></script>
 <script>
 (() => {
-const g = 9.81;
+const g = 10;   // zoals in de cursus
 const { setup, arrow, label, tipLabel, niceStep, niceNum, frame, curve, dot, fmt, deg } = TM1;
 const C = TM1.kleuren();
-let l = 3, th0 = 40 * Math.PI / 180, speed = 0.5, t = 0, playing = true;
+const TEMPO = 0.5;   // vaste afspeelsnelheid: de animatie loopt half zo snel als in werkelijkheid
+const LMAX = 5;      // grootste lengte van de schuifregelaar: bepaalt de vaste schaal van de figuur
+let l = 3, th0 = 40 * Math.PI / 180, t = 0, playing = true;
 const show = { v: true, comp: false, r: true, strobe: false, axes: true, traj: true };
 
 const Om = () => Math.sqrt(g / l);
@@ -141,7 +143,7 @@ function state(tt) {
 // ---------- scene ----------
 const sc = setup(document.getElementById('scene'));
 function geom() {
-  const s = Math.min(sc.w / (2.5 * l), sc.h / (1.42 * l));
+  const s = Math.min(sc.w / (2.5 * LMAX), sc.h / (1.42 * LMAX));
   return { s, ox: sc.w / 2, oy: Math.max(70, sc.h * 0.15) };
 }
 function drawScene() {
@@ -149,7 +151,7 @@ function drawScene() {
   const { s, ox, oy } = geom();
   const X = x => ox + x * s, Y = y => oy - y * s;
   const st = state(t);
-  const kv = 0.5 * l / vmax();               // m per (m/s)
+  const kv = 0.3;   // m per (m/s), vast: vectoren blijven vergelijkbaar als l of θ0 verandert
   const R = l * s;
 
   // support
@@ -253,7 +255,7 @@ function drawScene() {
 
   // vectorschaal
   const bars = [];
-  if (show.v) { const q = niceNum(vmax() / 2); bars.push([q * kv * s, C.v, `${q} m/s`]); }
+  if (show.v) bars.push([2 * kv * s, C.v, "2 m/s"]);   // vaste legende, net als de vaste vectorschaal
   TM1.schaalLegende(ctx, h, bars);
 }
 
@@ -298,7 +300,7 @@ function drawGraphs() {
     const dir = Math.sign(st.w), x0 = F3.X(deg(st.th)), y0 = F3.Y(st.speed) - 14;
     arrow(G3.ctx, x0 - dir * 10, y0, x0 + dir * 12, y0, C.ink, { w: 1.4, head: 7 });
   }
-  document.getElementById('g1sub').innerHTML = `Periode van <span class="i">θ</span>: <span class="i">T</span> = 2π√(<span class="i">l</span>/<span class="i">g</span>) = ${T.toFixed(2)} s; maximum |<span class="v">v</span><sub>P</sub>| = <span class="i">l</span>·<span class="i">θ</span><sub>0</sub>·√(<span class="i">g</span>/<span class="i">l</span>) = ${vm.toFixed(2)} m/s`;
+  document.getElementById('g1sub').innerHTML = `Periode van <span class="i">θ</span>: <span class="i">T</span> = 2π√(<span class="i">l</span>/<span class="i">g</span>) = ${T.toFixed(2)} s; maximum ‖<span class="v">v</span><sub>P</sub>‖ = <span class="i">l</span>·<span class="i">θ</span><sub>0</sub>·√(<span class="i">g</span>/<span class="i">l</span>) = ${vm.toFixed(2)} m/s`;
 }
 
 // ---------- readout ----------
@@ -308,14 +310,15 @@ function drawReadout() {
   const s = state(t);
   const rv = s.x * s.vx + s.y * s.vy;
   const turning = s.speed < 1e-3 * vmax() + 1e-9;
-  const mot = turning ? 'omkeerpunt (|v| = 0)' : (s.vy > 1e-9 ? 'opwaarts (v_y > 0)' : (s.vy < -1e-9 ? 'neerwaarts (v_y < 0)' : 'onderste stand'));
+  const NV = '‖<span class="v">v</span><sub>P</sub>‖';
+  const mot = turning ? `omkeerpunt (${NV} = 0)` : (s.vy > 1e-9 ? 'opwaarts (v<sub>y</sub> &gt; 0)' : (s.vy < -1e-9 ? 'neerwaarts (v<sub>y</sub> &lt; 0)' : 'onderste stand'));
   let html = '';
   html += cell('t', `${fmt(t % (2 * Tp()), 3)} s`);
   html += cell('θ', `${fmt(deg(s.th), 1)}° (${fmt(s.th, 3)} rad)`, true);
   html += cell('ω = dθ/dt', `${fmt(s.w, 3)} rad/s`);
   html += cell('<span class="v">r</span><sub>P</sub> = (x, y)', `(${fmt(s.x, 3)}, ${fmt(s.y, 3)}) m`, true);
   html += cell('<span class="v">v</span><sub>P</sub> = (v<sub>x</sub>, v<sub>y</sub>)', `(${fmt(s.vx, 3)}, ${fmt(s.vy, 3)}) m/s`, true);
-  html += cell('|<span class="v">v</span><sub>P</sub>| = l|ω|', `${fmt(s.speed, 3)} m/s`);
+  html += cell('‖<span class="v">v</span><sub>P</sub>‖ = l|ω|', `${fmt(s.speed, 3)} m/s`);
   html += cell('<span class="v">r</span><sub>P</sub>·<span class="v">v</span><sub>P</sub>', `${fmt(rv, 3)} m²/s ⇒ ⊥`);
   html += cell('beweging', mot, true);
   ro.innerHTML = html;
@@ -328,7 +331,6 @@ function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '�
 function syncLabels() {
   $('lval').textContent = `${l.toFixed(1)} m`;
   $('aval').textContent = `${deg(th0).toFixed(0)}° (${th0.toFixed(3)} rad)`;
-  $('spval').textContent = `${speed.toFixed(2)}×`;
   const T = Tp();
   $('tval').textContent = `${(t % (2 * T)).toFixed(2)} s`;
   tsl.value = Math.round((t % (2 * T)) / (2 * T) * 2000);
@@ -343,7 +345,6 @@ $('reset').onclick = () => { t = 0; render(); };
 $('stepf').onclick = () => { setPlaying(false); t += Tp() / 40; t %= 2 * Tp(); render(); };
 $('stepb').onclick = () => { setPlaying(false); t -= Tp() / 40; t = ((t % (2 * Tp())) + 2 * Tp()) % (2 * Tp()); render(); };
 tsl.oninput = () => { setPlaying(false); t = tsl.value / 2000 * 2 * Tp(); render(); };
-$('speed').oninput = e => { speed = +e.target.value; syncLabels(); };
 $('len').oninput = e => { const ph = t / Tp(); l = +e.target.value; t = ph * Tp(); render(); };
 $('amp').oninput = e => { th0 = +e.target.value * Math.PI / 180; render(); };
 for (const k of Object.keys(show)) {
@@ -374,7 +375,7 @@ let last = null;
 function loop(ts) {
   if (last !== null && playing) {
     const dt = Math.min((ts - last) / 1000, 0.05);
-    t = (t + dt * speed) % (2 * Tp());
+    t = (t + dt * TEMPO) % (2 * Tp());
     render();
   }
   last = ts;
