@@ -87,5 +87,10 @@ details li{margin:0 0 8px}
 .i{font-style:italic}
 /* vectoren in formules in dezelfde kleur als in de animatie: <span class="k-r"><span class="v">r</span><sub>P</sub></span> */
 .k-r{color:var(--cr)} .k-v{color:var(--cv)} .k-a{color:var(--ca)} .k-at{color:var(--cat)} .k-an{color:var(--can)}
-.k-e{color:#4f5862} .k-F{color:var(--cf)} .k-M{color:var(--cm)}
+.k-e{color:#4f5862} .k-F{color:var(--cf)} .k-M{color:var(--cm)} .k-vx{color:var(--cvx)} .k-vy{color:var(--cvy)}
+/* formules in TeX (KaTeX): brede formules scrollen horizontaal in plaats van de pagina te verbreden */
+.tex{margin:12px 0;overflow-x:auto;overflow-y:hidden;color:var(--ink)}
+.tex .katex-display{margin:0;text-align:left}
+.tex .katex-display>.katex{text-align:left}
+.tex.inline{display:inline;margin:0;overflow:visible}
 .col{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;border-left:1.5px solid var(--ink);border-right:1.5px solid var(--ink);border-radius:9px;padding:1px 8px;line-height:1.35}

@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <link rel="stylesheet" href="../gedeeld/tm1.css">
 </head>
 <body>
@@ -93,9 +95,10 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <!-- PAS AAN -->
-      <div class="eq"><span class="v">r</span><sub>P</sub>(<span class="i">t</span>) = <span class="col"><span><span class="i">a</span> cos <span class="i">t</span></span><span><span class="i">b</span> sin <span class="i">t</span></span></span></div>
-      <div class="eq"><span class="v">v</span><sub>P</sub>(<span class="i">t</span>) = d<span class="v">r</span><sub>P</sub>/d<span class="i">t</span> = <span class="col"><span>−<span class="i">a</span> sin <span class="i">t</span></span><span><span class="i">b</span> cos <span class="i">t</span></span></span></div>
+      <!-- PAS AAN: formules in TeX (KaTeX). Kleurmacro's: \kr \kv \ka \kat \kan \ke; accolade in kleur: \ubv{inhoud}{naam}.
+           Gebruik &amp; in plaats van & (bv. in aligned). -->
+      <div class="tex">\kr{\vec r_P}(t) = \begin{Bmatrix} a\cos t \\ b\sin t \end{Bmatrix}</div>
+      <div class="tex">\kv{\vec v_P}(t) = \frac{\mathrm{d}\kr{\vec r_P}}{\mathrm{d}t} = \begin{Bmatrix} -a\sin t \\ b\cos t \end{Bmatrix}</div>
       <p class="fn">PAS AAN: korte opmerking over aannames of vereenvoudigingen.</p>
     </div>
     <details class="card" open>

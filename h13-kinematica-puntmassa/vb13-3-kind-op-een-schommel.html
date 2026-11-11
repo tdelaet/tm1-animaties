@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <link rel="stylesheet" href="../gedeeld/tm1.css">
 <style>
   /* hoogte van de scène volgt de breedte (vaste schaal tot l = 5 m), zodat er geen lege strook onder de figuur blijft */
@@ -14,20 +16,6 @@
 </style>
 <style>
   .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
-  /* accolade onder een term, met naam eronder (zoals in het handboek) */
-  .ub{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;line-height:1.5}
-  .ub>.ubk{align-self:stretch;height:7px;border:1.6px solid currentColor;border-top:0;border-radius:0 0 8px 8px;margin-top:1px}
-  .ub>.ubl{font-size:.72em;line-height:1.3;font-style:italic}
-  /* kleuren zoals de vectoren in de animatie: tangentieel oranje, normaal roze, eenheidsvectoren grijs */
-  .ub.t{color:var(--cat)} .ub.n{color:var(--can)} .ub.e{color:#4f5862}
-  .ub>.inh{color:var(--ink)}
-  /* formuleregel met accolades: alle termen op dezelfde hoogte, accolades op één lijn */
-  .rij{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:.35em;margin:10px 0;line-height:1.4}
-  /* gewone blokken met vaste regelhoogte (geen flex, anders werken <sub> en de vectorpijl niet) */
-  .rij>.m,.rij .inh{display:block;line-height:1.9em;white-space:nowrap}
-  .rij.hoog>.m,.rij.hoog .inh{line-height:3.2em}
-  .rij .ubl{padding-top:.45em;white-space:nowrap}
-  .rij .spook{visibility:hidden}
 </style>
 </head>
 <body>
@@ -118,23 +106,10 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="eq"><span class="i">θ</span>(<span class="i">t</span>) = <span class="i">θ</span><sub>0</sub> cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>),&nbsp; <span class="i">ω</span> = d<span class="i">θ</span>/d<span class="i">t</span>,&nbsp; <span class="i">α</span> = d²<span class="i">θ</span>/d<span class="i">t</span>² = −<span class="i">θ</span><sub>0</sub> (<span class="i">g</span>/<span class="i">l</span>) cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>)</div>
-      <div class="rij">
-        <span class="m"><span class="k-a"><span class="v">a</span><sub>P</sub></span>(<span class="i">t</span>)&nbsp;=</span>
-        <span class="ub n"><span class="inh"><span class="i">a<sub>Pn</sub></span>&nbsp;<span class="k-e"><span class="v">e</span><sub>n</sub></span></span><span class="ubk"></span><span class="ubl"><span class="k-an"><span class="v">a</span><sub>Pn</sub></span></span></span>
-        <span class="m">+</span>
-        <span class="ub t"><span class="inh"><span class="i">a<sub>Pt</sub></span>&nbsp;<span class="k-e"><span class="v">e</span><sub>t</sub></span></span><span class="ubk"></span><span class="ubl"><span class="k-at"><span class="v">a</span><sub>Pt</sub></span></span></span>
-      </div>
-      <div class="rij hoog">
-        <span class="m"><span class="spook"><span class="k-a"><span class="v">a</span><sub>P</sub></span>(<span class="i">t</span>)&nbsp;</span>=</span>
-        <span class="ub n"><span class="inh"><span class="i">l ω</span>²(<span class="i">t</span>)</span><span class="ubk"></span><span class="ubl">a<sub>Pn</sub></span></span>
-        <span class="ub e"><span class="inh"><span class="col"><span>−sin <span class="i">θ</span>(<span class="i">t</span>)</span><span>cos <span class="i">θ</span>(<span class="i">t</span>)</span></span></span><span class="ubk"></span><span class="ubl"><span class="k-e"><span class="v">e</span><sub>n</sub></span></span></span>
-        <span class="m">+</span>
-        <span class="ub t"><span class="inh"><span class="i">l α</span>(<span class="i">t</span>)</span><span class="ubk"></span><span class="ubl">a<sub>Pt</sub></span></span>
-        <span class="ub e"><span class="inh"><span class="col"><span>cos <span class="i">θ</span>(<span class="i">t</span>)</span><span>sin <span class="i">θ</span>(<span class="i">t</span>)</span></span></span><span class="ubk"></span><span class="ubl"><span class="k-e"><span class="v">e</span><sub>t</sub></span></span></span>
-      </div>
-      <div class="eq"><span class="i">a<sub>Pt</sub></span> = <span class="k-a"><span class="v">a</span><sub>P</sub></span> · <span class="k-e"><span class="v">e</span><sub>t</sub></span> = <span class="i">l</span> (−<span class="i">θ</span><sub>0</sub> (<span class="i">g</span>/<span class="i">l</span>) cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>)),&nbsp;&nbsp; <span class="k-e"><span class="v">e</span><sub>t</sub></span> = <span class="col"><span>cos <span class="i">θ</span></span><span>sin <span class="i">θ</span></span></span></div>
-      <div class="eq"><span class="i">a<sub>Pn</sub></span> = ‖<span class="k-a"><span class="v">a</span><sub>P</sub></span> − <span class="i">a<sub>Pt</sub></span> <span class="k-e"><span class="v">e</span><sub>t</sub></span>‖ = <span class="i">l</span> (−<span class="i">θ</span><sub>0</sub> √(<span class="i">g</span>/<span class="i">l</span>) sin(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>))²,&nbsp;&nbsp; <span class="k-e"><span class="v">e</span><sub>n</sub></span> = <span class="col"><span>−sin <span class="i">θ</span></span><span>cos <span class="i">θ</span></span></span></div>
+      <div class="tex">\theta(t) = \theta_0\cos\left(\sqrt{\frac{g}{l}}\,t\right), \qquad \omega = \frac{\mathrm{d}\theta}{\mathrm{d}t}, \qquad \alpha = \frac{\mathrm{d}^2\theta}{\mathrm{d}t^2} = -\theta_0\,\frac{g}{l}\cos\left(\sqrt{\frac{g}{l}}\,t\right)</div>
+      <div class="tex">\begin{aligned} \ka{\vec a_P}(t) &amp;= \uban{\kan{a_{Pn}}\,\ke{\vec e_n}}{\kan{\vec a_{Pn}}} + \ubat{\kat{a_{Pt}}\,\ke{\vec e_t}}{\kat{\vec a_{Pt}}} \\[6pt] &amp;= \uban{l\,\omega^2(t)}{\kan{a_{Pn}}}\,\ube{\begin{Bmatrix}-\sin\theta(t)\\ \cos\theta(t)\end{Bmatrix}}{\ke{\vec e_n}} + \ubat{l\,\alpha(t)}{\kat{a_{Pt}}}\,\ube{\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}}{\ke{\vec e_t}} \end{aligned}</div>
+      <div class="tex">\kat{a_{Pt}} = \ka{\vec a_P}\cdot\ke{\vec e_t} = l\left(-\theta_0\left(\sqrt{\frac{g}{l}}\right)^{2}\cos\left(\sqrt{\frac{g}{l}}\,t\right)\right), \qquad \ke{\vec e_t} = \begin{Bmatrix}\cos\theta\\ \sin\theta\end{Bmatrix}</div>
+      <div class="tex">\kan{a_{Pn}} = \left\|\ka{\vec a_P} - \kat{a_{Pt}}\,\ke{\vec e_t}\right\| = l\left(-\theta_0\sqrt{\frac{g}{l}}\,\sin\left(\sqrt{\frac{g}{l}}\,t\right)\right)^{2}, \qquad \ke{\vec e_n} = \begin{Bmatrix}-\sin\theta\\ \cos\theta\end{Bmatrix}</div>
       <p class="fn"><span class="k-at"><span class="v">a</span><sub>Pt</sub></span> = <span class="i">lα</span> <span class="k-e"><span class="v">e</span><sub>t</sub></span> ligt evenwijdig met <span class="k-v"><span class="v">v</span><sub>P</sub></span> en verandert de <em>grootte</em> van de snelheid; <span class="k-an"><span class="v">a</span><sub>Pn</sub></span> = <span class="i">lω</span>² <span class="k-e"><span class="v">e</span><sub>n</sub></span> staat loodrecht op <span class="k-v"><span class="v">v</span><sub>P</sub></span>, wijst naar het middelpunt van de cirkelbeweging en verandert de <em>richting</em> van de snelheid. Hier is <span class="k-e"><span class="v">e</span><sub>t</sub></span> = (cos <span class="i">θ</span>, sin <span class="i">θ</span>) gekozen in de zin van toenemende <span class="i">θ</span>; wanneer het kind naar links zwaait, wijst <span class="k-v"><span class="v">v</span><sub>P</sub></span> tegen <span class="k-e"><span class="v">e</span><sub>t</sub></span> in. De beweging is opgelegd (kinematica); getallen met <span class="i">g</span> = 10 m/s², zoals in de cursus.</p>
     </div>
     <details class="card" open>
@@ -344,7 +319,7 @@ function drawReadout() {
   const va = s.vx * s.ax + s.vy * s.ay;
   const turning = s.speed < 1e-3 * vmax() + 1e-9;
   // stelling 13.6, vectorieel geschreven
-  const V = '<span class="v">v</span><sub>P</sub>', A = '<span class="v">a</span><sub>P</sub>', NV = `‖${V}‖`;
+  const V = '<span class="k-v"><span class="v">v</span><sub>P</sub></span>', A = '<span class="k-a"><span class="v">a</span><sub>P</sub></span>', NV = `‖${V}‖`;
   const tr = turning ? `${NV} = 0: keert om`
     : Math.abs(va) < 1e-6 ? `${V}·${A} = 0: ${NV} maximaal`
     : va > 0 ? `${V}·${A} &gt; 0: ${NV} neemt toe` : `${V}·${A} &lt; 0: ${NV} neemt af`;
@@ -353,11 +328,11 @@ function drawReadout() {
     ['θ', `${fmt(deg(s.th), 1)}° (${fmt(s.th, 3)} rad)`, true],
     ['ω = dθ/dt', `${fmt(s.w, 3)} rad/s`],
     ['α = d²θ/dt²', `${fmt(s.al, 3)} rad/s²`],
-    ['<span class="v">a</span><sub>P</sub> = (a<sub>x</sub>, a<sub>y</sub>)', `(${fmt(s.ax, 3)}, ${fmt(s.ay, 3)}) m/s²`, true],
-    ['a<sub>Pt</sub> = lα', `${fmt(s.at, 3)} m/s²`],
-    ['a<sub>Pn</sub> = lω²', `${fmt(s.an, 3)} m/s²`],
-    ['‖<span class="v">a</span><sub>P</sub>‖', `${fmt(s.amag, 3)} m/s²`],
-    ['‖<span class="v">v</span><sub>P</sub>‖', `${fmt(s.speed, 3)} m/s`],
+    ['<span class="k-a"><span class="v">a</span><sub>P</sub></span> = (a<sub>x</sub>, a<sub>y</sub>)', `(${fmt(s.ax, 3)}, ${fmt(s.ay, 3)}) m/s²`, true],
+    ['<span class="i k-at">a<sub>Pt</sub></span> = lα', `${fmt(s.at, 3)} m/s²`],
+    ['<span class="i k-an">a<sub>Pn</sub></span> = lω²', `${fmt(s.an, 3)} m/s²`],
+    ['‖<span class="k-a"><span class="v">a</span><sub>P</sub></span>‖', `${fmt(s.amag, 3)} m/s²`],
+    ['‖<span class="k-v"><span class="v">v</span><sub>P</sub></span>‖', `${fmt(s.speed, 3)} m/s`],
     ['stelling 13.6', tr, true]
   ]);
 }

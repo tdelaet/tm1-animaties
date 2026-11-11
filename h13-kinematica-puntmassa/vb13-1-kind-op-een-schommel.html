@@ -7,20 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <link rel="stylesheet" href="../gedeeld/tm1.css">
 <style>
   /* hoogte van de scène volgt de breedte (vaste schaal tot l = 5 m), zodat er geen lege strook onder de figuur blijft */
   .scene canvas{height:auto;aspect-ratio:25/15;max-height:500px}
-  /* accolade onder een term, met naam eronder (zoals in het handboek; zelfde opmaak als Vb. 13.3) */
-  .ub{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;line-height:1.5}
-  .ub>.ubk{align-self:stretch;height:7px;border:1.6px solid currentColor;border-top:0;border-radius:0 0 8px 8px;margin-top:1px}
-  .ub>.ubl{font-size:.72em;line-height:1.3;font-style:italic}
-  .ub.vel{color:var(--cv)} .ub.e{color:#4f5862}
-  .ub>.inh{color:var(--ink)}
-  .rij{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:.35em;margin:10px 0;line-height:1.4}
-  .rij>.m,.rij .inh{display:block;line-height:1.9em;white-space:nowrap}
-  .rij.hoog>.m,.rij.hoog .inh{line-height:3.2em}
-  .rij .ubl{padding-top:.45em;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -107,14 +99,9 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="eq"><span class="i">θ</span>(<span class="i">t</span>) = <span class="i">θ</span><sub>0</sub> cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>),&nbsp;&nbsp; <span class="i">ω</span>(<span class="i">t</span>) = d<span class="i">θ</span>/d<span class="i">t</span> = −<span class="i">θ</span><sub>0</sub>√(<span class="i">g</span>/<span class="i">l</span>) sin(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>)</div>
-      <div class="eq"><span class="k-r"><span class="v">r</span><sub>P</sub></span>(<span class="i">t</span>) = <span class="col"><span><span class="i">l</span> sin <span class="i">θ</span>(<span class="i">t</span>)</span><span>−<span class="i">l</span> cos <span class="i">θ</span>(<span class="i">t</span>)</span></span></div>
-      <div class="rij hoog">
-        <span class="m"><span class="k-v"><span class="v">v</span><sub>P</sub></span>(<span class="i">t</span>)&nbsp;=</span>
-        <span class="ub vel"><span class="inh"><span class="i">l ω</span>(<span class="i">t</span>)</span><span class="ubk"></span><span class="ubl">v<sub>P</sub>(t)</span></span>
-        <span class="ub e"><span class="inh"><span class="col"><span>cos <span class="i">θ</span>(<span class="i">t</span>)</span><span>sin <span class="i">θ</span>(<span class="i">t</span>)</span></span></span><span class="ubk"></span><span class="ubl"><span class="k-e"><span class="v">e</span><sub>t</sub></span>(t)</span></span>
-        <span class="m">&nbsp;⊥ <span class="k-r"><span class="v">r</span><sub>P</sub></span></span>
-      </div>
+      <div class="tex">\theta(t) = \theta_0 \cos\left(\sqrt{\frac{g}{l}}\,t\right), \qquad \omega(t) = \frac{\mathrm{d}\theta}{\mathrm{d}t} = -\theta_0 \sqrt{\frac{g}{l}}\,\sin\left(\sqrt{\frac{g}{l}}\,t\right)</div>
+      <div class="tex">\kr{\vec r_P}(t) = \begin{Bmatrix} l\sin\theta(t) \\ -l\cos\theta(t) \end{Bmatrix}</div>
+      <div class="tex">\kv{\vec v_P}(t) = \ubv{l\,\omega(t)}{\kv{v_P(t)}}\,\ube{\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}}{\ke{\vec e_t(t)}} \;\perp\; \kr{\vec r_P}</div>
       <p class="fn">De beweging θ(t) is hier opgelegd: we beschrijven ze enkel (kinematica). De uitdrukking voor θ(t) is de oplossing voor kleine uitwijkingen; bij grote θ<sub>0</sub> wijkt een echte schommel daar wat van af. Dat volgt pas uit de dynamica. Getallen met <span class="i">g</span> = 10 m/s², zoals in de cursus.</p>
     </div>
     <details class="card" open>
@@ -315,7 +302,7 @@ function drawGraphs() {
     const dir = Math.sign(st.w), x0 = F3.X(deg(st.th)), y0 = F3.Y(st.speed) - 14;
     arrow(G3.ctx, x0 - dir * 10, y0, x0 + dir * 12, y0, C.ink, { w: 1.4, head: 7 });
   }
-  document.getElementById('g1sub').innerHTML = `Periode van <span class="i">θ</span>: <span class="i">T</span> = 2π√(<span class="i">l</span>/<span class="i">g</span>) = ${T.toFixed(2)} s; maximum ‖<span class="v">v</span><sub>P</sub>‖ = <span class="i">l</span>·<span class="i">θ</span><sub>0</sub>·√(<span class="i">g</span>/<span class="i">l</span>) = ${vm.toFixed(2)} m/s`;
+  document.getElementById('g1sub').innerHTML = `Periode van <span class="i">θ</span>: <span class="i">T</span> = 2π√(<span class="i">l</span>/<span class="i">g</span>) = ${T.toFixed(2)} s; maximum ‖<span class="k-v"><span class="v">v</span><sub>P</sub></span>‖ = <span class="i">l</span>·<span class="i">θ</span><sub>0</sub>·√(<span class="i">g</span>/<span class="i">l</span>) = ${vm.toFixed(2)} m/s`;
 }
 
 // ---------- readout ----------
@@ -325,16 +312,16 @@ function drawReadout() {
   const s = state(t);
   const rv = s.x * s.vx + s.y * s.vy;
   const turning = s.speed < 1e-3 * vmax() + 1e-9;
-  const NV = '‖<span class="v">v</span><sub>P</sub>‖';
-  const mot = turning ? `omkeerpunt (${NV} = 0)` : (s.vy > 1e-9 ? 'opwaarts (v<sub>y</sub> &gt; 0)' : (s.vy < -1e-9 ? 'neerwaarts (v<sub>y</sub> &lt; 0)' : 'onderste stand'));
+  const NV = '‖<span class="k-v"><span class="v">v</span><sub>P</sub></span>‖';
+  const mot = turning ? `omkeerpunt (${NV} = 0)` : (s.vy > 1e-9 ? 'opwaarts (<span class="i k-vy">v<sub>y</sub></span> &gt; 0)' : (s.vy < -1e-9 ? 'neerwaarts (<span class="i k-vy">v<sub>y</sub></span> &lt; 0)' : 'onderste stand'));
   let html = '';
   html += cell('t', `${fmt(t % (2 * Tp()), 3)} s`);
   html += cell('θ', `${fmt(deg(s.th), 1)}° (${fmt(s.th, 3)} rad)`, true);
   html += cell('ω = dθ/dt', `${fmt(s.w, 3)} rad/s`);
-  html += cell('<span class="v">r</span><sub>P</sub> = (x, y)', `(${fmt(s.x, 3)}, ${fmt(s.y, 3)}) m`, true);
-  html += cell('<span class="v">v</span><sub>P</sub> = (v<sub>x</sub>, v<sub>y</sub>)', `(${fmt(s.vx, 3)}, ${fmt(s.vy, 3)}) m/s`, true);
-  html += cell('‖<span class="v">v</span><sub>P</sub>‖ = l|ω|', `${fmt(s.speed, 3)} m/s`);
-  html += cell('<span class="v">r</span><sub>P</sub>·<span class="v">v</span><sub>P</sub>', `${fmt(rv, 3)} m²/s ⇒ ⊥`);
+  html += cell('<span class="k-r"><span class="v">r</span><sub>P</sub></span> = (x, y)', `(${fmt(s.x, 3)}, ${fmt(s.y, 3)}) m`, true);
+  html += cell('<span class="k-v"><span class="v">v</span><sub>P</sub></span> = (<span class="i k-vx">v<sub>x</sub></span>, <span class="i k-vy">v<sub>y</sub></span>)', `(${fmt(s.vx, 3)}, ${fmt(s.vy, 3)}) m/s`, true);
+  html += cell('‖<span class="k-v"><span class="v">v</span><sub>P</sub></span>‖ = l|ω|', `${fmt(s.speed, 3)} m/s`);
+  html += cell('<span class="k-r"><span class="v">r</span><sub>P</sub></span>·<span class="k-v"><span class="v">v</span><sub>P</sub></span>', `${fmt(rv, 3)} m²/s ⇒ ⊥`);
   html += cell('beweging', mot, true);
   ro.innerHTML = html;
 }

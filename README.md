@@ -51,10 +51,15 @@ grafieken, denkvragen).
   momenten paars. Elke vector krijgt daarnaast een label, zodat kleur nooit de enige aanduiding is.
 - **Asbijschriften van grafieken** in LaTeX-stijl: wiskunde tussen `$…$`, bv. `'$|\\vec{v}_P|$ [m/s]'`
   of `'$a_{Pt}$ [m/s²]'` (zie `TM1.formule` in `gedeeld/tm1.js`). In JavaScript-strings staat de backslash dubbel.
-- **Kleur van vectoren in formules** gelijk aan de animatie, met de klassen uit `gedeeld/tm1.css`:
-  `<span class="k-r"><span class="v">r</span><sub>P</sub></span>` (ook `k-v`, `k-a`, `k-at`, `k-an`, `k-e`, `k-F`, `k-M`).
+- **Formules in TeX** (KaTeX): `<div class="tex">…</div>` met kleurmacro's `\kr`, `\kv`, `\ka`, `\kat`, `\kan`, `\ke`
+  en gekleurde accolades `\ubv{inhoud}{naam}`, `\ubat{…}{…}`, … (zie `TM1.tex` in `gedeeld/tm1.js`). Kolomvectoren met
+  `\begin{Bmatrix}…\end{Bmatrix}` zoals in het handboek; schrijf `&amp;` in plaats van `&`.
+  In de pagina horen dan ook de KaTeX-links uit het sjabloon (`sjabloon/voorbeeld.html`).
+- **Kleur in formules** gelijk aan de animatie, voor vectoren én de bijbehorende scalaire grootheden (bv. *a*<sub>Pt</sub> oranje),
+  met de klassen uit `gedeeld/tm1.css`: `<span class="k-r"><span class="v">r</span><sub>P</sub></span>`,
+  `<span class="i k-at">a<sub>Pt</sub></span>` (ook `k-v`, `k-a`, `k-an`, `k-e`, `k-F`, `k-M`).
 - **Valversnelling**: rekenen met *g* = 10 m/s², zoals in de cursus.
-- **Vectorschaal**: elke scène toont linksonder hoe lang 1 m/s of 1 m/s² is.
+- **Vectorschaal**: vast (niet afhankelijk van de schuifregelaars); elke scène toont linksonder een vaste legende, bv. 2 m/s en 5 m/s².
 - **Opgelegde beweging**: maak in de tekst duidelijk wanneer de beweging gegeven is (kinematica)
   en wanneer ze volgt uit krachten (dynamica).
 - **Denkvragen** onderaan: een paar vragen die studenten met de animatie zelf kunnen beantwoorden.
@@ -62,4 +67,5 @@ grafieken, denkvragen).
 ## Lokaal bekijken
 
 Dubbelklik op `index.html`. Alles werkt rechtstreeks vanuit de map; een webserver is niet nodig.
-Alleen de lettertypes komen van Google Fonts; zonder internet valt de pagina terug op standaardlettertypes.
+Alleen de lettertypes (Google Fonts) en KaTeX voor de formules (jsDelivr) komen van het internet; zonder
+internet vallen de lettertypes terug op standaardlettertypes en blijven de formules als TeX-code staan.

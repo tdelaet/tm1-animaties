@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <link rel="stylesheet" href="../gedeeld/tm1.css">
 <style>
   /* snelheid van de lucht t.o.v. de baan: eigen tint, zodat de drie snelheden uit elkaar te houden zijn */
@@ -108,10 +110,11 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="eq"><span class="k-v"><span class="v">v</span><sub>vliegtuig/baan</sub></span> = <span class="k-vl"><span class="v">v</span><sub>vliegtuig/lucht</sub></span> + <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span>&nbsp;&nbsp;<span style="font-family:Inter;font-size:13px;color:var(--muted)">(definitie 13.5: <span class="v">v</span><sub>B/A</sub> = <span class="v">v</span><sub>B</sub> − <span class="v">v</span><sub>A</sub>)</span></div>
-      <div class="eq"><span class="k-v"><span class="v">v</span><sub>vliegtuig/baan</sub></span> = <span class="col"><span>83</span><span>0</span></span> m/s,&nbsp; <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span> = <span class="col"><span>0</span><span>11</span></span> m/s &nbsp;⇒&nbsp; <span class="k-vl"><span class="v">v</span><sub>vliegtuig/lucht</sub></span> = <span class="col"><span>83</span><span>−11</span></span> m/s</div>
-      <div class="eq"><span class="i">β</span> = atan(11/83) = 7.55°&nbsp; tussen de neus en de baan, tegen de wind in</div>
-      <p class="fn">Beide snelheden worden in hetzelfde assenstelsel uitgedrukt: <span class="i">x</span> langs de baan, <span class="i">y</span> dwars erop, in de zin waarin de wind waait. Met de schuifregelaars kan je ook een schuine wind (<span class="i">φ</span> ≠ 90°) kiezen: dan is <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span> = <span class="i">w</span>(cos <span class="i">φ</span>, sin <span class="i">φ</span>) en <span class="i">β</span> = atan2(<span class="i">w</span> sin <span class="i">φ</span>, <span class="i">v</span> − <span class="i">w</span> cos <span class="i">φ</span>). Zonder correctie houdt de piloot de neus langs de baan en vliegt hij met dezelfde snelheid <span class="i">v</span> t.o.v. de lucht.</p>
+      <div class="tex">\kv{\vec v_{\text{vliegtuig/baan}}} = \kvl{\vec v_{\text{vliegtuig/lucht}}} + \kw{\vec v_{\text{lucht/baan}}} \qquad {\small\text{(definitie 13.5: } \vec v_{B/A} = \vec v_B - \vec v_A\text{)}}</div>
+      <div class="tex">\kv{\vec v_{\text{vliegtuig/baan}}} = \begin{Bmatrix}83\\ 0\end{Bmatrix}\text{ m/s}, \qquad \kw{\vec v_{\text{lucht/baan}}} = \begin{Bmatrix}0\\ 11\end{Bmatrix}\text{ m/s}</div>
+      <div class="tex">\Rightarrow\quad \kvl{\vec v_{\text{vliegtuig/lucht}}} = \kv{\vec v_{\text{vliegtuig/baan}}} - \kw{\vec v_{\text{lucht/baan}}} = \begin{Bmatrix}83\\ -11\end{Bmatrix}\text{ m/s}</div>
+      <div class="tex">\beta = \operatorname{atan}\left(\frac{11}{83}\right) = 7.55^\circ \quad \text{tussen de neus en de baan, tegen de wind in}</div>
+      <p class="fn">Beide snelheden worden in hetzelfde assenstelsel uitgedrukt: <span class="i">x</span> langs de baan, <span class="i">y</span> dwars erop, in de zin waarin de wind waait. Met de schuifregelaars kan je ook een schuine wind (<span class="i">φ</span> ≠ 90°) kiezen: dan is <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span> = <span class="i k-w">w</span>(cos <span class="i">φ</span>, sin <span class="i">φ</span>) en <span class="i">β</span> = atan2(<span class="i k-w">w</span> sin <span class="i">φ</span>, <span class="i k-v">v</span> − <span class="i k-w">w</span> cos <span class="i">φ</span>). Zonder correctie houdt de piloot de neus langs de baan en vliegt hij met dezelfde snelheid <span class="i k-v">v</span> t.o.v. de lucht.</p>
     </div>
     <details class="card" open>
       <summary>Denkvragen bij de animatie</summary>
@@ -377,12 +380,12 @@ function drawReadout() {
   TM1.uitlezing(ro, [
     ['t', `${fmt(t, 2)} s`],
     ['plaats t.o.v. de baan (x, y)', `(${fmt(p.x, 0)}, ${fmt(p.y, 1)}) m`, true],
-    ['<span class="v">v</span><sub>vliegtuig/baan</sub>', vec(sp.vg), true],
-    ['|<span class="v">v</span><sub>vliegtuig/baan</sub>|', `${fmt(Math.hypot(sp.vg.x, sp.vg.y), 2)} m/s`],
-    ['<span class="v">v</span><sub>lucht/baan</sub>', vec(sp.wind), true],
-    ['|<span class="v">v</span><sub>lucht/baan</sub>|', `${fmt(w, 2)} m/s`],
-    ['<span class="v">v</span><sub>vliegtuig/lucht</sub>', vec(sp.va), true],
-    ['|<span class="v">v</span><sub>vliegtuig/lucht</sub>|', `${fmt(Math.hypot(sp.va.x, sp.va.y), 2)} m/s`],
+    ['<span class="k-v"><span class="v">v</span><sub>vliegtuig/baan</sub></span>', vec(sp.vg), true],
+    ['‖<span class="k-v"><span class="v">v</span><sub>vliegtuig/baan</sub></span>‖', `${fmt(Math.hypot(sp.vg.x, sp.vg.y), 2)} m/s`],
+    ['<span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span>', vec(sp.wind), true],
+    ['‖<span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span>‖', `${fmt(w, 2)} m/s`],
+    ['<span class="k-vl"><span class="v">v</span><sub>vliegtuig/lucht</sub></span>', vec(sp.va), true],
+    ['‖<span class="k-vl"><span class="v">v</span><sub>vliegtuig/lucht</sub></span>‖', `${fmt(Math.hypot(sp.va.x, sp.va.y), 2)} m/s`],
     ['koers (neus) t.o.v. baan', `${fmt(deg(sp.psi), 2)}°`],
     ['spoor t.o.v. baan', `${fmt(deg(sp.track), 2)}°`],
     ['zijdelingse afwijking', `${fmt(p.y, 1)} m${naast ? ' · naast de baan!' : ''}`, true]
@@ -404,8 +407,8 @@ function syncLabels() {
   $('fr_baan').classList.toggle('on', fr === 'baan'); $('fr_lucht').classList.toggle('on', fr === 'lucht');
   $('hint').textContent = `Bovenaanzicht · bekeken vanuit ${fr === 'baan' ? 'de baan' : 'de lucht'}`;
   $('frnote').innerHTML = fr === 'baan'
-    ? 'De baan staat stil, de lucht stroomt met <span class="v">v</span><sub>lucht/baan</sub> voorbij. Het vliegtuig beweegt met <span class="v">v</span><sub>vliegtuig/baan</sub>.'
-    : 'De lucht staat stil, de baan schuift met −<span class="v">v</span><sub>lucht/baan</sub> weg. Het vliegtuig beweegt met <span class="v">v</span><sub>vliegtuig/lucht</sub>, in de richting van zijn neus.';
+    ? 'De baan staat stil, de lucht stroomt met <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span> voorbij. Het vliegtuig beweegt met <span class="k-v"><span class="v">v</span><sub>vliegtuig/baan</sub></span>.'
+    : 'De lucht staat stil, de baan schuift met −<span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span> weg. Het vliegtuig beweegt met <span class="k-vl"><span class="v">v</span><sub>vliegtuig/lucht</sub></span>, in de richting van zijn neus.';
 }
 function render() { drawScene(); drawTriangle(); drawBeta(); drawReadout(); syncLabels(); }
 function behoudFase(f) { const fase = t / Tc(); f(); t = Math.min(fase, 0.9999) * Tc(); render(); }

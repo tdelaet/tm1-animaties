@@ -272,7 +272,39 @@
       `<div class="ro${w ? ' wide' : ''}"><div class="k">${k}</div><div class="val">${v}</div></div>`).join('');
   }
 
+  /** Formules in TeX: elk element met class "tex" wordt met KaTeX gezet (class "tex inline" voor in de lopende tekst).
+      Kleurmacro's, met dezelfde kleuren als de vectoren in de animatie:
+        \kr{…} positie, \kv{…} snelheid, \ka{…} versnelling, \kat{…} tangentieel, \kan{…} normaal, \ke{…} eenheidsvector,
+        \kvx, \kvy (componenten), \kF, \kM, en paginakleuren \kvl, \kw als --cvl / --cw bestaan.
+      Accolade in kleur, inhoud zwart: \ubv{inhoud}{naam}, \ubat{…}{…}, \uban{…}{…}, \ube{…}{…}, enz.
+      Vereist KaTeX in de pagina (zie README); zonder KaTeX blijft de TeX-code als tekst staan. */
+  function texMacros() {
+    const C = kleuren(), m = {};
+    const k = { r: C.r, v: C.v, a: C.a, at: C.at, an: C.an, e: '#4f5862', vx: C.vx, vy: C.vy, F: C.F, M: C.M,
+      vl: css('--cvl'), w: css('--cw') };
+    // in een macro is # het argumentteken: een kleurcode #rrggbb moet daarom als ##rrggbb geschreven worden
+    const kl = hex => hex.replace(/^#/, '##');
+    for (const [n, hex] of Object.entries(k)) {
+      if (!hex) continue;
+      m['\\k' + n] = `\\textcolor{${kl(hex)}}{#1}`;
+      m['\\ub' + n] = `\\textcolor{${kl(hex)}}{\\underbrace{\\textcolor{${kl(C.ink)}}{#1}}_{#2}}`;
+    }
+    return m;
+  }
+  function tex(root = document) {
+    if (!global.katex) return;
+    const macros = texMacros();
+    root.querySelectorAll('.tex').forEach(el => {
+      if (el.dataset.tex === undefined) el.dataset.tex = el.textContent;
+      try {
+        global.katex.render(el.dataset.tex, el, { displayMode: !el.classList.contains('inline'), throwOnError: false, macros: { ...macros } });
+      } catch (e) { /* laat de TeX-code staan */ }
+    });
+  }
+  if (document.readyState === 'complete') tex(); else global.addEventListener('load', () => tex());
+
   global.TM1 = Object.assign(global.TM1 || {}, {
+    tex,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
     frame, curve, dot, cursor, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });
