@@ -252,9 +252,22 @@
     doe();
   }
 
-  /** Vectorschaal-legende linksonder in een scène. balken: [[lengte_px, kleur, tekst], ...] */
-  function schaalLegende(ctx, h, balken) {
+  /** Vectorschaal-legende linksonder in een scène. balken: [[lengte_px, kleur, tekst], ...]
+      Met opt.rechtsboven = { w, y } komt ze rechtsboven (w = breedte van de scène, y = bovenkant). */
+  function schaalLegende(ctx, h, balken, opt = {}) {
     const C = kleuren();
+    if (opt.rechtsboven && balken.length) {
+      const { w, y = 44 } = opt.rechtsboven, xr = w - 70;
+      ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textBaseline = 'middle';
+      let yb = y; ctx.textAlign = 'right'; ctx.fillText('vectorschaal', w - 14, yb); yb += 18;
+      balken.forEach(([len, col, txt]) => {
+        ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(xr - len, yb); ctx.lineTo(xr, yb); ctx.stroke();
+        ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(xr - len, yb - 5); ctx.lineTo(xr - len, yb + 5); ctx.moveTo(xr, yb - 5); ctx.lineTo(xr, yb + 5); ctx.stroke();
+        ctx.textAlign = 'left'; ctx.fillText(txt, xr + 6, yb); yb += 18;
+      });
+      ctx.restore();
+      return;
+    }
     ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textBaseline = 'middle';
     let yb = h - 18;
     balken.slice().reverse().forEach(([len, col, txt]) => {

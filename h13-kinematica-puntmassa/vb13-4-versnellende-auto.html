@@ -240,17 +240,7 @@ function drawScene() {
   const bars = [];
   if (show.v) bars.push([10 * KV, C.v, '10 m/s']);
   if (show.a) bars.push([2 * KA, C.a, '2 m/s²']);
-  if (bars.length) {
-    ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textBaseline = 'middle';
-    const xr = w - 70; let yb = 44;   // onder de hint rechtsboven
-    ctx.textAlign = 'right'; ctx.fillText('vectorschaal', w - 14, yb); yb += 18;
-    bars.forEach(([len, col, txt]) => {
-      ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(xr - len, yb); ctx.lineTo(xr, yb); ctx.stroke();
-      ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(xr - len, yb - 5); ctx.lineTo(xr - len, yb + 5); ctx.moveTo(xr, yb - 5); ctx.lineTo(xr, yb + 5); ctx.stroke();
-      ctx.textAlign = 'left'; ctx.fillText(txt, xr + 6, yb); yb += 18;
-    });
-    ctx.restore();
-  }
+  TM1.schaalLegende(ctx, h, bars, { rechtsboven: { w, y: 44 } });   // onder de hint rechtsboven
 }
 
 // ---------- grafieken ----------

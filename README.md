@@ -55,6 +55,8 @@ grafieken, denkvragen).
   en gekleurde accolades `\ubv{inhoud}{naam}`, `\ubat{…}{…}`, … (zie `TM1.tex` in `gedeeld/tm1.js`). Kolomvectoren met
   `\begin{Bmatrix}…\end{Bmatrix}` zoals in het handboek; schrijf `&amp;` in plaats van `&`.
   In de pagina horen dan ook de KaTeX-links uit het sjabloon (`sjabloon/voorbeeld.html`).
+- **Versnelling, snelheid en positie als stelsel**: zet *a*, *v* en *r* onder elkaar met een accolade ervoor,
+  `\left\{\begin{aligned} … \\ … \\ … \end{aligned}\right.`, telkens in die volgorde (ook per fase of per component).
 - **Kleur in formules** gelijk aan de animatie, voor vectoren én de bijbehorende scalaire grootheden (bv. *a*<sub>Pt</sub> oranje),
   met de klassen uit `gedeeld/tm1.css`: `<span class="k-r"><span class="v">r</span><sub>P</sub></span>`,
   `<span class="i k-at">a<sub>Pt</sub></span>` (ook `k-v`, `k-a`, `k-an`, `k-e`, `k-F`, `k-M`).

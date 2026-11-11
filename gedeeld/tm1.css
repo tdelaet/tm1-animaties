@@ -29,6 +29,7 @@ h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:28px;mar
 .scene{position:relative;padding:0;overflow:hidden}
 .scene canvas{display:block;width:100%;height:500px;touch-action:none}
 .scene .hint{position:absolute;right:12px;top:10px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.85);padding:2px 8px;border-radius:6px}
+@media (max-width:600px){.scene .hint{display:none}}   /* op een gsm zou de hint over de figuur en de vectorschaal vallen */
 
 /* uitleestabel */
 .readout{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border-top:1px solid var(--line)}
