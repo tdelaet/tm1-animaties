@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 13.7 – Een rechtlijnige beweging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* hoge scène: verticale baan van 0 tot 5000 m op vaste schaal */
+  .scene canvas{height:auto;aspect-ratio:1/1;max-height:540px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 13.7 — Een rechtlijnige beweging</h1>
+    <span class="kicker">Kinematica van een puntmassa · rechtlijnige beweging met een versnelling die lineair toeneemt in de tijd</span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Lanceervoertuig dat verticaal opstijgt, met positie-, snelheids- en versnellingsvector"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar dat tijdstip te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="stepb" title="1 s terug">◂ Stap</button>
+          <button id="stepf" title="1 s vooruit">Stap ▸</button>
+          <button id="reset">↺ t = 0</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
+          <input type="range" id="tslider" min="0" max="3000" value="0">
+        </div>
+        <div class="note">De animatie loopt 2× sneller dan in werkelijkheid.</div>
+      </div>
+
+      <div class="card panel q1">
+        <h2>Spring naar de gevraagde tijdstippen</h2>
+        <div class="btnrow">
+          <button id="j10"><span class="i">t</span> = 10 s</button>
+          <button id="j20"><span class="i">t</span> = 20 s</button>
+          <button id="j30"><span class="i">t</span> = 30 s</button>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
+          <label><input type="checkbox" id="t_a"> <span class="sw" style="background:var(--ca)"></span><span>versnelling <span class="k-a"><span class="v">a</span></span></span></label>
+          <label><input type="checkbox" id="t_v"> <span class="sw" style="background:var(--cv)"></span><span>snelheid <span class="k-v"><span class="v">v</span></span></span></label>
+          <label><input type="checkbox" id="t_r"> <span class="sw" style="background:var(--cr)"></span><span>positie <span class="k-r"><span class="v">r</span></span></span></label>
+          <label><input type="checkbox" id="t_strobe"> <span class="sw" style="background:#9aa3ad"></span><span>stroboscoop</span></label>
+          <label><input type="checkbox" id="t_merk"> <span class="sw d" style="color:#7a828c"></span><span>hoogtes op 10, 20, 30 s</span></label>
+        </div>
+        <div class="note">Stroboscoop: de plaats van het voertuig om de 2 s.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3>Versnelling <span class="i k-a">a</span>(<span class="i">t</span>)</h3>
+      <div class="sub">De ingekleurde oppervlakte tot <span class="i">t</span> is <span class="i k-v">v</span>(<span class="i">t</span>) − <span class="i k-v">v</span>(0).</div>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Snelheid <span class="i k-v">v</span>(<span class="i">t</span>)</h3>
+      <div class="sub">De ingekleurde oppervlakte tot <span class="i">t</span> is <span class="i k-r">r</span>(<span class="i">t</span>) − <span class="i k-r">r</span>(0).</div>
+      <canvas id="g2"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Positie (hoogte) <span class="i k-r">r</span>(<span class="i">t</span>)</h3>
+      <div class="sub">De gevraagde waarden op 10, 20 en 30 s zijn aangeduid.</div>
+      <canvas id="g3"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitwerking (videoles)</h2>
+      <div class="tex">\text{Gegeven:}\quad \ka{a}(t) = 1\ \text{m/s}^3\cdot t, \qquad \kv{v}(0) = 0, \qquad \kr{r}(0) = 0</div>
+      <div class="tex">\left\{\begin{aligned} \ka{a}(t) &amp;= 1\ \text{m/s}^3\cdot t \\ \kv{v}(t) &amp;= \kv{v}(0) + \int_0^t \ka{a}(t)\,\mathrm{d}t = 0 + 1\ \text{m/s}^3\int_0^t t\,\mathrm{d}t = 0.5\ \text{m/s}^3\cdot t^2 \\ \kr{r}(t) &amp;= \kr{r}(0) + \int_0^t \kv{v}(t)\,\mathrm{d}t = 0 + 0.5\ \text{m/s}^3\int_0^t t^2\,\mathrm{d}t = 0.1667\ \text{m/s}^3\cdot t^3 \end{aligned}\right.</div>
+      <div class="tex">\begin{array}{c|ccc} t &amp; 10\ \text{s} &amp; 20\ \text{s} &amp; 30\ \text{s} \\ \hline \kv{v}(t) &amp; 50\ \text{m/s} &amp; 200\ \text{m/s} &amp; 450\ \text{m/s} \\ \kr{r}(t) &amp; 167\ \text{m} &amp; 1333\ \text{m} &amp; 4500\ \text{m} \end{array}</div>
+      <div class="tex">\ka{\vec a}(t) = \ka{a}(t)\,\ke{\vec e_y}, \qquad \kv{\vec v}(t) = \kv{v}(t)\,\ke{\vec e_y}, \qquad \kr{\vec r}(t) = \kr{r}(t)\,\ke{\vec e_y}</div>
+      <p class="fn">De versnelling is hier niet constant: dit is géén eenparig versnelde beweging, dus de formules van stelling 13.8 gelden niet. Snelheid en positie volgen door de versnelling en de snelheid te integreren vanaf de beginwaarden. De baan is verticaal: alle vectoren liggen langs <span class="k-e"><span class="v">e</span><sub>y</sub></span>, daarom volstaan de scalaire waarden. De beweging is opgelegd (kinematica).</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Is dit een eenparig versnelde beweging? Waarom mag je de formules van stelling 13.8 hier niet gebruiken?</li>
+        <li>Spring naar <span class="i">t</span> = 10 s. Hoe groot is de ingekleurde oppervlakte onder de grafiek van <span class="i k-a">a</span>(<span class="i">t</span>)? Vergelijk met <span class="i k-v">v</span>(10 s).</li>
+        <li>Zet de stroboscoop aan. Hoe veranderen de afstanden tussen opeenvolgende posities? Wat zegt dat over de snelheid?</li>
+        <li>Tussen 10 s en 30 s wordt de tijd 3 keer zo groot. Hoeveel keer groter worden <span class="i k-v">v</span> en <span class="i k-r">r</span>? Verklaar met de uitdrukkingen.</li>
+        <li>Wat is het teken van <span class="k-v"><span class="v">v</span></span>·<span class="k-a"><span class="v">a</span></span> tijdens de hele beweging? Wat zegt stelling 13.6 dan?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt } = TM1;
+const C = TM1.kleuren();
+const K = 1;                  // a(t) = K·t met K = 1 m/s³
+const TEND = 30;              // einde van de beweging [s]
+const RMAX = 5000;            // getekende hoogte [m]: vaste schaal
+const TEMPO = 2;              // 2× sneller dan in werkelijkheid
+const KV = 0.25, KA = 3;      // vectorschaal: px per (m/s) en px per (m/s²), vast
+const MERK = [10, 20, 30];    // gevraagde tijdstippen
+let t = 0, playing = true;
+const show = { a: true, v: true, r: true, strobe: false, merk: true };
+
+const state = tt => ({ a: K * tt, v: 0.5 * K * tt * tt, r: K * tt * tt * tt / 6 });
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function raket(ctx, x, y, vlam) {
+  // (x, y) = onderkant van het voertuig
+  ctx.save(); ctx.translate(x, y);
+  if (vlam > 0) {
+    const L = 6 + 18 * vlam;
+    ctx.fillStyle = 'rgba(232,137,12,0.85)';
+    ctx.beginPath(); ctx.moveTo(-5, 0); ctx.quadraticCurveTo(0, L, 5, 0); ctx.closePath(); ctx.fill();
+  }
+  ctx.fillStyle = '#e9ecef'; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(-6, -2); ctx.lineTo(-6, -30); ctx.quadraticCurveTo(0, -44, 6, -30); ctx.lineTo(6, -2); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#c2255c';
+  ctx.beginPath(); ctx.moveTo(-6, -2); ctx.lineTo(-11, 2); ctx.lineTo(-6, -12); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(6, -2); ctx.lineTo(11, 2); ctx.lineTo(6, -12); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawScene() {
+  const ctx = sc.ctx, w = sc.w, h = sc.h; ctx.clearRect(0, 0, w, h);
+  const yG = h - 34, yTop = 130;                       // grond en hoogte 5000 m
+  const Y = r => yG - r / RMAX * (yG - yTop);
+  const ax = Math.round(w * 0.42);                     // x van de baan
+  const st = state(t);
+
+  // grond en lanceerplatform
+  ctx.fillStyle = '#ecebe5'; ctx.fillRect(0, yG, w, h - yG);
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, yG); ctx.lineTo(w, yG); ctx.stroke();
+  ctx.fillStyle = '#9aa1aa'; ctx.fillRect(ax - 22, yG - 4, 44, 4);
+
+  // hoogteschaal
+  ctx.save(); ctx.font = '11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let r = 0; r <= RMAX; r += 500) {
+    ctx.beginPath(); ctx.moveTo(10, Y(r)); ctx.lineTo(w - 10, Y(r)); ctx.stroke();
+    if (r % 1000 === 0) ctx.fillText(`${r} m`, 10, Y(r) - 2);   // boven de lijn, zodat 0 m niet op de grond valt
+  }
+  ctx.restore();
+  // verticale as y, met O op de grond en e_y in de grond eronder
+  arrow(ctx, ax, yG, ax, yTop - 40, '#b5bac1', { w: 1, head: 7 });
+  label(ctx, 'y', '', ax + 6, yTop - 36, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'O', '', ax - 30, yG + 18, C.ink, { vec: false, size: 13 });
+  arrow(ctx, ax + 30, yG + 30, ax + 30, yG + 8, '#4f5862', { w: 1.6, head: 7 });
+  label(ctx, 'e', 'y', ax + 36, yG + 24, '#4f5862', { size: 13 });
+
+  // gevraagde hoogtes
+  if (show.merk) {
+    ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1;
+    ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.textBaseline = 'middle';
+    for (const tm of MERK) {
+      const r = state(tm).r, y = Y(r);
+      ctx.beginPath(); ctx.moveTo(ax - 30, y); ctx.lineTo(w - 12, y); ctx.stroke();
+      ctx.fillText(`t = ${tm} s: ${Math.round(r)} m`, w - 128, y - 8);
+    }
+    ctx.restore();
+  }
+
+  // stroboscoop
+  if (show.strobe) {
+    for (let k = 0; k <= t + 1e-9; k += 2) {
+      const y = Y(state(k).r);
+      ctx.save(); ctx.fillStyle = C.ink; ctx.globalAlpha = 0.45; ctx.beginPath(); ctx.arc(ax - 16, y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+    }
+  }
+
+  // positievector, links van de baan
+  const py = Y(st.r);
+  if (show.r && yG - py > 6) {
+    arrow(ctx, ax - 34, yG, ax - 34, py, C.r, { w: 2.4 });
+    label(ctx, 'r', '', ax - 48, Math.min((yG + py) / 2, yG - 10) + 5, C.r, { align: 'right' });
+  }
+  raket(ctx, ax, py, st.a / (K * TEND));
+  // punt P (onderkant van het voertuig)
+  ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(ax, py, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+
+  // snelheid en versnelling, rechts van het voertuig (beide naar boven)
+  if (show.v && arrow(ctx, ax + 22, py, ax + 22, py - st.v * KV, C.v, { w: 3, head: 12 }))
+    label(ctx, 'v', '', ax + 28, py - st.v * KV + 8, C.v);
+  if (show.a && arrow(ctx, ax + 46, py, ax + 46, py - st.a * KA, C.a, { w: 3, head: 12 }))
+    label(ctx, 'a', '', ax + 52, py - st.a * KA + 8, C.a);
+
+  const bars = [];
+  if (show.v) bars.push([100 * KV, C.v, '100 m/s']);
+  if (show.a) bars.push([10 * KA, C.a, '10 m/s²']);
+  TM1.schaalLegende(ctx, h, bars, { rechtsboven: { w, y: 40 } });
+}
+
+// ---------- grafieken ----------
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+const G3 = setup(document.getElementById('g3'));
+let F1, F2, F3;
+function vlak(G, F, f, kleur) {
+  const ctx = G.ctx; ctx.save(); ctx.fillStyle = kleur; ctx.globalAlpha = 0.14;
+  ctx.beginPath(); ctx.moveTo(F.X(0), F.Y(0));
+  for (let i = 0; i <= 200; i++) { const u = t * i / 200; ctx.lineTo(F.X(u), F.Y(f(u))); }
+  ctx.lineTo(F.X(t), F.Y(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function merken(G, F, f, kleur, yr, eenheid, dec) {
+  const ctx = G.ctx;
+  ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = '#c7cbd1';
+  for (const tm of MERK) { const x = F.X(tm); ctx.beginPath(); ctx.moveTo(x, F.Y(yr[0])); ctx.lineTo(x, F.Y(yr[1])); ctx.stroke(); }
+  ctx.restore();
+  if (!eenheid) return;
+  ctx.save(); ctx.font = '11px Inter, sans-serif'; ctx.fillStyle = kleur; ctx.textAlign = 'right';
+  for (const tm of MERK) { const y = f(tm); dot(ctx, F.X(tm), F.Y(y), kleur, 3.5); ctx.fillText(`${y.toFixed(dec)} ${eenheid}`, F.X(tm) - 5, F.Y(y) - 6); }
+  ctx.restore();
+}
+function drawGraphs() {
+  const st = state(t);
+  F1 = frame(G1, [0, TEND], [0, 32], '$t$ [s]', '$a$ [m/s²]');
+  merken(G1, F1, u => state(u).a, C.a, [0, 32]);
+  vlak(G1, F1, u => state(u).a, C.v);   // oppervlakte = snelheid
+  curve(G1.ctx, F1, 2, 0, TEND, u => u, u => state(u).a, C.a, 2.2);
+  TM1.cursor(G1.ctx, F1, t); dot(G1.ctx, F1.X(t), F1.Y(st.a), C.a);
+
+  F2 = frame(G2, [0, TEND], [0, 480], '$t$ [s]', '$v$ [m/s]');
+  merken(G2, F2, u => state(u).v, C.v, [0, 480], 'm/s', 0);
+  vlak(G2, F2, u => state(u).v, C.r);   // oppervlakte = positie
+  curve(G2.ctx, F2, 300, 0, TEND, u => u, u => state(u).v, C.v, 2.2);
+  TM1.cursor(G2.ctx, F2, t); dot(G2.ctx, F2.X(t), F2.Y(st.v), C.v);
+
+  F3 = frame(G3, [0, TEND], [0, 5000], '$t$ [s]', '$r$ [m]');
+  merken(G3, F3, u => state(u).r, C.r, [0, 5000], 'm', 0);
+  curve(G3.ctx, F3, 300, 0, TEND, u => u, u => state(u).r, C.r, 2.2);
+  TM1.cursor(G3.ctx, F3, t); dot(G3.ctx, F3.X(t), F3.Y(st.r), C.r);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const V = '<span class="k-v"><span class="v">v</span></span>', A = '<span class="k-a"><span class="v">a</span></span>', NV = `‖${V}‖`;
+function drawReadout() {
+  const s = state(t);
+  const tr = t < 1e-9 ? `${V} = 0 en ${A} = 0 op t = 0` : `${V}·${A} &gt; 0: ${NV} neemt toe`;
+  TM1.uitlezing(ro, [
+    ['t', `${fmt(t, 2)} s`],
+    ['<span class="i k-a">a</span> = 1 m/s³·<span class="i">t</span>', `${fmt(s.a, 2)} m/s²`],
+    ['<span class="i k-v">v</span> = 0.5 m/s³·<span class="i">t</span>²', `${fmt(s.v, 1)} m/s`],
+    ['<span class="i k-r">r</span> = 0.1667 m/s³·<span class="i">t</span>³', `${fmt(s.r, 1)} m`],
+    ['stelling 13.6', tr, true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), tsl = $('tslider');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() { $('tval').textContent = `${t.toFixed(2)} s`; tsl.value = Math.round(t / TEND * 3000); }
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+const naar = x => { setPlaying(false); t = Math.min(Math.max(x, 0), TEND); render(); };
+
+playBtn.onclick = () => { if (!playing && t >= TEND - 1e-6) t = 0; setPlaying(!playing); };
+$('reset').onclick = () => { t = 0; render(); };
+$('stepf').onclick = () => naar(t + 1);
+$('stepb').onclick = () => naar(t - 1);
+tsl.oninput = () => naar(tsl.value / 3000 * TEND);
+$('j10').onclick = () => naar(10);
+$('j20').onclick = () => naar(20);
+$('j30').onclick = () => naar(30);
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G1, () => F1, naar);
+TM1.scrub(G2, () => F2, naar);
+TM1.scrub(G3, () => F3, naar);
+
+TM1.bijGrootte([sc, G1, G2, G3], render);
+// na t = 30 s even blijven staan, dan opnieuw
+let wacht = 0;
+TM1.lus(dt => {
+  if (t >= TEND) { wacht += dt; if (wacht > 1.5) { wacht = 0; t = 0; } }
+  else t = Math.min(t + dt * TEMPO, TEND);
+  render();
+}, () => playing);
+})();
+</script>
+</body>
+</html>

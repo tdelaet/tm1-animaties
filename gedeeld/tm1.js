@@ -102,7 +102,12 @@
           while (j < seg.length && d) { if (seg[j] === '{') d++; else if (seg[j] === '}') d--; j++; }
           const s = seg.slice(k + 1, j - 1); k = j; return s;
         }
-        if (seg[k] === '\\') { const m = /^\\[a-zA-Z]+/.exec(seg.slice(k)); k += m[0].length; return m[0]; }
+        if (seg[k] === '\\') {
+          const m = /^\\[a-zA-Z]+/.exec(seg.slice(k));
+          if (m) { k += m[0].length; return m[0]; }
+          // backslash gevolgd door een leesteken: \| is de dubbele norm ‖, anders het teken zelf
+          const ch = seg[k + 1] || ''; k += 2; return ch === '|' ? '‖' : ch;
+        }
         return seg[k++];
       };
       const sym = s => s.replace(/\\([a-zA-Z]+)/g, (m, n) => GRIEKS[n] ?? n);
