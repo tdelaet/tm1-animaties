@@ -82,7 +82,7 @@ TM1.catalogus = [
         pad: 'h13-kinematica-puntmassa/vb13-3-kind-op-een-schommel.html', opmerking: 'bouwt verder op Vb. 13.1' },
       { id: '13.4', titel: 'Versnellende auto', status: 'klaar' },
       { id: '13.5', titel: 'Katapult slingert kei weg', status: 'klaar' },
-      { id: '13.6', titel: 'Cirkelbeweging met constante grootte van de snelheid' },
+      { id: '13.6', titel: 'Cirkelbeweging met constante grootte van de snelheid', status: 'klaar' },
       { id: '13.7', titel: 'Een rechtlijnige beweging' },
       { id: '13.8', titel: 'Een slingerbeweging' },
       { id: '13.9', titel: 'Plooiladder' }]},
