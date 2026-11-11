@@ -11,6 +11,7 @@
 <style>
   /* snelheid van de lucht t.o.v. de baan: eigen tint, zodat de drie snelheden uit elkaar te houden zijn */
   :root{ --cw:#0e7490; --cvl:#6aa2ea; }
+  .k-vl{color:var(--cvl)} .k-w{color:var(--cw)}
   .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px}
   .seg button{border:0;border-radius:0;padding:7px 12px}
   .seg button+button{border-left:1px solid var(--line)}
@@ -107,10 +108,10 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="eq"><span class="v">v</span><sub>vliegtuig/baan</sub> = <span class="v">v</span><sub>vliegtuig/lucht</sub> + <span class="v">v</span><sub>lucht/baan</sub>&nbsp;&nbsp;<span style="font-family:Inter;font-size:13px;color:var(--muted)">(definitie 13.5: <span class="v">v</span><sub>B/A</sub> = <span class="v">v</span><sub>B</sub> − <span class="v">v</span><sub>A</sub>)</span></div>
-      <div class="eq"><span class="v">v</span><sub>vliegtuig/baan</sub> = <span class="col"><span>83</span><span>0</span></span> m/s,&nbsp; <span class="v">v</span><sub>lucht/baan</sub> = <span class="col"><span>0</span><span>11</span></span> m/s &nbsp;⇒&nbsp; <span class="v">v</span><sub>vliegtuig/lucht</sub> = <span class="col"><span>83</span><span>−11</span></span> m/s</div>
+      <div class="eq"><span class="k-v"><span class="v">v</span><sub>vliegtuig/baan</sub></span> = <span class="k-vl"><span class="v">v</span><sub>vliegtuig/lucht</sub></span> + <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span>&nbsp;&nbsp;<span style="font-family:Inter;font-size:13px;color:var(--muted)">(definitie 13.5: <span class="v">v</span><sub>B/A</sub> = <span class="v">v</span><sub>B</sub> − <span class="v">v</span><sub>A</sub>)</span></div>
+      <div class="eq"><span class="k-v"><span class="v">v</span><sub>vliegtuig/baan</sub></span> = <span class="col"><span>83</span><span>0</span></span> m/s,&nbsp; <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span> = <span class="col"><span>0</span><span>11</span></span> m/s &nbsp;⇒&nbsp; <span class="k-vl"><span class="v">v</span><sub>vliegtuig/lucht</sub></span> = <span class="col"><span>83</span><span>−11</span></span> m/s</div>
       <div class="eq"><span class="i">β</span> = atan(11/83) = 7.55°&nbsp; tussen de neus en de baan, tegen de wind in</div>
-      <p class="fn">Beide snelheden worden in hetzelfde assenstelsel uitgedrukt: <span class="i">x</span> langs de baan, <span class="i">y</span> dwars erop, in de zin waarin de wind waait. Met de schuifregelaars kan je ook een schuine wind (<span class="i">φ</span> ≠ 90°) kiezen: dan is <span class="v">v</span><sub>lucht/baan</sub> = <span class="i">w</span>(cos <span class="i">φ</span>, sin <span class="i">φ</span>) en <span class="i">β</span> = atan2(<span class="i">w</span> sin <span class="i">φ</span>, <span class="i">v</span> − <span class="i">w</span> cos <span class="i">φ</span>). Zonder correctie houdt de piloot de neus langs de baan en vliegt hij met dezelfde snelheid <span class="i">v</span> t.o.v. de lucht.</p>
+      <p class="fn">Beide snelheden worden in hetzelfde assenstelsel uitgedrukt: <span class="i">x</span> langs de baan, <span class="i">y</span> dwars erop, in de zin waarin de wind waait. Met de schuifregelaars kan je ook een schuine wind (<span class="i">φ</span> ≠ 90°) kiezen: dan is <span class="k-w"><span class="v">v</span><sub>lucht/baan</sub></span> = <span class="i">w</span>(cos <span class="i">φ</span>, sin <span class="i">φ</span>) en <span class="i">β</span> = atan2(<span class="i">w</span> sin <span class="i">φ</span>, <span class="i">v</span> − <span class="i">w</span> cos <span class="i">φ</span>). Zonder correctie houdt de piloot de neus langs de baan en vliegt hij met dezelfde snelheid <span class="i">v</span> t.o.v. de lucht.</p>
     </div>
     <details class="card" open>
       <summary>Denkvragen bij de animatie</summary>

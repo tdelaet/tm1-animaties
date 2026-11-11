@@ -51,6 +51,8 @@ grafieken, denkvragen).
   momenten paars. Elke vector krijgt daarnaast een label, zodat kleur nooit de enige aanduiding is.
 - **Asbijschriften van grafieken** in LaTeX-stijl: wiskunde tussen `$…$`, bv. `'$|\\vec{v}_P|$ [m/s]'`
   of `'$a_{Pt}$ [m/s²]'` (zie `TM1.formule` in `gedeeld/tm1.js`). In JavaScript-strings staat de backslash dubbel.
+- **Kleur van vectoren in formules** gelijk aan de animatie, met de klassen uit `gedeeld/tm1.css`:
+  `<span class="k-r"><span class="v">r</span><sub>P</sub></span>` (ook `k-v`, `k-a`, `k-at`, `k-an`, `k-e`, `k-F`, `k-M`).
 - **Valversnelling**: rekenen met *g* = 10 m/s², zoals in de cursus.
 - **Vectorschaal**: elke scène toont linksonder hoe lang 1 m/s of 1 m/s² is.
 - **Opgelegde beweging**: maak in de tekst duidelijk wanneer de beweging gegeven is (kinematica)

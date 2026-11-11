@@ -11,6 +11,16 @@
 <style>
   /* hoogte van de scène volgt de breedte (vaste schaal tot l = 5 m), zodat er geen lege strook onder de figuur blijft */
   .scene canvas{height:auto;aspect-ratio:25/15;max-height:500px}
+  /* accolade onder een term, met naam eronder (zoals in het handboek; zelfde opmaak als Vb. 13.3) */
+  .ub{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;line-height:1.5}
+  .ub>.ubk{align-self:stretch;height:7px;border:1.6px solid currentColor;border-top:0;border-radius:0 0 8px 8px;margin-top:1px}
+  .ub>.ubl{font-size:.72em;line-height:1.3;font-style:italic}
+  .ub.vel{color:var(--cv)} .ub.e{color:#4f5862}
+  .ub>.inh{color:var(--ink)}
+  .rij{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:.35em;margin:10px 0;line-height:1.4}
+  .rij>.m,.rij .inh{display:block;line-height:1.9em;white-space:nowrap}
+  .rij.hoog>.m,.rij.hoog .inh{line-height:3.2em}
+  .rij .ubl{padding-top:.45em;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -98,8 +108,13 @@
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
       <div class="eq"><span class="i">θ</span>(<span class="i">t</span>) = <span class="i">θ</span><sub>0</sub> cos(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>),&nbsp;&nbsp; <span class="i">ω</span>(<span class="i">t</span>) = d<span class="i">θ</span>/d<span class="i">t</span> = −<span class="i">θ</span><sub>0</sub>√(<span class="i">g</span>/<span class="i">l</span>) sin(√(<span class="i">g</span>/<span class="i">l</span>) <span class="i">t</span>)</div>
-      <div class="eq"><span class="v">r</span><sub>P</sub>(<span class="i">t</span>) = <span class="col"><span><span class="i">l</span> sin <span class="i">θ</span>(<span class="i">t</span>)</span><span>−<span class="i">l</span> cos <span class="i">θ</span>(<span class="i">t</span>)</span></span></div>
-      <div class="eq"><span class="v">v</span><sub>P</sub>(<span class="i">t</span>) = <span class="i">l ω</span>(<span class="i">t</span>) <span class="col"><span>cos <span class="i">θ</span>(<span class="i">t</span>)</span><span>sin <span class="i">θ</span>(<span class="i">t</span>)</span></span>&nbsp; ⊥ <span class="v">r</span><sub>P</sub></div>
+      <div class="eq"><span class="k-r"><span class="v">r</span><sub>P</sub></span>(<span class="i">t</span>) = <span class="col"><span><span class="i">l</span> sin <span class="i">θ</span>(<span class="i">t</span>)</span><span>−<span class="i">l</span> cos <span class="i">θ</span>(<span class="i">t</span>)</span></span></div>
+      <div class="rij hoog">
+        <span class="m"><span class="k-v"><span class="v">v</span><sub>P</sub></span>(<span class="i">t</span>)&nbsp;=</span>
+        <span class="ub vel"><span class="inh"><span class="i">l ω</span>(<span class="i">t</span>)</span><span class="ubk"></span><span class="ubl">v<sub>P</sub>(t)</span></span>
+        <span class="ub e"><span class="inh"><span class="col"><span>cos <span class="i">θ</span>(<span class="i">t</span>)</span><span>sin <span class="i">θ</span>(<span class="i">t</span>)</span></span></span><span class="ubk"></span><span class="ubl"><span class="k-e"><span class="v">e</span><sub>t</sub></span>(t)</span></span>
+        <span class="m">&nbsp;⊥ <span class="k-r"><span class="v">r</span><sub>P</sub></span></span>
+      </div>
       <p class="fn">De beweging θ(t) is hier opgelegd: we beschrijven ze enkel (kinematica). De uitdrukking voor θ(t) is de oplossing voor kleine uitwijkingen; bij grote θ<sub>0</sub> wijkt een echte schommel daar wat van af. Dat volgt pas uit de dynamica. Getallen met <span class="i">g</span> = 10 m/s², zoals in de cursus.</p>
     </div>
     <details class="card" open>

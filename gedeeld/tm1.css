@@ -85,4 +85,7 @@ details li{margin:0 0 8px}
 .v{font-style:italic;position:relative;display:inline-block;line-height:1}
 .v::after{content:"→";position:absolute;left:50%;top:-.78em;transform:translateX(-50%);font-size:.6em;font-style:normal;line-height:1}
 .i{font-style:italic}
+/* vectoren in formules in dezelfde kleur als in de animatie: <span class="k-r"><span class="v">r</span><sub>P</sub></span> */
+.k-r{color:var(--cr)} .k-v{color:var(--cv)} .k-a{color:var(--ca)} .k-at{color:var(--cat)} .k-an{color:var(--can)}
+.k-e{color:#4f5862} .k-F{color:var(--cf)} .k-M{color:var(--cm)}
 .col{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;border-left:1.5px solid var(--ink);border-right:1.5px solid var(--ink);border-radius:9px;padding:1px 8px;line-height:1.35}
