@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 2.7 – Kruk-drijfstangmechanisme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* vaste schaal: x van −1.5 tot 4.5 m, y van −1.5 tot 1.5 m */
+  .scene canvas{height:auto;aspect-ratio:6/3;max-height:460px}
+  .tabel{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0 4px}
+  .tabel th,.tabel td{padding:4px 6px;border-bottom:1px solid var(--line, #e3e6ea);text-align:center;white-space:nowrap}
+  .tabel th:first-child,.tabel td:first-child{text-align:left}
+  .tabelwrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 2.7 — Een kruk-drijfstangmechanisme</h1>
+    <span class="kicker">Vectoren voor meetkundige analyse · θ<sub>2</sub> en <span class="i">x<sub>B</sub></span> in functie van θ<sub>1</sub> via de kettingen O-A-B en O-B; de baan van het midden C van de drijfstang</span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Kruk OA die rond O draait en drijfstang AB waarvan het uiteinde B in een horizontale geleiding loopt"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar die stand te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Hoek van de kruk <span class="i">θ</span><sub>1</sub></span><b id="thval"></b></div>
+          <input type="range" id="th" min="0" max="360" step="1" value="60">
+        </div>
+        <div class="btnrow" style="margin-top:8px">
+          <span style="font-size:13px;color:var(--muted);align-self:center">Standen uit het handboek:</span>
+          <button data-st="0">0°</button><button data-st="60">60°</button><button data-st="135">135°</button><button data-st="270">270°</button>
+        </div>
+        <div class="note"><span class="i">L</span><sub>1</sub> = 1 m, <span class="i">L</span><sub>2</sub> = 3 m. In het handboek draait de kruk aan <span class="i">ω</span><sub>1</sub> = 2π rad/s (één omwenteling per seconde); de animatie toont dat vertraagd, aan een kwart omwenteling per seconde.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
+          <label><input type="checkbox" id="t_OAB"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B</span></label>
+          <label><input type="checkbox" id="t_OB"> <span class="sw" style="background:var(--cr)"></span><span>ketting O-B: <span class="k-r"><span class="v">r</span><sub>B/O</sub></span></span></label>
+          <label><input type="checkbox" id="t_C"> <span class="sw" style="background:var(--cr)"></span><span><span class="k-r"><span class="v">r</span><sub>C/O</sub></span></span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van C</span></label>
+          <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoeken <span class="i">θ</span><sub>1</sub>, <span class="i">θ</span><sub>2</sub></span></label>
+        </div>
+        <div class="note"><span class="i">θ</span><sub>1</sub> wordt gemeten vanaf de <span class="i">x</span>-as tegen de wijzers in, <span class="i">θ</span><sub>2</sub> is de hoek van de drijfstang met de horizontale, positief als A boven de geleiding ligt (zie de vector <span class="k-r"><span class="v">r</span><sub>B/A</sub></span>).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3><span class="i">θ</span><sub>2</sub> in functie van <span class="i">θ</span><sub>1</sub></h3>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3><span class="i">x<sub>B</sub></span> in functie van <span class="i">θ</span><sub>1</sub></h3>
+      <canvas id="g2"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Baan van het midden C van de drijfstang</h3>
+      <canvas id="g3" style="cursor:default"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\kr{\vec r_{B/O}} = \kr{\vec r_{A/O}} + \kr{\vec r_{B/A}}</div>
+      <div class="tex">\phantom{\kr{\vec r_{B/O}}} = L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix} + L_2\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}</div>
+      <div class="tex">\kr{\vec r_{B/O}} = \begin{Bmatrix}x_B\\ 0\end{Bmatrix}</div>
+      <div class="tex">\begin{aligned} L_1\cos\theta_1 + L_2\cos\theta_2 &amp;= x_B\\ L_1\sin\theta_1 - L_2\sin\theta_2 &amp;= 0 \end{aligned}</div>
+      <div class="tex">\theta_2 = \arcsin\left(\frac{L_1}{L_2}\sin\theta_1\right)</div>
+      <div class="tex">x_B = L_1\cos\theta_1 + \sqrt{L_2^2 - L_1^2\sin^2\theta_1}</div>
+      <div class="tex">\kr{\vec r_{C/O}} = \kr{\vec r_{A/O}} + \kr{\vec r_{C/A}}</div>
+      <div class="tex">\phantom{\kr{\vec r_{C/O}}} = L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix} + \frac{L_2}{2}\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}</div>
+      <div class="tex">\phantom{\kr{\vec r_{C/O}}} = \begin{Bmatrix}L_1\cos\theta_1 + \frac{L_2}{2}\cos\theta_2\\ \frac{L_1}{2}\sin\theta_1\end{Bmatrix}</div>
+      <p class="fn">en na invullen van <span class="i">θ</span><sub>2</sub>:</p>
+      <div class="tex">\kr{\vec r_{C/O}} = \begin{Bmatrix}L_1\cos\theta_1 + \frac{L_2}{2}\cos\left(\arcsin\left(\frac{L_1}{L_2}\sin\theta_1\right)\right)\\ \frac{L_1}{2}\sin\theta_1\end{Bmatrix}</div>
+      <p class="fn">Het mechanisme heeft één kinematische vrijheidsgraad: <span class="i">θ</span><sub>1</sub> legt de hele stand vast. Controle: C ligt steeds in het midden van A en B, dus <span class="k-r"><span class="v">r</span><sub>C/O</sub></span> = (<span class="k-r"><span class="v">r</span><sub>A/O</sub></span> + <span class="k-r"><span class="v">r</span><sub>B/O</sub></span>)/2.</p>
+      <div class="tabelwrap">
+        <table class="tabel">
+          <tr><th></th><th><span class="i">θ</span><sub>1</sub> = 0°</th><th><span class="i">θ</span><sub>1</sub> = 60°</th><th><span class="i">θ</span><sub>1</sub> = 135°</th><th><span class="i">θ</span><sub>1</sub> = 270°</th></tr>
+          <tr><td><span class="k-r"><span class="v">r</span><sub>A/O</sub></span></td><td>(1.00, 0.00) m</td><td>(0.500, 0.866) m</td><td>(−0.707, 0.707) m</td><td>(0.00, −1.00) m</td></tr>
+          <tr><td><span class="k-r"><span class="v">r</span><sub>B/O</sub></span></td><td>(4.00, 0.00) m</td><td>(3.37, 0.00) m</td><td>(2.21, 0.00) m</td><td>(2.82, 0.00) m</td></tr>
+          <tr><td><span class="k-r"><span class="v">r</span><sub>C/O</sub></span></td><td>(2.50, 0.00) m</td><td>(1.94, 0.433) m</td><td>(0.750, 0.354) m</td><td>(1.41, −0.500) m</td></tr>
+        </table>
+      </div>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Hoeveel vrijheidsgraden heeft het mechanisme? Welke grootheden liggen vast zodra je <span class="i">θ</span><sub>1</sub> kiest?</li>
+        <li>Klik de vier standen uit het handboek aan en vergelijk de uitlezing met de tabel.</li>
+        <li>Wat is de grootste en de kleinste waarde van <span class="i">x<sub>B</sub></span>? Bij welke <span class="i">θ</span><sub>1</sub>? Hoe groot is de slag van B?</li>
+        <li>Waarom is de maximale <span class="i">θ</span><sub>2</sub> gelijk aan arcsin(<span class="i">L</span><sub>1</sub>/<span class="i">L</span><sub>2</sub>)? Wat gebeurt er als <span class="i">L</span><sub>2</sub> &lt; <span class="i">L</span><sub>1</sub>?</li>
+        <li>Waarom is de baan van C symmetrisch rond de <span class="i">x</span>-as, maar niet rond een verticale as?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const L1 = 1, L2 = 3;
+const XMIN = -1.5, XMAX = 4.5, YMIN = -1.5, YMAX = 1.5;
+let th1 = rad(60), playing = true;
+const show = { OAB: true, OB: true, C: false, baan: true, hoek: true };
+const wrap = t => ((t % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+function state(t1 = th1) {
+  const t2 = Math.asin(L1 / L2 * Math.sin(t1));
+  const A = { x: L1 * Math.cos(t1), y: L1 * Math.sin(t1) };
+  const B = { x: L1 * Math.cos(t1) + Math.sqrt(L2 * L2 - L1 * L1 * Math.sin(t1) ** 2), y: 0 };
+  const Cc = { x: A.x + L2 / 2 * Math.cos(t2), y: A.y - L2 / 2 * Math.sin(t2) };
+  return { t2, A, B, C: Cc };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN));
+  const X = x => (W - S * (XMAX - XMIN)) / 2 + (x - XMIN) * S, Y = y => H - (H - S * (YMAX - YMIN)) / 2 - (y - YMIN) * S;
+  const Pt = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state();
+  const O = Pt({ x: 0, y: 0 }), A = Pt(st.A), B = Pt(st.B), Cc = Pt(st.C);
+
+  // geleiding van B
+  ctx.save(); ctx.fillStyle = '#eef0f3'; ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1.2;
+  const gy1 = Y(0) - 0.13 * S, gy2 = Y(0) + 0.13 * S;
+  ctx.beginPath(); ctx.moveTo(X(1.7), gy1); ctx.lineTo(X(4.4), gy1); ctx.moveTo(X(1.7), gy2); ctx.lineTo(X(4.4), gy2); ctx.stroke();
+  for (let x = 1.75; x < 4.4; x += 0.1) { ctx.beginPath(); ctx.moveTo(X(x), gy2); ctx.lineTo(X(x) - 5, gy2 + 6); ctx.moveTo(X(x), gy1); ctx.lineTo(X(x) + 5, gy1 - 6); ctx.stroke(); }
+  // verlengde van de geleiding (x-as)
+  ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(XMIN), Y(0)); ctx.lineTo(X(1.7), Y(0)); ctx.stroke(); ctx.restore();
+  // baan van A
+  ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = '#c4c9cf'; ctx.beginPath(); ctx.arc(O.x, O.y, L1 * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  // baan van C
+  if (show.baan) {
+    ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.4; ctx.beginPath();
+    for (let i = 0; i <= 180; i++) { const q = Pt(state(2 * Math.PI * i / 180).C); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+    ctx.closePath(); ctx.stroke(); ctx.restore();
+  }
+  // schuifblok in B, kruk en drijfstang
+  ctx.save();
+  ctx.fillStyle = '#c9d2dc'; ctx.strokeStyle = '#4c5560'; ctx.lineWidth = 1.4;
+  ctx.fillRect(B.x - 0.22 * S, gy1 + 1, 0.44 * S, gy2 - gy1 - 2); ctx.strokeRect(B.x - 0.22 * S, gy1 + 1, 0.44 * S, gy2 - gy1 - 2);
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(A.x, A.y); ctx.stroke();
+  ctx.strokeStyle = '#c3c8ce'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+  // vaste steun in O
+  ctx.fillStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(O.x - 12, O.y + 20); ctx.lineTo(O.x + 12, O.y + 20); ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  // hoeken
+  if (show.hoek) {
+    const t = wrap(th1);
+    ctx.save(); ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.4;
+    if (t > 0.03) { ctx.beginPath(); ctx.arc(O.x, O.y, 0.32 * S, 0, -t, true); ctx.stroke(); }
+    ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(B.x - 0.75 * S, B.y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(B.x, B.y, 0.6 * S, Math.PI, Math.PI + st.t2, st.t2 < 0); ctx.stroke();
+    ctx.restore();
+    const am = t / 2;
+    label(ctx, 'θ', '1', O.x + 0.42 * S * Math.cos(am) - 4, O.y - 0.42 * S * Math.sin(am) + 5, '#4f5862', { vec: false, size: 14 });
+    label(ctx, 'θ', '2', B.x - 0.75 * S, B.y + (st.t2 >= 0 ? -6 : 18), '#4f5862', { vec: false, size: 14 });
+  }
+  // kettingen
+  if (show.OB && arrow(ctx, O.x, O.y, B.x, B.y, C.r, { w: 2.6, head: 12 })) label(ctx, 'r', 'B/O', (O.x + B.x) / 2 + 30, O.y + (st.A.y > 0 ? 22 : -10), C.r, { size: 14 });
+  if (show.OAB) {
+    if (arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) {
+      const n = { x: -Math.sin(th1), y: -Math.cos(th1) };
+      label(ctx, 'r', 'A/O', (O.x + A.x) / 2 + 24 * n.x - 10, (O.y + A.y) / 2 + 24 * n.y + 4, C.r, { size: 13 });
+    }
+    if (arrow(ctx, A.x, A.y, B.x, B.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'B/A', A.x + 0.72 * (B.x - A.x), A.y + 0.72 * (B.y - A.y) + (st.A.y >= 0 ? -10 : 22), C.r, { size: 13 });
+  }
+  if (show.C && arrow(ctx, O.x, O.y, Cc.x, Cc.y, C.r, { w: 2.2, head: 10 })) label(ctx, 'r', 'C/O', (O.x + Cc.x) / 2 + 4, (O.y + Cc.y) / 2 + (st.A.y >= 0 ? 18 : -8), C.r, { size: 13 });
+  // punten
+  for (const [q, n, dx, dy] of [[O, 'O', -18, 6], [A, 'A', -6, st.A.y >= 0 ? -10 : 20], [B, 'B', 10, -10], [Cc, 'C', -4, st.A.y >= 0 ? -10 : 20]]) {
+    ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 });
+  }
+  // assen
+  const ax = X(-1.25), ay = Y(-1.25);
+  arrow(ctx, ax, ay, ax + 34, ay, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', ax + 37, ay + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, ax, ay, ax, ay - 34, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', ax - 13, ay - 28, '#6b737d', { vec: false, size: 13 });
+}
+
+// ---------- grafieken ----------
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+const G3 = setup(document.getElementById('g3'));
+let F1, F2;
+function drawGraphs() {
+  const st = state(), d = deg(wrap(th1));
+  F1 = frame(G1, [0, 360], [-25, 25], '$\\theta_1$ [°]', '$\\theta_2$ [°]');
+  curve(G1.ctx, F1, 180, 0, 2 * Math.PI, u => deg(u), u => deg(state(u).t2), '#4f5862', 2.2);
+  TM1.cursor(G1.ctx, F1, d); dot(G1.ctx, F1.X(d), F1.Y(deg(st.t2)), '#4f5862');
+  F2 = frame(G2, [0, 360], [0, 4.5], '$\\theta_1$ [°]', '$x_B$ [m]');
+  curve(G2.ctx, F2, 180, 0, 2 * Math.PI, u => deg(u), u => state(u).B.x, C.r, 2.2);
+  TM1.cursor(G2.ctx, F2, d); dot(G2.ctx, F2.X(d), F2.Y(st.B.x), C.r);
+  // baan van C: gelijke schaal op beide assen
+  const ctx = G3.ctx, W = G3.w, H = G3.h; ctx.clearRect(0, 0, W, H);
+  const xl = 0.3, xh = 2.8, yl = -0.75, yh = 0.75, m = 34;
+  const S = Math.min((W - 2 * m) / (xh - xl), (H - 2 * m) / (yh - yl));
+  const ox = (W - S * (xh - xl)) / 2, oy = H / 2;
+  const X = x => ox + (x - xl) * S, Y = y => oy - y * S;
+  ctx.save(); ctx.font = '11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.strokeStyle = C.grid;
+  for (let v = 0.5; v <= 2.75; v += 0.25) { ctx.beginPath(); ctx.moveTo(X(v), Y(yl)); ctx.lineTo(X(v), Y(yh)); ctx.stroke(); if (Math.abs(v * 2 - Math.round(v * 2)) < 1e-9) { ctx.textAlign = 'center'; ctx.fillText(v.toFixed(1), X(v), Y(0) + 14); } }
+  for (let v = -0.5; v <= 0.51; v += 0.25) { ctx.beginPath(); ctx.moveTo(X(xl), Y(v)); ctx.lineTo(X(xh), Y(v)); ctx.stroke(); if (Math.abs(v) > 0.01 && Math.abs(v * 2 - Math.round(v * 2)) < 1e-9) { ctx.textAlign = 'right'; ctx.fillText(v.toFixed(1), X(xl) + 22, Y(v) + 4); } }
+  ctx.strokeStyle = '#9aa1aa'; ctx.beginPath(); ctx.moveTo(X(xl), Y(0)); ctx.lineTo(X(xh), Y(0)); ctx.stroke(); ctx.restore();
+  TM1.formule(ctx, '$x_C$ [m]', X(xh), Y(0) - 6, { align: 'right' });
+  TM1.formule(ctx, '$y_C$ [m]', X(xl) + 4, Y(yh) + 4);
+  ctx.save(); ctx.strokeStyle = C.r; ctx.lineWidth = 2.2; ctx.beginPath();
+  for (let i = 0; i <= 180; i++) { const q = state(2 * Math.PI * i / 180).C; i ? ctx.lineTo(X(q.x), Y(q.y)) : ctx.moveTo(X(q.x), Y(q.y)); }
+  ctx.stroke(); ctx.restore();
+  dot(ctx, X(st.C.x), Y(st.C.y), C.r);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = u => `(${fmt(u.x, 3)}, ${fmt(u.y, 3)}) m`;
+function drawReadout() {
+  const st = state();
+  TM1.uitlezing(ro, [
+    ['θ<sub>1</sub>', `${fmt(deg(wrap(th1)), 1)}°`],
+    ['θ<sub>2</sub>', `${fmt(deg(st.t2), 2)}°`],
+    ['<span class="i">x<sub>B</sub></span>', `${fmt(st.B.x, 3)} m`],
+    ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A), true],
+    ['<span class="k-r"><span class="v">r</span><sub>B/O</sub></span>', vec(st.B), true],
+    ['<span class="k-r"><span class="v">r</span><sub>C/O</sub></span>', vec(st.C), true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() { const d = deg(wrap(th1)); $('thval').textContent = `${d.toFixed(0)}°`; $('th').value = d; }
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+const naar = d => { setPlaying(false); th1 = rad(Math.min(Math.max(d, 0), 360)); render(); };
+
+playBtn.onclick = () => setPlaying(!playing);
+$('th').oninput = e => naar(+e.target.value);
+document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => naar(+b.dataset.st));
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G1, () => F1, naar);
+TM1.scrub(G2, () => F2, naar);
+
+TM1.bijGrootte([sc, G1, G2, G3], render);
+TM1.lus(dt => { th1 = wrap(th1 + 0.5 * Math.PI * dt); render(); }, () => playing);   // ¼ omwenteling per seconde
+})();
+</script>
+</body>
+</html>
