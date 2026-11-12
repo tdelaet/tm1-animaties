@@ -29,8 +29,8 @@ TM1.catalogus = [
       { id: '2.8', titel: 'Sta-apparaat', status: 'klaar' },
       { id: '2.9', titel: 'Telescopische kraanwagen', status: 'klaar' },
       { id: '2.10', titel: 'Kruk-drijfstangmechanisme', status: 'klaar' },
-      { id: '2.11', titel: 'Kubus duwt tegen zware plaat' },
-      { id: '2.12', titel: 'Van rotatie naar rotatie' }]}
+      { id: '2.11', titel: 'Kubus duwt tegen zware plaat', status: 'klaar' },
+      { id: '2.12', titel: 'Van rotatie naar rotatie', status: 'klaar' }]}
   ]},
   { deel: 'II', titel: 'Statica van enkelvoudige lichamen', hoofdstukken: [
     { nr: 3, titel: 'Krachten', map: 'h03-krachten', items: [] },

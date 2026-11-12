@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 2.11 – Kubus duwt tegen zware plaat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* vaste schaal: x van −1 tot 7.5 m, y van −0.9 tot 5.6 m */
+  .scene canvas{height:auto;aspect-ratio:85/65;max-height:520px}
+  .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 2.11 — Kubus duwt tegen zware plaat</h1>
+    <span class="kicker">Extra oefening · de hoek θ van de plaat in functie van de positie <span class="i">x<sub>E</sub></span> van de kubus, met vectoriële kettingen en met driehoeksmeetkunde</span>
+  </header>
+  <div class="vervolg">Op snelheidsniveau komt deze kubus terug in Voorbeeld 15.8 (nog geen animatie).</div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Kubus die naar links schuift en een scharnierende plaat omhoog duwt; de plaat rust op de ribbe H van de kubus"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar die stand te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="reset">⟲ Opnieuw</button>
+          <button id="j45"><span class="i">x<sub>E</sub></span> = <span class="i">b</span></button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Positie van de kubus <span class="i">x<sub>E</sub></span></span><b id="xval"></b></div>
+          <input type="range" id="x" min="0" max="4.583" step="0.001" value="4.583">
+        </div>
+        <div class="note"><span class="i">l</span> = 5 m, <span class="i">b</span> = 2 m, <span class="i">v</span> = 0.5 m/s naar links, in werkelijke tijd. Bij <span class="i">t</span> = 0 valt de rand BC van de plaat samen met de ribbe H van de kubus: <span class="i">x<sub>E</sub></span> = √(<span class="i">l</span>² − <span class="i">b</span>²) = 4.58 m. De animatie stopt als de plaat verticaal staat.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+          <label><input type="checkbox" id="t_dir"> <span class="sw" style="background:var(--cr)"></span><span>rechtstreeks: <span class="k-r"><span class="v">r</span><sub>H/A</sub></span></span></label>
+          <label><input type="checkbox" id="t_AEH"> <span class="sw d" style="color:var(--cr)"></span><span>ketting A-E-H</span></label>
+          <label><input type="checkbox" id="t_drie"> <span class="sw" style="background:#f3d98b"></span><span>driehoek AEH</span></label>
+        </div>
+        <div class="note">Het scharnier A ligt in de oorsprong. E is de linkeronderhoek van de kubus, H de ribbe waarop de plaat rust.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Hoek <span class="i">θ</span> in functie van <span class="i">x<sub>E</sub></span></h3>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Hoek <span class="i">θ</span> in functie van de tijd</h3>
+      <canvas id="g2"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <p class="fn"><b>1. Vectoriële kettingen.</b> De positie van H ten opzichte van A, rechtstreeks en via A-E-H:</p>
+      <div class="tex">\kr{\vec r_{H/A}} = |AH|\begin{Bmatrix}\cos\theta\\ \sin\theta\end{Bmatrix},</div>
+      <div class="tex">\kr{\vec r_{H/A}} = \kr{\vec r_{E/A}} + \kr{\vec r_{H/E}} = \begin{Bmatrix}x_E\\ 0\end{Bmatrix} + \begin{Bmatrix}0\\ b\end{Bmatrix}</div>
+      <div class="tex">|AH|\begin{Bmatrix}\cos\theta\\ \sin\theta\end{Bmatrix} = \begin{Bmatrix}x_E\\ 0\end{Bmatrix} + \begin{Bmatrix}0\\ b\end{Bmatrix}</div>
+      <div class="tex">\tan\theta = \frac{b}{x_E}, \qquad \theta = \operatorname{atan}\frac{b}{x_E}</div>
+      <p class="fn"><b>2. Driehoeksmeetkunde.</b> In de rechthoekige driehoek AEH geldt rechtstreeks:</p>
+      <div class="tex">\tan\theta(t) = \frac{b}{x_E(t)}</div>
+      <p class="fn"><b>Controle.</b> <span class="i">b</span>/<span class="i">x<sub>E</sub></span> is dimensieloos. Als <span class="i">x<sub>E</sub></span> → ∞ gaat <span class="i">θ</span> → 0; als <span class="i">x<sub>E</sub></span> → 0 staat de plaat verticaal, <span class="i">θ</span> → 90°; bij <span class="i">x<sub>E</sub></span> = <span class="i">b</span> is <span class="i">θ</span> = atan 1 = 45°.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Welke grootheid elimineer je uit het stelsel van de vectoriële kettingen, en hoe?</li>
+        <li>De kubus beweegt met een constante snelheid. Draait de plaat ook met een constante hoeksnelheid? Kijk naar de grafiek in functie van de tijd.</li>
+        <li>Klik op <span class="i">x<sub>E</sub></span> = <span class="i">b</span>. Waarom is de hoek dan 45°?</li>
+        <li>Waarom hangt <span class="i">θ</span> niet af van de lengte <span class="i">l</span> van de plaat? Waar speelt <span class="i">l</span> wel een rol?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const L = 5, B = 2, V = 0.5, X0 = Math.sqrt(L * L - B * B), TEND = X0 / V;   // [m], [m/s], [s]
+const XMIN = -1, XMAX = 7.5, YMIN = -0.9, YMAX = 5.6;
+let xE = X0, playing = true;
+const show = { dir: true, AEH: true, drie: true };
+const theta = x => Math.atan2(B, x);
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H_ = sc.h; ctx.clearRect(0, 0, W, H_);
+  const S = Math.min(W / (XMAX - XMIN), H_ / (YMAX - YMIN));
+  const X = x => (W - S * (XMAX - XMIN)) / 2 + (x - XMIN) * S, Y = y => H_ - (H_ - S * (YMAX - YMIN)) / 2 - (y - YMIN) * S;
+  const Pt = q => ({ x: X(q.x), y: Y(q.y) });
+  const th = theta(xE), u = { x: Math.cos(th), y: Math.sin(th) }, n = { x: -Math.sin(th), y: Math.cos(th) };
+  const A = Pt({ x: 0, y: 0 }), E = Pt({ x: xE, y: 0 }), H = Pt({ x: xE, y: B }), F = Pt({ x: xE + B, y: 0 }), G = Pt({ x: xE + B, y: B });
+
+  // grond
+  ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(-0.6), Y(0)); ctx.lineTo(W, Y(0)); ctx.stroke();
+  ctx.strokeStyle = '#b9bec5'; ctx.lineWidth = 1;
+  for (let x = -0.5; x < XMAX; x += 0.25) { ctx.beginPath(); ctx.moveTo(X(x), Y(0)); ctx.lineTo(X(x) - 6, Y(0) + 8); ctx.stroke(); }
+  ctx.restore();
+  // driehoek AEH
+  if (show.drie) {
+    ctx.save(); ctx.fillStyle = 'rgba(243,217,139,0.55)'; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(E.x, E.y); ctx.lineTo(H.x, H.y); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.2; const s = 9;   // rechte hoek in E
+    ctx.beginPath(); ctx.moveTo(E.x - s, E.y); ctx.lineTo(E.x - s, E.y - s); ctx.lineTo(E.x, E.y - s); ctx.stroke(); ctx.restore();
+  }
+  // kubus
+  ctx.save(); ctx.fillStyle = 'rgba(220,232,243,0.85)'; ctx.strokeStyle = '#4c5560'; ctx.lineWidth = 1.8;
+  ctx.fillRect(E.x, H.y, F.x - E.x, E.y - H.y); ctx.strokeRect(E.x, H.y, F.x - E.x, E.y - H.y); ctx.restore();
+  // plaat: band boven de lijn A-tip, rust op H
+  const tip = { x: L * u.x, y: L * u.y }, d = 0.18;
+  const p1 = Pt({ x: 0, y: 0 }), p2 = Pt(tip), p3 = Pt({ x: tip.x + d * n.x, y: tip.y + d * n.y }), p4 = Pt({ x: d * n.x, y: d * n.y });
+  ctx.save(); ctx.fillStyle = 'rgba(150,156,165,0.75)'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // scharnier in A
+  ctx.fillStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(A.x - 11, A.y + 18); ctx.lineTo(A.x + 11, A.y + 18); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  // hoek θ
+  ctx.save(); ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(A.x, A.y, 0.75 * S, 0, -th, true); ctx.stroke(); ctx.restore();
+  label(ctx, 'θ', '', A.x + 0.9 * S * Math.cos(th / 2) - 2, A.y - 0.9 * S * Math.sin(th / 2) + 6, '#4f5862', { vec: false, size: 15 });
+  // kettingen
+  if (show.AEH) {
+    if (arrow(ctx, A.x, A.y, E.x, E.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'E/A', (A.x + E.x) / 2 - 10, A.y + 22, C.r, { size: 13 });
+    if (arrow(ctx, E.x, E.y, H.x, H.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'H/E', E.x + 8, (E.y + H.y) / 2 + 4, C.r, { size: 13 });
+  }
+  if (show.dir && arrow(ctx, A.x, A.y, H.x, H.y, C.r, { w: 2.6, head: 12 })) label(ctx, 'r', 'H/A', A.x + 0.55 * (H.x - A.x) - 14, A.y + 0.55 * (H.y - A.y) - 16, C.r, { size: 14 });
+  // snelheid van de kubus
+  arrow(ctx, G.x + 0.9 * S, (G.y + F.y) / 2, G.x + 0.15 * S, (G.y + F.y) / 2, C.v, { w: 2.4, head: 10 });
+  label(ctx, 'v', '', G.x + 0.55 * S, (G.y + F.y) / 2 - 10, C.v, { size: 14 });
+  // punten
+  for (const [q, nm, dx, dy] of [[A, 'A', -18, 4], [E, 'E', -4, 22], [H, 'H', -18, -6], [F, 'F', 6, 18], [G, 'G', 6, -6], [p2, 'B', 6, -4]]) {
+    if (nm !== 'B') { ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore(); }
+    label(ctx, nm, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 13 });
+  }
+  const ax = X(-0.8), ay = Y(4.2);                     // linksboven: daar komt de plaat nooit
+  arrow(ctx, ax, ay, ax + 34, ay, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', ax + 37, ay + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, ax, ay, ax, ay - 34, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', ax - 13, ay - 28, '#6b737d', { vec: false, size: 13 });
+}
+
+// ---------- grafieken ----------
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+let F1, F2;
+function drawGraphs() {
+  const th = deg(theta(xE)), t = (X0 - xE) / V;
+  F1 = frame(G1, [0, 5], [0, 90], '$x_E$ [m]', '$\\theta$ [°]');
+  curve(G1.ctx, F1, 150, 0, X0, x => x, x => deg(theta(x)), '#4f5862', 2.2);
+  TM1.cursor(G1.ctx, F1, xE); dot(G1.ctx, F1.X(xE), F1.Y(th), '#4f5862');
+  F2 = frame(G2, [0, 10], [0, 90], '$t$ [s]', '$\\theta$ [°]');
+  curve(G2.ctx, F2, 150, 0, TEND, s => s, s => deg(theta(X0 - V * s)), '#4f5862', 2.2);
+  TM1.cursor(G2.ctx, F2, t); dot(G2.ctx, F2.X(t), F2.Y(th), '#4f5862');
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+function drawReadout() {
+  const th = theta(xE);
+  TM1.uitlezing(ro, [
+    ['<span class="i">t</span>', `${fmt((X0 - xE) / V, 2)} s`],
+    ['<span class="i">x<sub>E</sub></span>', `${fmt(xE, 3)} m`],
+    ['<span class="i">b</span>/<span class="i">x<sub>E</sub></span>', xE > 1e-6 ? fmt(B / xE, 3) : '∞'],
+    ['θ', `${fmt(deg(th), 2)}°`],
+    ['|<span class="i">AH</span>|', `${fmt(Math.hypot(xE, B), 3)} m`],
+    ['<span class="k-r"><span class="v">r</span><sub>H/A</sub></span>', `(${fmt(xE, 3)}, ${fmt(B, 3)}) m`, true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() { $('xval').textContent = `${xE.toFixed(2)} m`; $('x').value = xE; }
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+const naar = x => { setPlaying(false); xE = Math.min(Math.max(x, 0), X0); render(); };
+
+playBtn.onclick = () => { if (!playing && xE <= 0) xE = X0; setPlaying(!playing); };
+$('reset').onclick = () => { xE = X0; setPlaying(true); render(); };
+$('j45').onclick = () => naar(B);
+$('x').oninput = e => naar(+e.target.value);
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G1, () => F1, naar);
+TM1.scrub(G2, () => F2, s => naar(X0 - V * Math.min(Math.max(s, 0), TEND)));
+
+TM1.bijGrootte([sc, G1, G2], render);
+TM1.lus(dt => { xE -= V * dt; if (xE <= 0) { xE = 0; setPlaying(false); } render(); }, () => playing);
+})();
+</script>
+</body>
+</html>
