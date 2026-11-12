@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 2.6 – Telescopische kraanwagen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* vaste schaal: x (naar links!) van −4.2 tot 6.6 m, y van −3 tot 7.2 m */
+  .scene canvas{height:auto;aspect-ratio:108/102;max-height:560px}
+  .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 2.6 — Telescopische kraanwagen</h1>
+    <span class="kicker">Vectoren voor meetkundige analyse · de lengte van de zuiger |BE| in functie van de hoek α via de kettingen E-B en E-A-B</span>
+  </header>
+  <div class="vervolg">Op snelheidsniveau komt deze kraanwagen terug in <a href="../h15-snelheden-meetkundig/vb15-5-telescopische-kraanwagen.html">Voorbeeld 15.5</a> (vectoriële ketting) en <a href="../h15-snelheden-meetkundig/vb15-6-telescopische-kraanwagen.html">Voorbeeld 15.6</a> (driehoeksmeetkunde).</div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Telescopische kraanwagen met hydraulische zuiger tussen E en B; de vectoriële kettingen E-B en E-A-B"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar die stand te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Hoek <span class="i">α</span> van de kraanarm</span><b id="alval"></b></div>
+          <input type="range" id="al" min="0" max="50" step="0.1" value="13">
+        </div>
+        <div class="note">Afspelen laat de arm op en neer gaan tussen <span class="i">α</span> = 0° en 50°. Let op: de <span class="i">x</span>-as wijst naar links, zoals in de figuur van het handboek; <span class="i">α</span> en <span class="i">β</span> worden gemeten vanaf de horizontale naar links.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+          <label><input type="checkbox" id="t_EB"> <span class="sw" style="background:var(--cr)"></span><span>ketting E-B: <span class="k-r"><span class="v">r</span><sub>B/E</sub></span></span></label>
+          <label><input type="checkbox" id="t_EAB"> <span class="sw d" style="color:var(--cr)"></span><span>ketting E-A-B</span></label>
+          <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#e8a35a"></span><span>hoeken <span class="i">α</span> en <span class="i">β</span></span></label>
+          <label><input type="checkbox" id="t_tweede"> <span class="sw d" style="color:#7a828c"></span><span>tweede oplossing voor <span class="i">α</span></span></label>
+        </div>
+        <div class="note">De tweede oplossing heeft dezelfde lengte |<span class="i">BE</span>| maar een andere hoek <span class="i">α</span>. Ze voldoet aan de vergelijkingen, maar de arm zou dan door de wagen steken: fysisch inzicht sluit ze uit.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Lengte van de zuiger |<span class="i">BE</span>| in functie van <span class="i">α</span></h3>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Hoek <span class="i">β</span> van de zuiger in functie van <span class="i">α</span></h3>
+      <canvas id="g2"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\kr{\vec r_{B/E}} = \kr{\vec r_{A/E}} + \kr{\vec r_{B/A}}</div>
+      <div class="tex">\kr{\vec r_{A/E}} = \begin{Bmatrix}-2\ \text{m}\\ 1\ \text{m}\end{Bmatrix},</div>
+      <div class="tex">\kr{\vec r_{B/A}} = \begin{Bmatrix}|AB|\cos\alpha\\ |AB|\sin\alpha\end{Bmatrix},</div>
+      <div class="tex">\kr{\vec r_{B/E}} = \begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix}</div>
+      <div class="tex">\begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix} = \begin{Bmatrix}-2\ \text{m}\\ 1\ \text{m}\end{Bmatrix}</div>
+      <div class="tex">\phantom{\begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix}} + \begin{Bmatrix}|AB|\cos\alpha\\ |AB|\sin\alpha\end{Bmatrix} \qquad (2.6)</div>
+      <p class="fn">Twee vergelijkingen in drie onbekenden <span class="i">α</span>, |<span class="i">BE</span>| en <span class="i">β</span>. Kwadrateren en optellen elimineert <span class="i">β</span>:</p>
+      <div class="tex">|BE|^2 = 5\ \text{m}^2 + |AB|^2</div>
+      <div class="tex">\phantom{|BE|^2 =}\ - 4\ \text{m}\,|AB|\cos\alpha + 2\ \text{m}\,|AB|\sin\alpha</div>
+      <div class="tex">|BE| = \sqrt{21 - 16\cos\alpha + 8\sin\alpha}\ \text{m}</div>
+      <p class="fn">Omgekeerd volgt <span class="i">α</span> uit |<span class="i">BE</span>| via een vierkantsvergelijking in cos <span class="i">α</span> (eenheden weggelaten):</p>
+      <div class="tex">320\cos^2\alpha + (672 - 32|BE|^2)\cos\alpha</div>
+      <div class="tex">\phantom{320\cos^2\alpha}\ + (|BE|^4 - 42|BE|^2 + 377) = 0</div>
+      <p class="fn">Die vergelijking heeft in het algemeen meerdere oplossingen; de juiste kies je op basis van fysisch inzicht. Gegeven: |<span class="i">AB</span>| = 4 m, A ligt 2 m horizontaal en 1 m verticaal van E. Bij de stand <span class="i">α</span> = 13° van Voorbeeld 15.5 is |<span class="i">BE</span>| = 2.685 m en <span class="i">β</span> = 45.0°.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Welke vectoren in de twee kettingen hebben een gekende richting, welke een gekende lengte?</li>
+        <li>Waarom elimineer je <span class="i">β</span> en niet |<span class="i">BE</span>|?</li>
+        <li>Zet de tweede oplossing aan. Waarom voldoet ze aan dezelfde vergelijkingen? Waarom is ze fysisch onmogelijk?</li>
+        <li>Neemt |<span class="i">BE</span>| altijd toe als <span class="i">α</span> groter wordt? Kijk naar de grafiek.</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const AB = 4, AE = { x: -2, y: 1 }, LAC = 7;            // |AB|, r_A/E, lengte van de arm (schuift niet uit)
+const XMIN = -4.2, XMAX = 6.6, YMIN = -3, YMAX = 7.2;   // vaste schaal [m]; x wijst naar links
+const ALMAX = rad(50);
+const PHI = Math.atan2(16, 8);                          // |BE|² = 21 + √320·sin(α − φ)
+let al = rad(13), playing = true, richting = 1;
+const show = { EB: true, EAB: true, hoek: true, tweede: false };
+
+function state(a = al) {
+  const B = { x: AE.x + AB * Math.cos(a), y: AE.y + AB * Math.sin(a) };   // E in de oorsprong
+  const a2 = Math.PI + 2 * PHI - a;                                       // tweede oplossing, zelfde |BE|
+  const B2 = { x: AE.x + AB * Math.cos(a2), y: AE.y + AB * Math.sin(a2) };
+  return { B, L: Math.hypot(B.x, B.y), be: Math.atan2(B.y, B.x), a2, B2 };
+}
+const norm = a => ((a % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;   // naar (−180°, 180°]
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN));
+  const xr = W - (W - S * (XMAX - XMIN)) / 2, yb = H - (H - S * (YMAX - YMIN)) / 2;
+  const X = x => xr - (x - XMIN) * S, Y = y => yb - (y - YMIN) * S;   // x naar links
+  const P = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state();
+  const E = P({ x: 0, y: 0 }), A = P(AE), B = P(st.B);
+
+  // oplegger, wielen en platform
+  ctx.save();
+  ctx.fillStyle = '#ecebe5'; ctx.fillRect(0, Y(-2.15), W, H - Y(-2.15));
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, Y(-2.15)); ctx.lineTo(W, Y(-2.15)); ctx.stroke();
+  ctx.fillStyle = '#dbe7f2'; ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.4;
+  ctx.fillRect(X(5.8), Y(-0.6), X(-4) - X(5.8), Y(-1.5) - Y(-0.6)); ctx.strokeRect(X(5.8), Y(-0.6), X(-4) - X(5.8), Y(-1.5) - Y(-0.6));
+  for (const wx of [-3.4, -2.6, -1.8, 0.6, 1.4, 4.2, 5.0]) { ctx.beginPath(); ctx.arc(X(wx), Y(-1.8), 0.33 * S, 0, 2 * Math.PI); ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke(); }
+  ctx.fillStyle = '#dbe7f2'; ctx.fillRect(X(3.6), Y(-0.05), X(-3.6) - X(3.6), Y(-0.3) - Y(-0.05)); ctx.strokeRect(X(3.6), Y(-0.05), X(-3.6) - X(3.6), Y(-0.3) - Y(-0.05));
+  ctx.fillRect(X(-1.4), Y(1.9), X(-3.6) - X(-1.4), Y(-0.05) - Y(1.9)); ctx.strokeRect(X(-1.4), Y(1.9), X(-3.6) - X(-1.4), Y(-0.05) - Y(1.9));
+  ctx.fillStyle = '#fff'; ctx.fillRect(X(-1.8), Y(1.6), X(-3.2) - X(-1.8), Y(1.05) - Y(1.6));
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(1), Y(-0.3)); ctx.lineTo(X(1), Y(-0.75)); ctx.stroke();
+  ctx.restore();
+
+  // tweede (fysisch onmogelijke) oplossing: zelfde |BE|, andere α
+  if (show.tweede) {
+    const B2 = P(st.B2);
+    ctx.save(); ctx.globalAlpha = 0.75; ctx.setLineDash([6, 4]); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B2.x, B2.y); ctx.moveTo(E.x, E.y); ctx.lineTo(B2.x, B2.y); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.fillStyle = '#7a828c'; ctx.beginPath(); ctx.arc(B2.x, B2.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+    label(ctx, "B'", '', B2.x + 8, B2.y + 14, '#7a828c', { vec: false, size: 14 });
+  }
+
+  // telescopische arm (schuift niet uit)
+  const u = { x: Math.cos(al), y: Math.sin(al) };
+  const pt = s => P({ x: AE.x + s * u.x, y: AE.y + s * u.y });
+  ctx.save(); ctx.lineCap = 'butt';
+  ctx.strokeStyle = '#8fb3d6'; ctx.lineWidth = 0.42 * S; ctx.beginPath(); ctx.moveTo(pt(-0.5).x, pt(-0.5).y); ctx.lineTo(pt(5).x, pt(5).y); ctx.stroke();
+  ctx.strokeStyle = '#b8d0e8'; ctx.lineWidth = 0.3 * S; ctx.beginPath(); ctx.moveTo(pt(4.7).x, pt(4.7).y); ctx.lineTo(pt(LAC).x, pt(LAC).y); ctx.stroke();
+  ctx.restore();
+  const Cc = pt(LAC);
+  label(ctx, 'C', '', Cc.x - 6, Cc.y - 12, C.ink, { vec: false, size: 14 });
+
+  // zuiger E-B
+  ctx.save(); ctx.lineCap = 'round';
+  ctx.strokeStyle = '#2f3a48'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(E.x, E.y); ctx.lineTo(E.x + (B.x - E.x) * 0.55, E.y + (B.y - E.y) * 0.55); ctx.stroke();
+  ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(E.x, E.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+  ctx.restore();
+
+  // hoeken α (bij A) en β (bij E), gemeten vanaf de horizontale naar links
+  if (show.hoek) {
+    for (const [Q, hoek, n] of [[A, al, 'α'], [E, st.be, 'β']]) {
+      ctx.save(); ctx.fillStyle = 'rgba(232,163,90,0.45)'; ctx.beginPath(); ctx.moveTo(Q.x, Q.y); ctx.arc(Q.x, Q.y, 34, Math.PI, Math.PI + hoek); ctx.closePath(); ctx.fill();
+      ctx.setLineDash([3, 3]); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(Q.x, Q.y); ctx.lineTo(Q.x - 48, Q.y); ctx.stroke(); ctx.restore();
+      label(ctx, n, '', Q.x - Math.cos(hoek / 2) * 46, Q.y - Math.sin(hoek / 2) * 46 + 5, C.ink, { vec: false, size: 14, align: 'center' });
+    }
+  }
+  // kettingen
+  if (show.EAB) {
+    const k = (a, c, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, c.x, c.y, C.r, { w: 1.7, dash: [5, 3], head: 9 })) label(ctx, 'r', sub, (a.x + c.x) / 2 + dx, (a.y + c.y) / 2 + dy, C.r, { size: 13 }); };
+    k(E, A, 'A/E', -10, 20); k(A, B, 'B/A', -6, -12);
+  }
+  if (show.EB && arrow(ctx, E.x, E.y, B.x, B.y, C.r, { w: 2.6, head: 12 })) label(ctx, 'r', 'B/E', (E.x + B.x) / 2 - 44, (E.y + B.y) / 2, C.r, { size: 14 });
+
+  for (const [q, n, dx, dy] of [[A, 'A', 8, 4], [B, 'B', 8, -8], [E, 'E', 8, 16], [P({ x: 1, y: 0 }), 'O', -14, 16]]) {
+    ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 });
+  }
+  // assen: x naar links, y naar boven
+  const ax = { x: W - 24, y: Y(-0.6) };
+  arrow(ctx, ax.x, ax.y, ax.x - 40, ax.y, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'x', '', ax.x - 50, ax.y + 14, '#6b737d', { vec: false, size: 14 });
+  arrow(ctx, ax.x, ax.y, ax.x, ax.y - 40, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'y', '', ax.x + 4, ax.y - 42, '#6b737d', { vec: false, size: 14 });
+}
+
+// ---------- grafieken ----------
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+let F1, F2;
+function drawGraphs() {
+  const st = state(), d = deg(al);
+  F1 = frame(G1, [0, 50], [0, 5], '$\\alpha$ [°]', '$|BE|$ [m]');
+  curve(G1.ctx, F1, 120, 0, ALMAX, u => deg(u), u => state(u).L, C.r, 2.2);
+  TM1.cursor(G1.ctx, F1, d); dot(G1.ctx, F1.X(d), F1.Y(st.L), C.r);
+  F2 = frame(G2, [0, 50], [0, 120], '$\\alpha$ [°]', '$\\beta$ [°]');
+  curve(G2.ctx, F2, 120, 0, ALMAX, u => deg(u), u => deg(state(u).be), '#e8a35a', 2.2);
+  TM1.cursor(G2.ctx, F2, d); dot(G2.ctx, F2.X(d), F2.Y(deg(st.be)), '#e8a35a');
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+function drawReadout() {
+  const st = state();
+  const rij = [
+    ['α', `${fmt(deg(al), 2)}°`],
+    ['β', `${fmt(deg(st.be), 2)}°`],
+    ['|BE|', `${fmt(st.L, 3)} m`],
+    ['<span class="k-r"><span class="v">r</span><sub>B/A</sub></span>', `(${fmt(st.B.x - AE.x, 3)}, ${fmt(st.B.y - AE.y, 3)}) m`, true],
+    ['<span class="k-r"><span class="v">r</span><sub>B/E</sub></span>', `(${fmt(st.B.x, 3)}, ${fmt(st.B.y, 3)}) m`, true]
+  ];
+  if (show.tweede) rij.push(['tweede oplossing α′', `${fmt(deg(norm(st.a2)), 2)}°`]);
+  TM1.uitlezing(ro, rij);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() { $('alval').textContent = `${deg(al).toFixed(1)}°`; $('al').value = deg(al); }
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+const naar = d => { setPlaying(false); al = rad(Math.min(Math.max(d, 0), 50)); render(); };
+
+playBtn.onclick = () => setPlaying(!playing);
+$('al').oninput = e => naar(+e.target.value);
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G1, () => F1, naar);
+TM1.scrub(G2, () => F2, naar);
+
+TM1.bijGrootte([sc, G1, G2], render);
+TM1.lus(dt => {
+  al += richting * 0.25 * dt;
+  if (al >= ALMAX) { al = ALMAX; richting = -1; }
+  if (al <= 0) { al = 0; richting = 1; }
+  render();
+}, () => playing);
+})();
+</script>
+</body>
+</html>
