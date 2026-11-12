@@ -23,7 +23,7 @@ TM1.catalogus = [
       { id: '2.2', titel: 'Mobiele robot', status: 'klaar' },
       { id: '2.3', titel: 'Reuzenrad', status: 'klaar' },
       { id: '2.4', titel: 'Rollend wiel', status: 'klaar' },
-      { id: '2.5', titel: 'Sta-apparaat' },
+      { id: '2.5', titel: 'Sta-apparaat', status: 'klaar' },
       { id: '2.6', titel: 'Telescopische kraanwagen' },
       { id: '2.7', titel: 'Kruk-drijfstangmechanisme' },
       { id: '2.8', titel: 'Sta-apparaat' },
