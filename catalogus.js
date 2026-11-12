@@ -26,7 +26,7 @@ TM1.catalogus = [
       { id: '2.5', titel: 'Sta-apparaat', status: 'klaar' },
       { id: '2.6', titel: 'Telescopische kraanwagen', status: 'klaar' },
       { id: '2.7', titel: 'Kruk-drijfstangmechanisme', status: 'klaar' },
-      { id: '2.8', titel: 'Sta-apparaat' },
+      { id: '2.8', titel: 'Sta-apparaat', status: 'klaar' },
       { id: '2.9', titel: 'Telescopische kraanwagen' },
       { id: '2.10', titel: 'Kruk-drijfstangmechanisme' },
       { id: '2.11', titel: 'Kubus duwt tegen zware plaat' },
