@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 15.4 – Rollend wiel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* kleuren zoals in de figuren van het handboek: v_M/O blauw, v_A/M rood, v_A/O zwart */
+  :root{ --cvl:#1f4fd8; --cw:#d62828; --cv:#1c2430; }
+  .k-vl{color:var(--cvl)} .k-w{color:var(--cw)}
+  /* vaste schaal: x van −1 tot 8 m, y van −0.3 tot 3.6 m (wiel met R = 1 m) */
+  .scene canvas{height:auto;aspect-ratio:90/39;max-height:440px}
+  .graph canvas.groot{height:300px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 15.4 — Rollend wiel</h1>
+    <span class="kicker">Meetkundige analyses voor snelheden · de snelheid van een punt op de rand van een wiel dat rolt zonder glijden, via de vectoriële ketting O-M-A</span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Wiel dat rolt zonder glijden; de snelheid van een punt A op de rand en de cycloïde die A beschrijft"></canvas>
+      <div class="hint">Klik of sleep in de grafiek om naar die stand te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="reset">↺ θ = 0</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Hoek <span class="i">θ</span> waarover het wiel gedraaid is</span><b id="thval"></b></div>
+          <input type="range" id="th" min="0" max="360" step="1" value="0">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Rotatiesnelheid <span class="i">ω</span> = d<span class="i">θ</span>/d<span class="i">t</span></span><b id="wval"></b></div>
+          <input type="range" id="w" min="0" max="1.2" step="0.05" value="0.6">
+        </div>
+        <div class="btnrow" style="margin:0">
+          <button id="j0">A raakt de grond (<span class="i">θ</span> = 0)</button>
+          <button id="j90"><span class="i">θ</span> = 90°</button>
+          <button id="j180">A bovenaan (<span class="i">θ</span> = 180°)</button>
+          <button id="lim">limietgeval <span class="i">ω</span> = 0</button>
+        </div>
+        <div class="note">Het wiel heeft straal <span class="i">R</span> = 1 m en rolt naar rechts. Op <span class="i">t</span> = 0 ligt het centrum M boven de oorsprong en raakt A de grond in O. De animatie loopt in werkelijke tijd en begint opnieuw na één omwenteling.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
+          <label><input type="checkbox" id="t_deel"> <span class="sw d" style="color:var(--cvl)"></span><span>deelsnelheden</span></label>
+          <label><input type="checkbox" id="t_vA"> <span class="sw" style="background:var(--cv)"></span><span><span class="k-v"><span class="v">v</span><sub>A/O</sub></span></span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-M-A</span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van A (cycloïde)</span></label>
+          <label><input type="checkbox" id="t_strobe"> <span class="sw" style="background:#9aa3ad"></span><span>stroboscoop</span></label>
+        </div>
+        <div class="note">Stroboscoop: de stand van A en zijn snelheid <span class="k-v"><span class="v">v</span><sub>A/O</sub></span> op 12 gelijk verdeelde tijdstippen tijdens één omwenteling, zoals de figuur in het handboek.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Snelheidsdriehoek</h3>
+      <div class="sub"><span class="k-v"><span class="v">v</span><sub>A/O</sub></span> = <span class="k-vl"><span class="v">v</span><sub>M/O</sub></span> + <span class="k-w"><span class="v">v</span><sub>A/M</sub></span>: gelijkbenig, want beide deelsnelheden zijn <span class="i">Rω</span>.</div>
+      <canvas id="g1" class="groot" style="cursor:default"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Componenten van <span class="k-v"><span class="v">v</span><sub>A/O</sub></span> in functie van <span class="i">θ</span></h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cvx)"></span><span class="i">v</span><sub>A/O,x</sub> = <span class="i">Rω</span>(1 − cos <span class="i">θ</span>)</span><span><span class="sw" style="background:var(--cvy)"></span><span class="i">v</span><sub>A/O,y</sub> = <span class="i">Rω</span> sin <span class="i">θ</span></span></div>
+      <canvas id="g2" class="groot"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\kr{\vec r_{A/O}}(t) = \kr{\vec r_{M/O}}(t) + \kr{\vec r_{A/M}}(t) = \begin{Bmatrix}R\,\theta(t)\\ R\end{Bmatrix} + R\begin{Bmatrix}-\sin\theta(t)\\ -\cos\theta(t)\end{Bmatrix}</div>
+      <div class="tex">\begin{aligned} \kv{\vec v_{A/O}}(t) &amp;= \frac{\mathrm{d}\kr{\vec r_{M/O}}(t)}{\mathrm{d}t} + \frac{\mathrm{d}\kr{\vec r_{A/M}}(t)}{\mathrm{d}t} = \ubvl{\begin{Bmatrix}R\,\frac{\mathrm{d}\theta(t)}{\mathrm{d}t}\\ 0\end{Bmatrix}}{\kvl{\vec v_{M/O}}(t)} + \ubw{R\begin{Bmatrix}-\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}\frac{\mathrm{d}\theta(t)}{\mathrm{d}t}}{\kw{\vec v_{A/M}}(t)} \\ &amp;= \begin{Bmatrix}1-\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}R\,\omega \end{aligned}</div>
+      <div class="tex">\|\kvl{\vec v_{M/O}}\| = \|\kw{\vec v_{A/M}}\| = R\,\omega</div>
+      <p class="fn"><b>Controle:</b> de eenheden kloppen (m · 1/s). Als het wiel niet rolt (<span class="i">ω</span> = 0) is <span class="k-v"><span class="v">v</span><sub>A/O</sub></span> = <span class="v">0</span>. Als A de grond raakt (<span class="i">θ</span> = 0 + <span class="i">n</span>·2π) staat A ogenblikkelijk stil, want het wiel rolt zonder glijden: <span class="k-v"><span class="v">v</span><sub>A/O</sub></span> = <span class="v">0</span>. <span class="k-vl"><span class="v">v</span><sub>M/O</sub></span> is evenwijdig met de grond, <span class="k-w"><span class="v">v</span><sub>A/M</sub></span> raakt aan het wiel (loodrecht op MA); hun grootte is gelijk, enkel hun onderlinge richting verandert.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Spring naar <span class="i">θ</span> = 0. Waarom is de snelheid van A daar nul, terwijl het centrum M wel beweegt?</li>
+        <li>Spring naar <span class="i">θ</span> = 180°. Hoe groot is <span class="k-v"><span class="v">v</span><sub>A/O</sub></span> nu, vergeleken met <span class="k-vl"><span class="v">v</span><sub>M/O</sub></span>? Verklaar met de snelheidsdriehoek.</li>
+        <li>Waarom is de snelheidsdriehoek altijd gelijkbenig?</li>
+        <li>Zet de baan en de stroboscoop aan. Raakt <span class="k-v"><span class="v">v</span><sub>A/O</sub></span> telkens aan de cycloïde? Waar staan de stroboscoopstanden dicht bij elkaar, en waarom?</li>
+        <li>Verdubbel <span class="i">ω</span>. Verandert de vorm van de cycloïde? En de snelheden?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, tipLabel, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KMO = css('--cvl'), KAM = css('--cw');
+const R = 1;                                         // straal [m]
+const XMIN = -1, XMAX = 8, YMIN = -0.3, YMAX = 3.6;  // vaste schaal [m]
+const KV = 0.6;                                      // vectorschaal: m per (m/s), vast
+let th = 0, w = 0.6, playing = true;
+const show = { deel: true, vA: true, ket: true, baan: true, strobe: false };
+
+function state(t_ = th) {
+  const s = Math.sin(t_), c = Math.cos(t_);
+  const M = { x: R * t_, y: R }, A = { x: R * t_ - R * s, y: R - R * c };
+  const vMO = { x: R * w, y: 0 }, vAM = { x: -R * c * w, y: R * s * w };
+  return { M, A, vMO, vAM, vAO: { x: vMO.x + vAM.x, y: vMO.y + vAM.y } };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+const eenheid = (a, c) => { const dx = c.x - a.x, dy = c.y - a.y, n = Math.hypot(dx, dy) || 1; return { x: dx / n, y: dy / n }; };
+function haak(ctx, Q, u, q, s = 9) {
+  ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(Q.x + u.x * s, Q.y + u.y * s); ctx.lineTo(Q.x + (u.x + q.x) * s, Q.y + (u.y + q.y) * s); ctx.lineTo(Q.x + q.x * s, Q.y + q.y * s); ctx.stroke(); ctx.restore();
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN));
+  const X = x => (W - S * (XMAX - XMIN)) / 2 + (x - XMIN) * S, Y = y => H - (H - S * (YMAX - YMIN)) / 2 - (y - YMIN) * S;
+  const Pt = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state();
+
+  // grond en assen
+  ctx.save(); ctx.fillStyle = '#ecebe5'; ctx.fillRect(0, Y(0), W, H - Y(0));
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, Y(0)); ctx.lineTo(W, Y(0)); ctx.stroke(); ctx.restore();
+  const O = Pt({ x: 0, y: 0 });
+  arrow(ctx, O.x, O.y, O.x + 46, O.y, '#6b737d', { w: 1.3, head: 8 });
+  arrow(ctx, O.x, O.y, O.x, O.y - 46, '#6b737d', { w: 1.3, head: 8 });
+  label(ctx, 'x', '', O.x + 48, O.y + 14, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'y', '', O.x - 14, O.y - 40, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'O', '', O.x - 16, O.y + 16, C.ink, { vec: false, size: 13 });
+
+  // cycloïde
+  if (show.baan) {
+    ctx.save(); ctx.setLineDash([4, 5]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.4; ctx.beginPath();
+    for (let i = 0; i <= 200; i++) { const q = Pt(state(2 * Math.PI * i / 200).A); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+    ctx.stroke(); ctx.restore();
+  }
+  // stroboscoop: A en v_A/O op 12 standen (wielen licht)
+  if (show.strobe) {
+    for (let k = 0; k < 12; k++) {
+      const q = state(k * 2 * Math.PI / 12), A = Pt(q.A), M = Pt(q.M);
+      ctx.save(); ctx.strokeStyle = 'rgba(150,156,164,0.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(M.x, M.y, R * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+      arrow(ctx, A.x, A.y, A.x + q.vAO.x * KV * S, A.y - q.vAO.y * KV * S, C.v, { w: 1.6, head: 8, alpha: 0.45 });
+      ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(A.x, A.y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+    }
+  }
+
+  // wiel met spaken die meedraaien
+  const M = Pt(st.M), A = Pt(st.A);
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2.4; ctx.fillStyle = 'rgba(241,243,245,0.7)';
+  ctx.beginPath(); ctx.arc(M.x, M.y, R * S, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#c3c8cf'; ctx.lineWidth = 1;
+  // spaken draaien mee; spaak k = 0 loopt naar A
+  for (let k = 0; k < 6; k++) { const a = th + k * Math.PI / 3; ctx.beginPath(); ctx.moveTo(M.x, M.y); ctx.lineTo(M.x - Math.sin(a) * R * S, M.y + Math.cos(a) * R * S); ctx.stroke(); }
+  ctx.restore();
+  // contactpunt met de grond
+  ctx.save(); ctx.fillStyle = '#9aa1aa'; ctx.beginPath(); ctx.arc(M.x, Y(0), 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+
+  // ketting O-M-A
+  if (show.ket) {
+    if (arrow(ctx, O.x, O.y, M.x, M.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) label(ctx, 'r', 'M/O', (O.x + M.x) / 2 - 12, (O.y + M.y) / 2 - 4, C.r, { size: 12, align: 'right' });
+    if (arrow(ctx, M.x, M.y, A.x, A.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) label(ctx, 'r', 'A/M', (M.x + A.x) / 2 + 6, (M.y + A.y) / 2 - 6, C.r, { size: 12 });
+  }
+  // snelheden
+  const tip = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
+  if (show.deel) {
+    const t1 = tip(M, st.vMO), t2 = tip(A, st.vAM);
+    if (arrow(ctx, M.x, M.y, t1.x, t1.y, KMO, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, M.x, M.y, t1.x, t1.y, 'v', 'M/O', KMO);
+    if (arrow(ctx, A.x, A.y, t2.x, t2.y, KAM, { w: 2.4, dash: [7, 4], head: 11 })) { tipLabel(ctx, A.x, A.y, t2.x, t2.y, 'v', 'A/M', KAM); haak(ctx, A, eenheid(A, M), eenheid(A, t2)); }
+  }
+  if (show.vA) {
+    const t3 = tip(A, st.vAO);
+    if (arrow(ctx, A.x, A.y, t3.x, t3.y, C.v, { w: 3, head: 12 })) tipLabel(ctx, A.x, A.y, t3.x, t3.y, 'v', 'A/O', C.v);
+  }
+  for (const [q, n, dx, dy] of [[M, 'M', 6, 16], [A, 'A', -16, -6]]) {
+    ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 });
+  }
+  TM1.schaalLegende(ctx, H, [[0.5 * KV * S, C.v, '0.5 m/s']], { rechtsboven: { w: W, y: 40 } });
+}
+
+// ---------- snelheidsdriehoek ----------
+const G1 = setup(document.getElementById('g1'));
+function veelhoek(G, delen, totaal) {
+  const ctx = G.ctx, W = G.w, H = G.h; ctx.clearRect(0, 0, W, H);
+  const pts = [{ x: 0, y: 0 }];
+  delen.forEach(([u]) => { const p = pts[pts.length - 1]; pts.push({ x: p.x + u.x, y: p.y + u.y }); });
+  const L = Math.max(...pts.map(p => Math.hypot(p.x, p.y)), ...delen.map(([u]) => Math.hypot(u.x, u.y)));
+  if (L < 1e-9) { ctx.save(); ctx.font = '13px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.fillText('alle snelheden zijn nul', W / 2, H / 2); ctx.restore(); return; }
+  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x)), ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
+  const m = 48, k = Math.min((W - 2 * m - 30) / Math.max(xmax - xmin, 1e-9), (H - 2 * m) / Math.max(ymax - ymin, 1e-9), (Math.min(W, H) - 2 * m) / L);
+  const cx = (W - (xmax - xmin) * k) / 2 - xmin * k, cy = (H + (ymax - ymin) * k) / 2 + ymin * k;
+  const Pp = p => ({ x: cx + p.x * k, y: cy - p.y * k });
+  arrow(ctx, 14, H - 14, 46, H - 14, '#6b737d', { w: 1.2, head: 7 });
+  arrow(ctx, 14, H - 14, 14, H - 46, '#6b737d', { w: 1.2, head: 7 });
+  label(ctx, 'x', '', 49, H - 9, '#6b737d', { vec: false, size: 13 });
+  label(ctx, 'y', '', 19, H - 42, '#6b737d', { vec: false, size: 13 });
+  delen.forEach(([u, kleur, sub], i) => {
+    const a = Pp(pts[i]), c = Pp(pts[i + 1]);
+    if (arrow(ctx, a.x, a.y, c.x, c.y, kleur, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, a.x, a.y, c.x, c.y, 'v', sub, kleur);
+  });
+  const [u, kleur, sub] = totaal, a = Pp(pts[0]), c = Pp(u);
+  if (Math.hypot(u.x, u.y) < 1e-9) {
+    ctx.save(); ctx.font = '13px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.fillText('v_A/O = 0: de deelsnelheden heffen elkaar op', 60, 24); ctx.restore(); return;
+  }
+  if (arrow(ctx, a.x, a.y, c.x, c.y, kleur, { w: 3.2, head: 13 })) {
+    const n = eenheid(a, c);
+    label(ctx, 'v', sub, (a.x + c.x) / 2 - n.y * 18, (a.y + c.y) / 2 + n.x * 18 + 5, kleur, { align: 'center' });
+  }
+}
+
+// ---------- componenten in functie van θ ----------
+const G2 = setup(document.getElementById('g2'));
+let F2;
+function drawGrafiek() {
+  F2 = frame(G2, [0, 360], [-1.4, 2.6], '$\\theta$ [°]', '$v_{A/O}$ [m/s]');
+  curve(G2.ctx, F2, 180, 0, 2 * Math.PI, u => deg(u), u => state(u).vAO.x, C.vx, 2.2);
+  curve(G2.ctx, F2, 180, 0, 2 * Math.PI, u => deg(u), u => state(u).vAO.y, C.vy, 2.2);
+  const st = state();
+  TM1.cursor(G2.ctx, F2, deg(th)); dot(G2.ctx, F2.X(deg(th)), F2.Y(st.vAO.x), C.vx); dot(G2.ctx, F2.X(deg(th)), F2.Y(st.vAO.y), C.vy);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = (u, e) => `(${fmt(u.x, 3)}, ${fmt(u.y, 3)}) ${e}`;
+function drawReadout() {
+  const st = state();
+  TM1.uitlezing(ro, [
+    ['θ', `${fmt(deg(th), 1)}°`],
+    ['ω', `${fmt(w, 2)} rad/s`],
+    ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A, 'm'), true],
+    ['<span class="k-vl"><span class="v">v</span><sub>M/O</sub></span>', vec(st.vMO, 'm/s'), true],
+    ['<span class="k-w"><span class="v">v</span><sub>A/M</sub></span>', vec(st.vAM, 'm/s'), true],
+    ['<span class="k-v"><span class="v">v</span><sub>A/O</sub></span> (som)', vec(st.vAO, 'm/s'), true],
+    ['‖<span class="k-v"><span class="v">v</span><sub>A/O</sub></span>‖', `${fmt(Math.hypot(st.vAO.x, st.vAO.y), 3)} m/s`]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('thval').textContent = `${deg(th).toFixed(0)}°`; $('th').value = deg(th);
+  $('wval').textContent = `${w.toFixed(2)} rad/s`; $('w').value = w;
+}
+function render() {
+  const st = state();
+  drawScene();
+  veelhoek(G1, [[st.vMO, KMO, 'M/O'], [st.vAM, KAM, 'A/M']], [st.vAO, C.v, 'A/O']);
+  drawGrafiek(); drawReadout(); syncLabels();
+}
+const naar = d => { setPlaying(false); th = rad(d); render(); };
+
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { th = 0; render(); };
+$('th').oninput = e => naar(+e.target.value);
+$('w').oninput = e => { w = +e.target.value; render(); };
+$('j0').onclick = () => naar(0);
+$('j90').onclick = () => naar(90);
+$('j180').onclick = () => naar(180);
+$('lim').onclick = () => { setPlaying(false); w = 0; render(); };
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G2, () => F2, x => naar(Math.min(Math.max(x, 0), 360)));
+
+TM1.bijGrootte([sc, G1, G2], render);
+// het wiel rolt met ω; na één omwenteling opnieuw
+TM1.lus(dt => { th += w * dt; if (th >= 2 * Math.PI) th = 0; render(); }, () => playing);
+})();
+</script>
+</body>
+</html>

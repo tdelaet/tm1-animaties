@@ -11,8 +11,8 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <link rel="stylesheet" href="../gedeeld/tm1.css">
 <style>
-  /* deelsnelheden van de vectoriële ketting: drie tinten blauw/blauwgroen; de totale snelheid in het gewone blauw */
-  :root{ --cvl:#6aa2ea; --cw:#0e7490; --cvm:#4338ca; }
+  /* kleuren zoals in de figuren van het handboek: v_A/O blauw, v_B/A rood, v_M/B magenta, v_M/O zwart */
+  :root{ --cvl:#1f4fd8; --cw:#d62828; --cvm:#d61f9e; --cv:#1c2430; }
   .k-vl{color:var(--cvl)} .k-w{color:var(--cw)} .k-vm{color:var(--cvm)}
   /* vaste schaal: x van −1.5 tot 12 m, y van −1 tot 9 m */
   .scene canvas{height:auto;aspect-ratio:145/90;max-height:520px}
@@ -63,11 +63,10 @@
 
       <div class="card panel">
         <h2>Tonen</h2>
-        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_deel"> <span class="sw d" style="color:var(--cvl)"></span><span>deelsnelheden in A, B, M</span></label>
           <label><input type="checkbox" id="t_vM"> <span class="sw" style="background:var(--cv)"></span><span><span class="k-v"><span class="v">v</span><sub>M/O</sub></span></span></label>
           <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B-M</span></label>
-          <label><input type="checkbox" id="t_haaks"> <span class="sw" style="background:#7a828c"></span><span>rechte hoeken</span></label>
         </div>
         <div class="note">Elke deelsnelheid staat loodrecht op de verbindingslijn van haar ketting: <span class="k-vl"><span class="v">v</span><sub>A/O</sub></span> ⊥ OA, <span class="k-w"><span class="v">v</span><sub>B/A</sub></span> ⊥ AB, <span class="k-vm"><span class="v">v</span><sub>M/B</sub></span> ⊥ BM.</div>
       </div>
@@ -99,7 +98,7 @@
     <details class="card" open>
       <summary>Denkvragen bij de animatie</summary>
       <ol>
-        <li>Zet de rechte hoeken aan. Waarom staat <span class="k-vl"><span class="v">v</span><sub>A/O</sub></span> loodrecht op OA, <span class="k-w"><span class="v">v</span><sub>B/A</sub></span> loodrecht op AB en <span class="k-vm"><span class="v">v</span><sub>M/B</sub></span> loodrecht op BM?</li>
+        <li>Bekijk de rechte hoeken. Waarom staat <span class="k-vl"><span class="v">v</span><sub>A/O</sub></span> loodrecht op OA, <span class="k-w"><span class="v">v</span><sub>B/A</sub></span> loodrecht op AB en <span class="k-vm"><span class="v">v</span><sub>M/B</sub></span> loodrecht op BM?</li>
         <li>Zet <span class="i">ω</span> = 0. Wat gebeurt er met alle snelheden? Klopt dat met de controle "limietgevallen"?</li>
         <li>Controleer in de tabel dat <span class="k-r"><span class="v">r</span><sub>M/O</sub></span>·<span class="k-v"><span class="v">v</span><sub>M/O</sub></span> = 0. Waarom staat ook de totale snelheid van M loodrecht op OM?</li>
         <li>Zet <span class="i">b</span> = 0 en <span class="i">h</span> = 0. Waar ligt M dan, en welke deelsnelheden blijven over?</li>
@@ -120,7 +119,7 @@ const TEMPO = 0.5, THMAX = rad(75);
 const XMIN = -1.5, XMAX = 13, YMIN = -1, YMAX = 8;   // vaste schaal [m]
 const KV = 2;                                       // vectorschaal: m per (m/s), vast
 let th = 0, w = 0.3, L = 6, b = 2, h = 1.4, playing = true;
-const show = { deel: true, vM: true, ket: false, haaks: false };
+const show = { deel: true, vM: true, ket: true };   // rechte hoeken worden altijd getekend
 
 // ketting O-A-B-M: m = richting van de mast, p = loodrecht erop (naar rechts)
 function state(t_ = th) {
@@ -192,7 +191,7 @@ function drawScene() {
     if (arrow(ctx, A.x, A.y, t1.x, t1.y, KAO, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, A.x, A.y, t1.x, t1.y, 'v', 'A/O', KAO);
     if (arrow(ctx, B.x, B.y, t2.x, t2.y, KBA, { w: 2.4, dash: [7, 4], head: 10 })) tipLabel(ctx, B.x, B.y, t2.x, t2.y, 'v', 'B/A', KBA);
     if (arrow(ctx, M.x, M.y, t3.x, t3.y, KMB, { w: 2.4, dash: [7, 4], head: 10 })) tipLabel(ctx, M.x, M.y, t3.x, t3.y, 'v', 'M/B', KMB);
-    if (show.haaks && w > 0) {
+    if (w > 0) {
       haak(ctx, A, eenheid(A, O), eenheid(A, t1));
       if (b > 0.05) haak(ctx, B, eenheid(B, A), eenheid(B, t2));
       if (h > 0.05) haak(ctx, M, eenheid(M, B), eenheid(M, t3));
@@ -201,7 +200,7 @@ function drawScene() {
   if (show.vM) {
     const t4 = tip(M, st.vMO);
     if (arrow(ctx, M.x, M.y, t4.x, t4.y, C.v, { w: 3.2, head: 13 })) tipLabel(ctx, M.x, M.y, t4.x, t4.y, 'v', 'M/O', C.v);
-    if (show.haaks && w > 0) haak(ctx, M, eenheid(M, O), eenheid(M, t4));
+    if (w > 0) haak(ctx, M, eenheid(M, O), eenheid(M, t4));
   }
 
   // punten

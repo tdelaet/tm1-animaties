@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 15.2 – Mobiele robot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* kleuren zoals in de figuren van het handboek: v_A/O blauw, v_B/A rood, v_B/O zwart */
+  :root{ --cvl:#1f4fd8; --cw:#d62828; --cv:#1c2430; }
+  .k-vl{color:var(--cvl)} .k-w{color:var(--cw)}
+  /* vaste schaal: x van 0 tot 7 m, y van 0 tot 4.6 m */
+  .scene canvas{height:auto;aspect-ratio:70/46;max-height:520px}
+  .graph canvas.groot{height:300px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 15.2 — Mobiele robot</h1>
+    <span class="kicker">Meetkundige analyses voor snelheden · de snelheid van de hoek B van een rijdende en draaiende robot via de vectoriële ketting O-A-B</span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Bovenaanzicht van een mobiele robot die vooruit rijdt en draait, met de snelheden van A en B"></canvas>
+      <div class="hint">Klik of sleep in de grafiek om naar dat tijdstip te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="reset">↺ t = 0</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
+          <input type="range" id="tslider" min="0" max="2000" value="0">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Voorwaartse snelheid <span class="i k-vl">v<sub>r</sub></span></span><b id="vval"></b></div>
+          <input type="range" id="v" min="0" max="1" step="0.05" value="0.5">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Rotatiesnelheid <span class="i">ω</span> = d<span class="i">θ</span>/d<span class="i">t</span></span><b id="wval"></b></div>
+          <input type="range" id="w" min="-0.5" max="0.5" step="0.05" value="0.3">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Halve breedte <span class="i">b</span> en halve lengte <span class="i">l</span></span><b id="blval"></b></div>
+          <input type="range" id="b" min="0.1" max="0.5" step="0.05" value="0.3">
+          <input type="range" id="l" min="0.2" max="0.6" step="0.05" value="0.4">
+        </div>
+        <div class="btnrow" style="margin:0">
+          <button id="lim1">limietgeval ω = 0</button>
+          <button id="lim2">limietgeval <span class="i">v<sub>r</sub></span> = 0</button>
+        </div>
+        <div class="note">Met constante <span class="i">v<sub>r</sub></span> en <span class="i">ω</span> rijdt A over een cirkel. De animatie loopt in werkelijke tijd en begint opnieuw na één rondje (of wanneer de robot uit beeld rijdt).</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+          <label><input type="checkbox" id="t_deel"> <span class="sw d" style="color:var(--cvl)"></span><span>deelsnelheden</span></label>
+          <label><input type="checkbox" id="t_vB"> <span class="sw" style="background:var(--cv)"></span><span><span class="k-v"><span class="v">v</span><sub>B/O</sub></span></span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B</span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van A en B</span></label>
+        </div>
+        <div class="note"><span class="k-vl"><span class="v">v</span><sub>A/O</sub></span> ligt volgens de rijrichting; <span class="k-w"><span class="v">v</span><sub>B/A</sub></span> staat loodrecht op AB, want B draait rond A.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Snelheidsdriehoek</h3>
+      <div class="sub"><span class="k-v"><span class="v">v</span><sub>B/O</sub></span> = <span class="k-vl"><span class="v">v</span><sub>A/O</sub></span> + <span class="k-w"><span class="v">v</span><sub>B/A</sub></span>, kop aan staart.</div>
+      <canvas id="g1" class="groot" style="cursor:default"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Componenten van <span class="k-v"><span class="v">v</span><sub>B/O</sub></span> in functie van de tijd</h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cvx)"></span><span class="i">v</span><sub>B/O,x</sub></span><span><span class="sw" style="background:var(--cvy)"></span><span class="i">v</span><sub>B/O,y</sub></span></div>
+      <canvas id="g2" class="groot"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\begin{aligned} \kr{\vec r_{B/O}} &amp;= \kr{\vec r_{A/O}} + \kr{\vec r_{B/A}} \\ &amp;= \begin{Bmatrix}x_r\\ y_r\end{Bmatrix} + \sqrt{b^2+l^2}\begin{Bmatrix}\cos\left(\theta + \operatorname{atan}\frac{b}{l}\right)\\ \sin\left(\theta + \operatorname{atan}\frac{b}{l}\right)\end{Bmatrix} \end{aligned}</div>
+      <div class="tex">\begin{aligned} \kv{\vec v_{B/O}}(t) &amp;= \frac{\mathrm{d}\kr{\vec r_{A/O}}(t)}{\mathrm{d}t} + \frac{\mathrm{d}\kr{\vec r_{B/A}}(t)}{\mathrm{d}t} \\ &amp;= \ubvl{\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}\kvl{v_r}}{\kvl{\vec v_{A/O}}} + \ubw{\sqrt{b^2+l^2}\begin{Bmatrix}-\sin\left(\theta(t) + \operatorname{atan}\frac{b}{l}\right)\\ \cos\left(\theta(t) + \operatorname{atan}\frac{b}{l}\right)\end{Bmatrix}\omega}{\kw{\vec v_{B/A}}} \end{aligned}</div>
+      <div class="tex">\frac{\mathrm{d}x_r}{\mathrm{d}t} = \kvl{v_r}\cos\theta(t), \qquad \frac{\mathrm{d}y_r}{\mathrm{d}t} = \kvl{v_r}\sin\theta(t)</div>
+      <div class="tex">\|\kvl{\vec v_{A/O}}\| = \kvl{v_r}, \qquad \|\kw{\vec v_{B/A}}\| = \sqrt{b^2+l^2}\,|\omega|</div>
+      <p class="fn"><b>Controle:</b> de eenheden kloppen (m/s = m/s + m · 1/s). Als de robot niet roteert (<span class="i">ω</span> = 0) is <span class="k-v"><span class="v">v</span><sub>B/O</sub></span> = <span class="k-vl"><span class="v">v</span><sub>A/O</sub></span>; als hij niet vooruit rijdt (<span class="i">v<sub>r</sub></span> = 0) draait B enkel rond A. A is het referentiepunt in het midden van de robot, B de hoek links vooraan; de robot is 2<span class="i">b</span> breed en 2<span class="i">l</span> lang. Het handboek werkt met letters; de getallen hier zijn een keuze.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Waarom staat <span class="k-w"><span class="v">v</span><sub>B/A</sub></span> altijd loodrecht op AB? En waarom ligt <span class="k-vl"><span class="v">v</span><sub>A/O</sub></span> altijd volgens de rijrichting?</li>
+        <li>Klik op "limietgeval ω = 0". Wat wordt de snelheidsdriehoek? Hoe beweegt de robot dan?</li>
+        <li>Klik op "limietgeval <span class="i">v<sub>r</sub></span> = 0". Welke baan volgt B nu, en hoe groot is zijn snelheid?</li>
+        <li>Zet de baan van A en B aan. Zijn de banen even lang na één rondje? Welk punt rijdt het snelst?</li>
+        <li>Wat verandert er als de robot naar rechts draait (<span class="i">ω</span> &lt; 0)?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, tipLabel, frame, curve, dot, fmt, deg } = TM1;
+const C = TM1.kleuren();
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KAO = css('--cvl'), KBA = css('--cw');
+const XMIN = 0, XMAX = 7, YMIN = 0, YMAX = 4.6;   // vaste schaal [m]
+const TH0 = 0;                                   // beginrichting
+// beginstand van A: onderaan bij een linksdraai (ω ≥ 0), bovenaan bij een rechtsdraai, zodat de cirkel in beeld blijft
+const A0v = () => ({ x: 3.5, y: w >= 0 ? 0.9 : 3.7 });
+const KV = 2;                                    // vectorschaal: m per (m/s), vast
+let v = 0.5, w = 0.3, b = 0.3, l = 0.4, t = 0, playing = true;
+const show = { deel: true, vB: true, ket: true, baan: true };
+
+// duur van één lus: één rondje, of tot de robot uit beeld rijdt
+const tLus = () => Math.abs(w) > 1e-6 ? 2 * Math.PI / Math.abs(w) : (v > 1e-6 ? 3.2 / v : 10);
+function state(tt) {
+  const th = TH0 + w * tt, A0 = A0v();
+  const A = Math.abs(w) > 1e-6
+    ? { x: A0.x + v / w * (Math.sin(th) - Math.sin(TH0)), y: A0.y - v / w * (Math.cos(th) - Math.cos(TH0)) }
+    : { x: A0.x + v * tt * Math.cos(TH0), y: A0.y + v * tt * Math.sin(TH0) };
+  const rho = Math.hypot(b, l), be = Math.atan(b / l), ph = th + be;
+  const B = { x: A.x + rho * Math.cos(ph), y: A.y + rho * Math.sin(ph) };
+  const vAO = { x: v * Math.cos(th), y: v * Math.sin(th) };
+  const vBA = { x: -rho * Math.sin(ph) * w, y: rho * Math.cos(ph) * w };
+  return { th, A, B, vAO, vBA, vBO: { x: vAO.x + vBA.x, y: vAO.y + vBA.y } };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+const eenheid = (a, c) => { const dx = c.x - a.x, dy = c.y - a.y, n = Math.hypot(dx, dy) || 1; return { x: dx / n, y: dy / n }; };
+function haak(ctx, P, u, q, s = 9) {
+  ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(P.x + u.x * s, P.y + u.y * s); ctx.lineTo(P.x + (u.x + q.x) * s, P.y + (u.y + q.y) * s); ctx.lineTo(P.x + q.x * s, P.y + q.y * s); ctx.stroke(); ctx.restore();
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN));
+  const X = x => (W - S * (XMAX - XMIN)) / 2 + (x - XMIN) * S, Y = y => H - (H - S * (YMAX - YMIN)) / 2 - (y - YMIN) * S;
+  const P = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state(t);
+
+  // raster (vloer) en assen
+  ctx.save(); ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let x = 0; x <= XMAX; x += 0.5) { ctx.beginPath(); ctx.moveTo(X(x), Y(YMIN)); ctx.lineTo(X(x), Y(YMAX)); ctx.stroke(); }
+  for (let y = 0; y <= YMAX; y += 0.5) { ctx.beginPath(); ctx.moveTo(X(XMIN), Y(y)); ctx.lineTo(X(XMAX), Y(y)); ctx.stroke(); }
+  ctx.restore();
+  const O = P({ x: 0, y: 0 });
+  arrow(ctx, O.x + 4, O.y - 4, O.x + 50, O.y - 4, '#6b737d', { w: 1.3, head: 8 });
+  arrow(ctx, O.x + 4, O.y - 4, O.x + 4, O.y - 50, '#6b737d', { w: 1.3, head: 8 });
+  label(ctx, 'x', '', O.x + 52, O.y - 8, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'y', '', O.x + 10, O.y - 44, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'O', '', O.x + 6, O.y - 10, C.ink, { vec: false, size: 13 });
+
+  // banen van A en B over één lus
+  if (show.baan) {
+    for (const [k, kleur] of [['A', '#9aa1aa'], ['B', '#c9a0a0']]) {
+      ctx.save(); ctx.setLineDash([4, 5]); ctx.strokeStyle = kleur; ctx.lineWidth = 1.3; ctx.beginPath();
+      for (let i = 0; i <= 120; i++) { const q = P(state(tLus() * i / 120)[k]); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+      ctx.stroke(); ctx.restore();
+    }
+  }
+
+  // robot: rechthoek 2l × 2b rond A, met wielen
+  const c = Math.cos(st.th), s = Math.sin(st.th);
+  const hoek = (u, q) => P({ x: st.A.x + u * c - q * s, y: st.A.y + u * s + q * c });
+  const R = [hoek(l, b), hoek(-l, b), hoek(-l, -b), hoek(l, -b)];
+  ctx.save(); ctx.fillStyle = '#eef1f4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); R.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // wielen aan de zijkanten
+  ctx.fillStyle = '#5b6168';
+  for (const zij of [1, -1]) {
+    const m = [[0.15, zij * (b + 0.06)], [-0.15, zij * (b + 0.06)], [-0.15, zij * (b - 0.02)], [0.15, zij * (b - 0.02)]].map(([u, q]) => hoek(u, q));
+    ctx.beginPath(); m.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.fill();
+  }
+  // rijrichting
+  const neus = hoek(l * 0.75, 0), mid = P(st.A);
+  ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(mid.x, mid.y); ctx.lineTo(neus.x, neus.y); ctx.stroke();
+  ctx.restore();
+
+  const A = P(st.A), B = P(st.B);
+  // ketting O-A-B
+  if (show.ket) {
+    if (arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 1.6, dash: [6, 4], head: 9 })) label(ctx, 'r', 'A/O', (O.x + A.x) / 2 - 10, (O.y + A.y) / 2 - 6, C.r, { size: 13, align: 'right' });
+    if (arrow(ctx, A.x, A.y, B.x, B.y, C.r, { w: 1.6, dash: [5, 3], head: 8 })) label(ctx, 'r', 'B/A', (A.x + B.x) / 2 - 12, (A.y + B.y) / 2 + 4, C.r, { size: 13, align: 'right' });
+  }
+  // snelheden
+  const tip = (Q, u) => ({ x: Q.x + u.x * KV * S, y: Q.y - u.y * KV * S });
+  if (show.deel) {
+    const t1 = tip(A, st.vAO), t2 = tip(B, st.vBA);
+    if (arrow(ctx, A.x, A.y, t1.x, t1.y, KAO, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, A.x, A.y, t1.x, t1.y, 'v', 'A/O', KAO);
+    if (arrow(ctx, B.x, B.y, t2.x, t2.y, KBA, { w: 2.4, dash: [7, 4], head: 10 })) {
+      tipLabel(ctx, B.x, B.y, t2.x, t2.y, 'v', 'B/A', KBA);
+      haak(ctx, B, eenheid(B, A), eenheid(B, t2));   // v_B/A ⊥ AB
+    }
+  }
+  if (show.vB) {
+    const t3 = tip(B, st.vBO);
+    if (arrow(ctx, B.x, B.y, t3.x, t3.y, C.v, { w: 3, head: 12 })) tipLabel(ctx, B.x, B.y, t3.x, t3.y, 'v', 'B/O', C.v);
+  }
+  for (const [q, n, dx, dy] of [[A, 'A', -16, 16], [B, 'B', 8, -6]]) {
+    ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 });
+  }
+  TM1.schaalLegende(ctx, H, [[0.5 * KV * S, C.v, '0.5 m/s']], { rechtsboven: { w: W, y: 40 } });
+}
+
+// ---------- snelheidsdriehoek ----------
+const G1 = setup(document.getElementById('g1'));
+function veelhoek(G, delen, totaal) {
+  // delen: [[vector, kleur, sub], ...] kop aan staart; totaal: [vector, kleur, sub]
+  const ctx = G.ctx, W = G.w, H = G.h; ctx.clearRect(0, 0, W, H);
+  const pts = [{ x: 0, y: 0 }];
+  delen.forEach(([u]) => { const p = pts[pts.length - 1]; pts.push({ x: p.x + u.x, y: p.y + u.y }); });
+  const L = Math.max(...pts.map(p => Math.hypot(p.x, p.y)), ...delen.map(([u]) => Math.hypot(u.x, u.y)));
+  if (L < 1e-9) {
+    ctx.save(); ctx.font = '13px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.fillText('alle snelheden zijn nul', W / 2, H / 2); ctx.restore(); return;
+  }
+  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x)), ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
+  const m = 48, k = Math.min((W - 2 * m - 30) / Math.max(xmax - xmin, 1e-9), (H - 2 * m) / Math.max(ymax - ymin, 1e-9), (Math.min(W, H) - 2 * m) / L);
+  const cx = (W - (xmax - xmin) * k) / 2 - xmin * k, cy = (H + (ymax - ymin) * k) / 2 + ymin * k;
+  const Pp = p => ({ x: cx + p.x * k, y: cy - p.y * k });
+  arrow(ctx, 14, H - 14, 46, H - 14, '#6b737d', { w: 1.2, head: 7 });
+  arrow(ctx, 14, H - 14, 14, H - 46, '#6b737d', { w: 1.2, head: 7 });
+  label(ctx, 'x', '', 49, H - 9, '#6b737d', { vec: false, size: 13 });
+  label(ctx, 'y', '', 19, H - 42, '#6b737d', { vec: false, size: 13 });
+  delen.forEach(([u, kleur, sub], i) => {
+    const a = Pp(pts[i]), c = Pp(pts[i + 1]);
+    if (arrow(ctx, a.x, a.y, c.x, c.y, kleur, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, a.x, a.y, c.x, c.y, 'v', sub, kleur);
+  });
+  const [u, kleur, sub] = totaal, a = Pp(pts[0]), c = Pp(u);
+  if (arrow(ctx, a.x, a.y, c.x, c.y, kleur, { w: 3.2, head: 13 })) {
+    const n = eenheid(a, c);
+    label(ctx, 'v', sub, (a.x + c.x) / 2 - n.y * 18, (a.y + c.y) / 2 + n.x * 18 + 5, kleur, { align: 'center' });
+  }
+}
+
+// ---------- componenten in functie van de tijd ----------
+const G2 = setup(document.getElementById('g2'));
+let F2;
+function drawGrafiek() {
+  const T = tLus();
+  F2 = frame(G2, [0, T], [-1.4, 1.4], '$t$ [s]', '$v_{B/O}$ [m/s]');
+  curve(G2.ctx, F2, 200, 0, T, u => u, u => state(u).vBO.x, C.vx, 2.2);
+  curve(G2.ctx, F2, 200, 0, T, u => u, u => state(u).vBO.y, C.vy, 2.2);
+  const st = state(t);
+  TM1.cursor(G2.ctx, F2, t); dot(G2.ctx, F2.X(t), F2.Y(st.vBO.x), C.vx); dot(G2.ctx, F2.X(t), F2.Y(st.vBO.y), C.vy);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = (u, e) => `(${fmt(u.x, 3)}, ${fmt(u.y, 3)}) ${e}`;
+function drawReadout() {
+  const st = state(t);
+  TM1.uitlezing(ro, [
+    ['t', `${fmt(t, 2)} s`],
+    ['θ', `${fmt(deg(st.th), 1)}°`],
+    ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span> = (<span class="i">x<sub>r</sub></span>, <span class="i">y<sub>r</sub></span>)', vec(st.A, 'm'), true],
+    ['<span class="k-vl"><span class="v">v</span><sub>A/O</sub></span>', vec(st.vAO, 'm/s'), true],
+    ['<span class="k-w"><span class="v">v</span><sub>B/A</sub></span>', vec(st.vBA, 'm/s'), true],
+    ['<span class="k-v"><span class="v">v</span><sub>B/O</sub></span>', vec(st.vBO, 'm/s'), true],
+    ['‖<span class="k-v"><span class="v">v</span><sub>B/O</sub></span>‖', `${fmt(Math.hypot(st.vBO.x, st.vBO.y), 3)} m/s`]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), tsl = $('tslider');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('vval').textContent = `${v.toFixed(2)} m/s`;
+  $('wval').textContent = `${w.toFixed(2)} rad/s`;
+  $('blval').textContent = `b = ${b.toFixed(2)} m, l = ${l.toFixed(2)} m`;
+  $('tval').textContent = `${t.toFixed(2)} s`;
+  $('v').value = v; $('w').value = w;
+  tsl.value = Math.round(t / tLus() * 2000);
+}
+function render() {
+  const st = state(t);
+  drawScene();
+  veelhoek(G1, [[st.vAO, KAO, 'A/O'], [st.vBA, KBA, 'B/A']], [st.vBO, C.v, 'B/O']);
+  drawGrafiek(); drawReadout(); syncLabels();
+}
+const nieuw = f => { f(); t = Math.min(t, tLus()); render(); };
+
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { t = 0; render(); };
+tsl.oninput = () => { setPlaying(false); t = tsl.value / 2000 * tLus(); render(); };
+$('v').oninput = e => nieuw(() => { v = +e.target.value; });
+$('w').oninput = e => nieuw(() => { w = +e.target.value; });
+$('b').oninput = e => nieuw(() => { b = +e.target.value; });
+$('l').oninput = e => nieuw(() => { l = +e.target.value; });
+$('lim1').onclick = () => nieuw(() => { w = 0; if (v === 0) v = 0.5; });
+$('lim2').onclick = () => nieuw(() => { v = 0; if (w === 0) w = 0.3; });
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G2, () => F2, x => { setPlaying(false); t = x; render(); });
+
+TM1.bijGrootte([sc, G1, G2], render);
+TM1.lus(dt => { t += dt; if (t >= tLus()) t = 0; render(); }, () => playing);
+})();
+</script>
+</body>
+</html>

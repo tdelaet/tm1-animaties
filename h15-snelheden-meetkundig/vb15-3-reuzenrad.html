@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 15.3 – Reuzenrad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* kleuren zoals in de figuren van het handboek: v_C/A blauw, v_D/C rood, v_P/D groen, v_P/O zwart */
+  :root{ --cvl:#1f4fd8; --cw:#d62828; --cvm:#1fa34a; --cv:#1c2430; }
+  .k-vl{color:var(--cvl)} .k-w{color:var(--cw)} .k-vm{color:var(--cvm)}
+  /* vaste schaal: x van 0 tot 12 m, y van 0 tot 11 m */
+  .scene canvas{height:auto;aspect-ratio:12/11;max-height:560px}
+  .graph canvas.groot{height:300px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 15.3 — Reuzenrad</h1>
+    <span class="kicker">Meetkundige analyses voor snelheden · de snelheid van een persoon in een kantelende gondel via de vectoriële ketting O-B-A-C-D-P</span>
+  </header>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Reuzenrad met een scharnierende gondel; de deelsnelheden van de vectoriële ketting in C, D en P"></canvas>
+      <div class="hint">Klik of sleep in de grafiek om naar die stand te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="reset">↺ stand uit het handboek</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Stand van het rad <span class="i">θ</span><sub>1</sub></span><b id="th1val"></b></div>
+          <input type="range" id="th1" min="0" max="360" step="1" value="30">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Kanteling van de gondel <span class="i">θ</span><sub>2</sub></span><b id="th2val"></b></div>
+          <input type="range" id="th2" min="-180" max="180" step="1" value="0">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Rotatiesnelheid van het rad <span class="i">ω</span><sub>1</sub></span><b id="w1val"></b></div>
+          <input type="range" id="w1" min="0" max="0.4" step="0.02" value="0.2">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Kantelsnelheid van de gondel <span class="i">ω</span><sub>2</sub></span><b id="w2val"></b></div>
+          <input type="range" id="w2" min="-0.3" max="0.3" step="0.02" value="0.16">
+        </div>
+        <div class="btnrow" style="margin:0">
+          <button id="lim1">limietgeval <span class="i">ω</span><sub>2</sub> = 0</button>
+          <button id="lim2">limietgeval <span class="i">ω</span><sub>1</sub> = 0</button>
+          <button id="fig2">tweede figuur: <span class="i">θ</span><sub>2</sub> = 10°, <span class="i">ω</span><sub>2</sub> = 0</button>
+        </div>
+        <div class="note">Afspelen laat het rad draaien met een constante <span class="i">ω</span><sub>1</sub> en de gondel kantelen met een constante <span class="i">ω</span><sub>2</sub>, in werkelijke tijd. <b>Opgelet:</b> met een constante <span class="i">ω</span><sub>2</sub> blijft de gondel ronddraaien. Dat is fysisch niet realistisch, maar zo blijft de uitdrukking voor de snelheid zo eenvoudig mogelijk.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+          <label><input type="checkbox" id="t_deel"> <span class="sw d" style="color:var(--cvl)"></span><span>deelsnelheden</span></label>
+          <label><input type="checkbox" id="t_vP"> <span class="sw" style="background:var(--cv)"></span><span><span class="k-v"><span class="v">v</span><sub>P/O</sub></span></span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-B-A-C-D-P</span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van P (bij <span class="i">ω</span><sub>2</sub> = 0)</span></label>
+        </div>
+        <div class="note">C is het scharnier van de gondel aan het rad, D ligt op de as van de gondel op afstand <span class="i">l</span> onder C, P (de persoon) op afstand <span class="i">d</span> naast D.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Snelheidsveelhoek</h3>
+      <div class="sub"><span class="k-v"><span class="v">v</span><sub>P/O</sub></span> = <span class="k-vl"><span class="v">v</span><sub>C/A</sub></span> + <span class="k-w"><span class="v">v</span><sub>D/C</sub></span> + <span class="k-vm"><span class="v">v</span><sub>P/D</sub></span>, kop aan staart.</div>
+      <canvas id="g1" class="groot" style="cursor:default"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Componenten van <span class="k-v"><span class="v">v</span><sub>P/O</sub></span> in functie van <span class="i">θ</span><sub>1</sub></h3>
+      <div class="sub">Bij de huidige <span class="i">θ</span><sub>2</sub>, <span class="i">ω</span><sub>1</sub> en <span class="i">ω</span><sub>2</sub>.</div>
+      <div class="legend"><span><span class="sw" style="background:var(--cvx)"></span><span class="i">v</span><sub>P/O,x</sub></span><span><span class="sw" style="background:var(--cvy)"></span><span class="i">v</span><sub>P/O,y</sub></span></div>
+      <canvas id="g2" class="groot"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\begin{aligned} \kr{\vec r_{P/O}}(t) &amp;= \kr{\vec r_{B/O}} + \kr{\vec r_{A/B}} + \kr{\vec r_{C/A}}(t) + \kr{\vec r_{D/C}}(t) + \kr{\vec r_{P/D}}(t) \\ &amp;= \begin{Bmatrix}x_r\\ 0\end{Bmatrix} + \begin{Bmatrix}0\\ h\end{Bmatrix} + r\begin{Bmatrix}\cos\theta_1(t)\\ \sin\theta_1(t)\end{Bmatrix} \\ &amp;\quad + l\begin{Bmatrix}\sin\theta_2(t)\\ -\cos\theta_2(t)\end{Bmatrix} + d\begin{Bmatrix}\cos\theta_2(t)\\ \sin\theta_2(t)\end{Bmatrix} \end{aligned}</div>
+      <div class="tex">\begin{aligned} \kv{\vec v_{P/O}}(t) &amp;= \ubvl{r\begin{Bmatrix}-\sin\theta_1(t)\\ \cos\theta_1(t)\end{Bmatrix}\omega_1(t)}{\kvl{\vec v_{C/A}}(t)} \\ &amp;\quad + \ubw{l\begin{Bmatrix}\cos\theta_2(t)\\ \sin\theta_2(t)\end{Bmatrix}\omega_2(t)}{\kw{\vec v_{D/C}}(t)} + \ubvm{d\begin{Bmatrix}-\sin\theta_2(t)\\ \cos\theta_2(t)\end{Bmatrix}\omega_2(t)}{\kvm{\vec v_{P/D}}(t)} \end{aligned}</div>
+      <div class="tex">\kv{\vec v_{B/O}} = \kv{\vec v_{A/B}} = \vec 0</div>
+      <div class="tex">\|\kvl{\vec v_{C/A}}\| = r\,|\omega_1|, \qquad \|\kw{\vec v_{D/C}}\| = l\,|\omega_2|, \qquad \|\kvm{\vec v_{P/D}}\| = d\,|\omega_2|</div>
+      <p class="fn"><b>Controle:</b> de eenheden kloppen (m · 1/s). Als de gondel niet kantelt (<span class="i">ω</span><sub>2</sub> = 0) voert ze een zuivere translatie uit op een cirkelbaan (zie Vb. 14.1) en is <span class="k-v"><span class="v">v</span><sub>P/O</sub></span> = <span class="k-vl"><span class="v">v</span><sub>C/A</sub></span>. Als het rad stilstaat (<span class="i">ω</span><sub>1</sub> = 0) draait P rond C met straal √(<span class="i">l</span>² + <span class="i">d</span>²): ‖<span class="k-v"><span class="v">v</span><sub>P/O</sub></span>‖ = √(<span class="i">l</span>² + <span class="i">d</span>²) |<span class="i">ω</span><sub>2</sub>|. Het handboek werkt met letters; hier is <span class="i">r</span> = 4 m, <span class="i">h</span> = 5.5 m, <span class="i">l</span> = 1.2 m en <span class="i">d</span> = 0.4 m gekozen.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Waarom zijn <span class="k-v"><span class="v">v</span><sub>B/O</sub></span> en <span class="k-v"><span class="v">v</span><sub>A/B</sub></span> nul?</li>
+        <li>Waarom staat elke deelsnelheid loodrecht op haar verbindingslijn: <span class="k-vl"><span class="v">v</span><sub>C/A</sub></span> ⊥ AC, <span class="k-w"><span class="v">v</span><sub>D/C</sub></span> ⊥ CD, <span class="k-vm"><span class="v">v</span><sub>P/D</sub></span> ⊥ DP?</li>
+        <li>Klik op "tweede figuur" en zet de baan van P aan. Welke vorm heeft de baan, en waar ligt het middelpunt? Raakt <span class="k-v"><span class="v">v</span><sub>P/O</sub></span> aan de baan?</li>
+        <li>Klik op "limietgeval <span class="i">ω</span><sub>1</sub> = 0". Rond welk punt draait P nu, en met welke straal?</li>
+        <li>Welke deelsnelheid is het grootst? Wat betekent dat voor de beweging die een persoon in de gondel voelt?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, tipLabel, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KCA = css('--cvl'), KDC = css('--cw'), KPD = css('--cvm');
+const XR = 6, HA = 5.5, RR = 4, LL = 1.2, DD = 0.4;   // x_r, h, r, l, d [m]
+const XMIN = 0, XMAX = 12, YMIN = 0, YMAX = 11;       // vaste schaal [m]
+const KV = 2.5;                                       // vectorschaal: m per (m/s), vast
+let th1 = rad(30), th2 = 0, w1 = 0.2, w2 = 0.16, playing = true;
+const show = { deel: true, vP: true, ket: true, baan: true };
+
+function state(t1 = th1, t2 = th2) {
+  const W2 = w2;                                          // constante kantelsnelheid
+  const B = { x: XR, y: 0 }, A = { x: XR, y: HA };
+  const Cp = { x: A.x + RR * Math.cos(t1), y: A.y + RR * Math.sin(t1) };
+  const D = { x: Cp.x + LL * Math.sin(t2), y: Cp.y - LL * Math.cos(t2) };
+  const P = { x: D.x + DD * Math.cos(t2), y: D.y + DD * Math.sin(t2) };
+  const vCA = { x: -RR * Math.sin(t1) * w1, y: RR * Math.cos(t1) * w1 };
+  const vDC = { x: LL * Math.cos(t2) * W2, y: LL * Math.sin(t2) * W2 };
+  const vPD = { x: -DD * Math.sin(t2) * W2, y: DD * Math.cos(t2) * W2 };
+  return { W2, B, A, C: Cp, D, P, vCA, vDC, vPD, vPO: { x: vCA.x + vDC.x + vPD.x, y: vCA.y + vDC.y + vPD.y } };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+const eenheid = (a, c) => { const dx = c.x - a.x, dy = c.y - a.y, n = Math.hypot(dx, dy) || 1; return { x: dx / n, y: dy / n }; };
+function haak(ctx, Q, u, q, s = 8) {
+  ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(Q.x + u.x * s, Q.y + u.y * s); ctx.lineTo(Q.x + (u.x + q.x) * s, Q.y + (u.y + q.y) * s); ctx.lineTo(Q.x + q.x * s, Q.y + q.y * s); ctx.stroke(); ctx.restore();
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN));
+  const X = x => (W - S * (XMAX - XMIN)) / 2 + (x - XMIN) * S, Y = y => H - (H - S * (YMAX - YMIN)) / 2 - (y - YMIN) * S;
+  const Pt = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state();
+  const O = Pt({ x: 0, y: 0 }), B = Pt(st.B), A = Pt(st.A), Cc = Pt(st.C), D = Pt(st.D), P = Pt(st.P);
+
+  // grond, assen, steunpoten, rad
+  ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, O.y); ctx.lineTo(W, O.y); ctx.stroke(); ctx.restore();
+  arrow(ctx, O.x + 4, O.y - 4, O.x + 46, O.y - 4, '#6b737d', { w: 1.3, head: 8 });
+  arrow(ctx, O.x + 4, O.y - 4, O.x + 4, O.y - 46, '#6b737d', { w: 1.3, head: 8 });
+  label(ctx, 'x', '', O.x + 48, O.y - 8, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'y', '', O.x + 10, O.y - 40, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'O', '', O.x + 6, O.y - 10, C.ink, { vec: false, size: 13 });
+  ctx.save(); ctx.strokeStyle = '#8f969e'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(X(XR - 2.2), O.y); ctx.moveTo(A.x, A.y); ctx.lineTo(X(XR + 2.2), O.y); ctx.stroke();
+  ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(A.x, A.y, RR * S, 0, 2 * Math.PI); ctx.stroke();
+  ctx.strokeStyle = '#c3c8cf'; ctx.lineWidth = 1;
+  for (let k = 0; k < 8; k++) { const a = th1 + k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(X(XR + RR * Math.cos(a)), Y(HA + RR * Math.sin(a))); ctx.stroke(); }
+  ctx.restore();
+
+  // baan van P als de gondel niet kantelt: verschoven cirkel
+  if (show.baan && Math.abs(w2) < 1e-9) {
+    const M = Pt({ x: XR + LL * Math.sin(th2) + DD * Math.cos(th2), y: HA - LL * Math.cos(th2) + DD * Math.sin(th2) });
+    ctx.save(); ctx.setLineDash([4, 5]); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(M.x, M.y, RR * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  }
+
+  // gondel: hangt aan C, gekanteld over θ2 (u = dwarsrichting, n = langs de as naar beneden)
+  {
+    const u = { x: Math.cos(th2), y: Math.sin(th2) }, n = { x: Math.sin(th2), y: -Math.cos(th2) };
+    const q = (a, b_) => Pt({ x: st.C.x + a * u.x + b_ * n.x, y: st.C.y + a * u.y + b_ * n.y });
+    const hk = [q(-0.85, 0.3), q(0.85, 0.3), q(0.85, LL + 0.45), q(-0.85, LL + 0.45)];
+    ctx.save(); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.6; ctx.fillStyle = 'rgba(241,243,245,0.9)';
+    ctx.beginPath(); ctx.moveTo(Cc.x, Cc.y); ctx.lineTo(q(0, 0.3).x, q(0, 0.3).y); ctx.stroke();
+    ctx.beginPath(); hk.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(Cc.x, Cc.y); ctx.lineTo(q(0, LL + 0.45).x, q(0, LL + 0.45).y); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ketting O-B-A-C-D-P
+  if (show.ket) {
+    const k = (a, b_, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, b_.x, b_.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) label(ctx, 'r', sub, (a.x + b_.x) / 2 + dx, (a.y + b_.y) / 2 + dy, C.r, { size: 12 }); };
+    k(O, B, 'B/O', -10, 18); k(B, A, 'A/B', 6, 30); k(A, Cc, 'C/A', -36, -6); k(Cc, D, 'D/C', -34, 0); k(D, P, 'P/D', -6, 16);
+  }
+
+  // snelheden en rechte hoeken
+  const tip = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
+  if (show.deel) {
+    const t1 = tip(Cc, st.vCA), t2 = tip(D, st.vDC), t3 = tip(P, st.vPD);
+    if (arrow(ctx, Cc.x, Cc.y, t1.x, t1.y, KCA, { w: 2.4, dash: [7, 4], head: 11 })) { tipLabel(ctx, Cc.x, Cc.y, t1.x, t1.y, 'v', 'C/A', KCA); haak(ctx, Cc, eenheid(Cc, A), eenheid(Cc, t1)); }
+    if (arrow(ctx, D.x, D.y, t2.x, t2.y, KDC, { w: 2.4, dash: [7, 4], head: 10 })) { tipLabel(ctx, D.x, D.y, t2.x, t2.y, 'v', 'D/C', KDC); haak(ctx, D, eenheid(D, Cc), eenheid(D, t2)); }
+    if (arrow(ctx, P.x, P.y, t3.x, t3.y, KPD, { w: 2.4, dash: [7, 4], head: 9 })) { tipLabel(ctx, P.x, P.y, t3.x, t3.y, 'v', 'P/D', KPD); haak(ctx, P, eenheid(P, D), eenheid(P, t3), 6); }
+  }
+  if (show.vP) {
+    const t4 = tip(P, st.vPO);
+    if (arrow(ctx, P.x, P.y, t4.x, t4.y, C.v, { w: 3, head: 12 })) tipLabel(ctx, P.x, P.y, t4.x, t4.y, 'v', 'P/O', C.v);
+  }
+  for (const [q, n, dx, dy] of [[B, 'B', 6, -6], [A, 'A', -18, -4], [Cc, 'C', 6, -6], [D, 'D', -16, 4], [P, 'P', 6, 14]]) {
+    ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 13 });
+  }
+  // hoek θ1 bij A
+  if (th1 % (2 * Math.PI) > 0.02) {
+    const ra = 30;
+    ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(A.x + ra + 12, A.y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(A.x, A.y, ra, -(th1 % (2 * Math.PI)), 0); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '1', A.x + Math.cos(th1 / 2) * (ra + 10), A.y - Math.sin(th1 / 2) * (ra + 10) + 5, C.ink, { vec: false, size: 13, align: 'center' });
+  }
+  TM1.schaalLegende(ctx, H, [[0.5 * KV * S, C.v, '0.5 m/s']], { rechtsboven: { w: W, y: 40 } });
+}
+
+// ---------- snelheidsveelhoek ----------
+const G1 = setup(document.getElementById('g1'));
+function veelhoek(G, delen, totaal) {
+  const ctx = G.ctx, W = G.w, H = G.h; ctx.clearRect(0, 0, W, H);
+  const pts = [{ x: 0, y: 0 }];
+  delen.forEach(([u]) => { const p = pts[pts.length - 1]; pts.push({ x: p.x + u.x, y: p.y + u.y }); });
+  const L = Math.max(...pts.map(p => Math.hypot(p.x, p.y)), ...delen.map(([u]) => Math.hypot(u.x, u.y)));
+  if (L < 1e-9) { ctx.save(); ctx.font = '13px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.fillText('alle snelheden zijn nul', W / 2, H / 2); ctx.restore(); return; }
+  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x)), ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
+  const m = 48, k = Math.min((W - 2 * m - 30) / Math.max(xmax - xmin, 1e-9), (H - 2 * m) / Math.max(ymax - ymin, 1e-9), (Math.min(W, H) - 2 * m) / L);
+  const cx = (W - (xmax - xmin) * k) / 2 - xmin * k, cy = (H + (ymax - ymin) * k) / 2 + ymin * k;
+  const Pp = p => ({ x: cx + p.x * k, y: cy - p.y * k });
+  arrow(ctx, 14, H - 14, 46, H - 14, '#6b737d', { w: 1.2, head: 7 });
+  arrow(ctx, 14, H - 14, 14, H - 46, '#6b737d', { w: 1.2, head: 7 });
+  label(ctx, 'x', '', 49, H - 9, '#6b737d', { vec: false, size: 13 });
+  label(ctx, 'y', '', 19, H - 42, '#6b737d', { vec: false, size: 13 });
+  delen.forEach(([u, kleur, sub], i) => {
+    const a = Pp(pts[i]), c = Pp(pts[i + 1]);
+    if (arrow(ctx, a.x, a.y, c.x, c.y, kleur, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, a.x, a.y, c.x, c.y, 'v', sub, kleur);
+  });
+  const [u, kleur, sub] = totaal, a = Pp(pts[0]), c = Pp(u);
+  if (arrow(ctx, a.x, a.y, c.x, c.y, kleur, { w: 3.2, head: 13 })) {
+    const n = eenheid(a, c);
+    label(ctx, 'v', sub, (a.x + c.x) / 2 - n.y * 18, (a.y + c.y) / 2 + n.x * 18 + 5, kleur, { align: 'center' });
+  }
+}
+
+// ---------- componenten in functie van θ1 ----------
+const G2 = setup(document.getElementById('g2'));
+let F2;
+function drawGrafiek() {
+  F2 = frame(G2, [0, 360], [-1.9, 1.9], '$\\theta_1$ [°]', '$v_{P/O}$ [m/s]');
+  curve(G2.ctx, F2, 180, 0, 2 * Math.PI, u => deg(u), u => state(u).vPO.x, C.vx, 2.2);
+  curve(G2.ctx, F2, 180, 0, 2 * Math.PI, u => deg(u), u => state(u).vPO.y, C.vy, 2.2);
+  const t1 = ((th1 % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI), st = state(t1);
+  TM1.cursor(G2.ctx, F2, deg(t1)); dot(G2.ctx, F2.X(deg(t1)), F2.Y(st.vPO.x), C.vx); dot(G2.ctx, F2.X(deg(t1)), F2.Y(st.vPO.y), C.vy);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = (u, e) => `(${fmt(u.x, 3)}, ${fmt(u.y, 3)}) ${e}`;
+function drawReadout() {
+  const st = state();
+  TM1.uitlezing(ro, [
+    ['θ<sub>1</sub>', `${fmt(deg(((th1 % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)), 1)}°`],
+    ['θ<sub>2</sub>', `${fmt(deg(th2), 1)}°`],
+    ['ω<sub>1</sub>, ω<sub>2</sub>', `${fmt(w1, 2)}, ${fmt(st.W2, 2)} rad/s`, true],
+    ['<span class="k-vl"><span class="v">v</span><sub>C/A</sub></span>', vec(st.vCA, 'm/s'), true],
+    ['<span class="k-w"><span class="v">v</span><sub>D/C</sub></span>', vec(st.vDC, 'm/s'), true],
+    ['<span class="k-vm"><span class="v">v</span><sub>P/D</sub></span>', vec(st.vPD, 'm/s'), true],
+    ['<span class="k-v"><span class="v">v</span><sub>P/O</sub></span> (som)', vec(st.vPO, 'm/s'), true],
+    ['‖<span class="k-v"><span class="v">v</span><sub>P/O</sub></span>‖', `${fmt(Math.hypot(st.vPO.x, st.vPO.y), 3)} m/s`]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  const t1 = ((th1 % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  $('th1val').textContent = `${deg(t1).toFixed(0)}°`; $('th1').value = deg(t1);
+  $('th2val').textContent = `${deg(th2).toFixed(0)}°`; $('th2').value = deg(th2);
+  $('w1val').textContent = `${w1.toFixed(2)} rad/s`; $('w1').value = w1;
+  $('w2val').textContent = `${w2.toFixed(2)} rad/s`; $('w2').value = w2;
+}
+function render() {
+  const st = state();
+  drawScene();
+  veelhoek(G1, [[st.vCA, KCA, 'C/A'], [st.vDC, KDC, 'D/C'], [st.vPD, KPD, 'P/D']], [st.vPO, C.v, 'P/O']);
+  drawGrafiek(); drawReadout(); syncLabels();
+}
+
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { th1 = rad(30); th2 = 0; w1 = 0.2; w2 = 0.16; render(); };
+$('th1').oninput = e => { setPlaying(false); th1 = rad(+e.target.value); render(); };
+$('th2').oninput = e => { setPlaying(false); th2 = rad(+e.target.value); render(); };
+$('w1').oninput = e => { w1 = +e.target.value; render(); };
+$('w2').oninput = e => { w2 = +e.target.value; render(); };
+$('lim1').onclick = () => { w2 = 0; render(); };
+$('lim2').onclick = () => { w1 = 0; if (w2 === 0) w2 = 0.16; render(); };
+$('fig2').onclick = () => { th2 = rad(10); w2 = 0; if (w1 === 0) w1 = 0.2; show.baan = true; $('t_baan').checked = true; render(); };
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G2, () => F2, x => { setPlaying(false); th1 = rad(Math.min(Math.max(x, 0), 359.9)); render(); });
+
+TM1.bijGrootte([sc, G1, G2], render);
+// rad draait met constante ω1, de gondel kantelt met constante ω2 (θ2 wordt tussen −180° en 180° gehouden)
+TM1.lus(dt => {
+  th1 = (th1 + w1 * dt) % (2 * Math.PI);
+  th2 += w2 * dt;
+  th2 = Math.atan2(Math.sin(th2), Math.cos(th2));
+  render();
+}, () => playing);
+})();
+</script>
+</body>
+</html>
