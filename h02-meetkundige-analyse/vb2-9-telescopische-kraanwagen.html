@@ -100,7 +100,7 @@ const EF = 2, AF = 1, EA = Math.hypot(EF, AF), GAM = Math.atan(AF / EF);
 const XMIN = -4.2, XMAX = 6.6, YMIN = -2.3, YMAX = 7.2;
 const ALMAX = rad(50);
 let al = rad(13), playing = true, richting = 1;
-const show = { ABE: true, AEF: true, hoek: true, maat: true };
+const show = { ABE: true, AEF: true, hoek: true, maat: false };
 
 function state(a = al) {
   const B = { x: AE.x + AB * Math.cos(a), y: AE.y + AB * Math.sin(a) };
