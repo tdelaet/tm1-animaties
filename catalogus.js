@@ -92,7 +92,7 @@ TM1.catalogus = [
       { id: '14.3', titel: 'Wasmachine' },
       { id: '14.4', titel: 'Ronddraaiende cilinder' }]},
     { nr: 15, titel: 'Meetkundige analyses voor snelheden', map: 'h15-snelheden-meetkundig', items: [
-      { id: '15.1', titel: 'Vlaggenmast' },
+      { id: '15.1', titel: 'Vlaggenmast', status: 'klaar' },
       { id: '15.2', titel: 'Mobiele robot' },
       { id: '15.3', titel: 'Reuzenrad' },
       { id: '15.4', titel: 'Rollend wiel' },

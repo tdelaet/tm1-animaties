@@ -299,7 +299,7 @@
   function texMacros() {
     const C = kleuren(), m = {};
     const k = { r: C.r, v: C.v, a: C.a, at: C.at, an: C.an, e: '#4f5862', vx: C.vx, vy: C.vy, F: C.F, M: C.M,
-      vl: css('--cvl'), w: css('--cw') };
+      vl: css('--cvl'), w: css('--cw'), vm: css('--cvm') };   // paginakleuren voor extra (deel)snelheden
     // in een macro is # het argumentteken: een kleurcode #rrggbb moet daarom als ##rrggbb geschreven worden
     const kl = hex => hex.replace(/^#/, '##');
     for (const [n, hex] of Object.entries(k)) {
