@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 2.1 – Vlaggenmast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* vaste schaal: x van −2 tot 12 m, y van −3 tot 9.5 m */
+  .scene canvas{height:auto;aspect-ratio:140/125;max-height:540px}
+  .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
+  .graph canvas.groot{height:320px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 2.1 — Vlaggenmast</h1>
+    <span class="kicker">Vectoren voor meetkundige analyse · de positie van het middelpunt M van de vlag via de vectoriële ketting O-A-B-M</span>
+  </header>
+  <div class="vervolg">Op snelheidsniveau komt deze vlaggenmast terug in <a href="../h15-snelheden-meetkundig/vb15-1-vlaggenmast.html">Voorbeeld 15.1</a>.</div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Vlaggenmast met plaat onder een hoek θ met de y-as; de vectoriële ketting O-A-B-M naar het middelpunt van de vlag"></canvas>
+      <div class="hint">Klik of sleep in de grafiek om naar die stand te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="j0">limietgeval θ = 0</button>
+          <button id="j90">limietgeval θ = 90°</button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Hoek <span class="i">θ</span> met de <span class="i">y</span>-as</span><b id="thval"></b></div>
+          <input type="range" id="th" min="0" max="90" step="0.5" value="30">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Lengte van de mast <span class="i">L</span></span><b id="Lval"></b></div>
+          <input type="range" id="L" min="5" max="9" step="0.1" value="8">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Breedte <span class="i">b</span> en hoogte <span class="i">h</span> van de plaat</span><b id="bhval"></b></div>
+          <input type="range" id="b" min="0" max="4" step="0.1" value="3">
+          <input type="range" id="h" min="0" max="3" step="0.1" value="2">
+        </div>
+        <div class="note">Afspelen laat de mast heen en weer kantelen tussen <span class="i">θ</span> = 0° en 90°. De waarden van het handboek zijn <span class="i">L</span> = 8 m, <span class="i">b</span> = 3 m en <span class="i">h</span> = 2 m.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B-M</span></label>
+          <label><input type="checkbox" id="t_rM"> <span class="sw" style="background:var(--cr)"></span><span><span class="k-r"><span class="v">r</span><sub>M/O</sub></span></span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van M</span></label>
+          <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:#7a828c"></span><span>componenten <span class="i">x<sub>M</sub></span>, <span class="i">y<sub>M</sub></span></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Baan van M voor <span class="i">θ</span> ∈ [0, π/2]</h3>
+      <div class="sub">Een cirkelboog rond de oorsprong met straal √((<span class="i">L</span> − <span class="i">h</span>/2)² + (<span class="i">b</span>/2)²).</div>
+      <canvas id="g1" class="groot"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Coördinaten van M in functie van <span class="i">θ</span></h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cr)"></span><span class="i">x<sub>M</sub></span></span><span><span class="sw d" style="color:var(--cr)"></span><span class="i">y<sub>M</sub></span></span></div>
+      <canvas id="g2" class="groot"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\begin{aligned} \kr{\vec r_{M/O}} &amp;= \kr{\vec r_{A/O}} + \kr{\vec r_{B/A}} + \kr{\vec r_{M/B}} \\ &amp;= L\begin{Bmatrix}\sin\theta\\ \cos\theta\end{Bmatrix} + \frac{b}{2}\begin{Bmatrix}\cos\theta\\ -\sin\theta\end{Bmatrix} + \frac{h}{2}\begin{Bmatrix}-\sin\theta\\ -\cos\theta\end{Bmatrix} \end{aligned}</div>
+      <div class="tex">\kr{\vec r_{M/O}} = \left(L-\frac{h}{2}\right)\begin{Bmatrix}\sin\theta\\ \cos\theta\end{Bmatrix} + \frac{b}{2}\begin{Bmatrix}\cos\theta\\ -\sin\theta\end{Bmatrix} = \begin{Bmatrix}\left(L-\frac{h}{2}\right)\sin\theta + \frac{b}{2}\cos\theta\\ \left(L-\frac{h}{2}\right)\cos\theta - \frac{b}{2}\sin\theta\end{Bmatrix}</div>
+      <div class="tex">\|\kr{\vec r_{M/O}}\| = \sqrt{\left(L-\frac{h}{2}\right)^2 + \left(\frac{b}{2}\right)^2} = \sqrt{(8\ \text{m}-1\ \text{m})^2 + (1.5\ \text{m})^2} = 7.16\ \text{m}</div>
+      <p class="fn"><b>Controle:</b> de eenheden kloppen (m). Bij <span class="i">θ</span> = 0 staat de mast verticaal: <span class="k-r"><span class="v">r</span><sub>M/O</sub></span> = (<span class="i">b</span>/2, <span class="i">L</span> − <span class="i">h</span>/2) = (1.5 m, 7 m). Bij <span class="i">θ</span> = 90° ligt de mast horizontaal: <span class="k-r"><span class="v">r</span><sub>M/O</sub></span> = (<span class="i">L</span> − <span class="i">h</span>/2, −<span class="i">b</span>/2) = (7 m, −1.5 m). Elke vector is geschreven als zijn lengte maal een eenheidsvector met dezelfde zin. <span class="i">θ</span> is de hoek met de <span class="i">y</span>-as, positief in wijzerzin.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Klik op de twee limietgevallen. Kun je de coördinaten van M rechtstreeks uit de figuur aflezen en vergelijken met de formule?</li>
+        <li>Waarom is de baan van M een cirkel rond de oorsprong? Wat is de straal?</li>
+        <li>Zet <span class="i">b</span> = 0 en <span class="i">h</span> = 0. Waar ligt M dan? Welke vectoren van de ketting vallen weg?</li>
+        <li>Kies een andere ketting van O naar M, bijvoorbeeld via de hoekpunten van de plaat. Kom je hetzelfde resultaat uit?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const XMIN = -2, XMAX = 12, YMIN = -3, YMAX = 9.5;
+let th = rad(30), L = 8, b = 3, h = 2, zin = 1, playing = true;
+const show = { ket: true, rM: true, baan: true, comp: false };
+
+function state(t_ = th) {
+  const s = Math.sin(t_), c = Math.cos(t_);
+  const A = { x: L * s, y: L * c };
+  const B = { x: A.x + b / 2 * c, y: A.y - b / 2 * s };
+  const M = { x: B.x - h / 2 * s, y: B.y - h / 2 * c };
+  return { s, c, A, B, M };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN));
+  const ox = (W - S * (XMAX - XMIN)) / 2 - XMIN * S, oy = (H - S * (YMAX - YMIN)) / 2 + YMAX * S;
+  const X = x => ox + x * S, Y = y => oy - y * S, P = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state();
+  const O = { x: ox, y: oy }, A = P(st.A), B = P(st.B), M = P(st.M);
+
+  // raster en assen
+  ctx.save(); ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let x = Math.ceil(XMIN); x <= XMAX; x++) { ctx.beginPath(); ctx.moveTo(X(x), Y(YMIN)); ctx.lineTo(X(x), Y(YMAX)); ctx.stroke(); }
+  for (let y = Math.ceil(YMIN); y <= YMAX; y++) { ctx.beginPath(); ctx.moveTo(X(XMIN), Y(y)); ctx.lineTo(X(XMAX), Y(y)); ctx.stroke(); }
+  ctx.restore();
+  arrow(ctx, ox, oy, ox + 50, oy, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'x', '', ox + 52, oy + 14, '#6b737d', { vec: false, size: 14 });
+  arrow(ctx, ox, oy, ox, oy - 50, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'y', '', ox - 14, oy - 42, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'O', '', ox - 16, oy + 16, C.ink, { vec: false, size: 14 });
+  // verticale referentie en θ
+  ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#b5bac1'; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox, Y(L * 0.7)); ctx.stroke(); ctx.restore();
+  if (th > 0.01) {
+    const ra = 60;
+    ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(ox, oy, ra, -Math.PI / 2, -Math.PI / 2 + th); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '', ox + Math.sin(th / 2) * (ra + 12), oy - Math.cos(th / 2) * (ra + 12) + 5, C.ink, { vec: false, size: 14, align: 'center' });
+  }
+  // baan van M
+  if (show.baan) {
+    ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.4; ctx.beginPath();
+    for (let i = 0; i <= 90; i++) { const q = P(state(rad(i)).M); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+    ctx.stroke(); ctx.restore();
+  }
+  // plaat en mast
+  const s = st.s, c = st.c;
+  const hk = [st.A, { x: st.A.x + b * c, y: st.A.y - b * s }, { x: st.A.x + b * c - h * s, y: st.A.y - b * s - h * c }, { x: st.A.x - h * s, y: st.A.y - h * c }].map(P);
+  ctx.save(); ctx.fillStyle = 'rgba(29,92,150,0.10)'; ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); hk.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = '#b5bac1'; ctx.beginPath(); ctx.moveTo(hk[0].x, hk[0].y); ctx.lineTo(hk[2].x, hk[2].y); ctx.moveTo(hk[1].x, hk[1].y); ctx.lineTo(hk[3].x, hk[3].y); ctx.stroke();
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(A.x, A.y); ctx.stroke(); ctx.restore();
+
+  // vectoriële ketting O-A-B-M (gestreept) en het resultaat r_M/O (vol)
+  if (show.ket) {
+    const k = (a, c_, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, c_.x, c_.y, C.r, { w: 2, dash: [6, 4], head: 10 })) label(ctx, 'r', sub, (a.x + c_.x) / 2 + dx, (a.y + c_.y) / 2 + dy, C.r, { size: 14 }); };
+    const n = { x: Math.cos(th) * 8, y: Math.sin(th) * 8 };   // kleine verschuiving naast de mast
+    if (arrow(ctx, O.x - n.x, O.y - n.y, A.x - n.x, A.y - n.y, C.r, { w: 2, dash: [6, 4], head: 10 })) label(ctx, 'r', 'A/O', (O.x + A.x) / 2 - 44, (O.y + A.y) / 2, C.r, { size: 14 });
+    if (b > 0.05) k(A, B, 'B/A', 4, -10);
+    if (h > 0.05) k(B, M, 'M/B', 8, 4);
+  }
+  if (show.rM && arrow(ctx, O.x, O.y, M.x, M.y, C.r, { w: 2.8, head: 12 })) label(ctx, 'r', 'M/O', (O.x + M.x) / 2 + 10, (O.y + M.y) / 2 + 16, C.r, { size: 15 });
+  if (show.comp) {
+    ctx.save(); ctx.setLineDash([2, 4]); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(M.x, M.y); ctx.lineTo(M.x, oy); ctx.moveTo(M.x, M.y); ctx.lineTo(ox, M.y); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.textAlign = 'center';
+    ctx.fillText(`x_M = ${st.M.x.toFixed(2)} m`, M.x, oy + 16); ctx.textAlign = 'right'; ctx.fillText(`y_M = ${st.M.y.toFixed(2)} m`, ox - 6, M.y + 4); ctx.restore();
+  }
+  for (const [q, n, dx, dy] of [[A, 'A', -16, -6], [B, 'B', 8, -6], [M, 'M', 8, 16]]) {
+    ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 });
+  }
+}
+
+// ---------- grafieken ----------
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+let F2;
+function drawGraphs() {
+  const st = state();
+  // baan: gelijke schaal op beide assen
+  const ctx = G1.ctx, W = G1.w, H = G1.h; ctx.clearRect(0, 0, W, H);
+  const lo = -2, hi = 9.5, m = 40, S = Math.min((W - 2 * m) / (hi - lo), (H - 2 * m) / (hi - lo));
+  const X = x => m + (x - lo) * S, Y = y => H - m - (y - lo) * S;
+  ctx.save(); ctx.font = '11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.strokeStyle = C.grid;
+  for (let v = -2; v <= 9; v++) {
+    ctx.beginPath(); ctx.moveTo(X(v), Y(lo)); ctx.lineTo(X(v), Y(hi)); ctx.stroke(); ctx.beginPath(); ctx.moveTo(X(lo), Y(v)); ctx.lineTo(X(hi), Y(v)); ctx.stroke();
+    if (v % 2 === 0) { ctx.textAlign = 'center'; ctx.fillText(v, X(v), Y(0) + 13); ctx.textAlign = 'right'; ctx.fillText(v, X(0) - 4, Y(v) + 4); }
+  }
+  ctx.strokeStyle = '#9aa1aa'; ctx.beginPath(); ctx.moveTo(X(lo), Y(0)); ctx.lineTo(X(hi), Y(0)); ctx.moveTo(X(0), Y(lo)); ctx.lineTo(X(0), Y(hi)); ctx.stroke(); ctx.restore();
+  TM1.formule(ctx, '$x_M$ [m]', X(hi), Y(0) - 6, { align: 'right' });
+  TM1.formule(ctx, '$y_M$ [m]', X(0) + 6, Y(hi) + 12);
+  ctx.save(); ctx.strokeStyle = C.r; ctx.lineWidth = 2.2; ctx.beginPath();
+  for (let i = 0; i <= 90; i++) { const q = state(rad(i)).M; i ? ctx.lineTo(X(q.x), Y(q.y)) : ctx.moveTo(X(q.x), Y(q.y)); }
+  ctx.stroke(); ctx.restore();
+  dot(ctx, X(st.M.x), Y(st.M.y), C.r);
+
+  F2 = frame(G2, [0, 90], [-3, 9], '$\\theta$ [°]', '$x_M$, $y_M$ [m]');
+  curve(G2.ctx, F2, 90, 0, Math.PI / 2, u => deg(u), u => state(u).M.x, C.r, 2.2);
+  G2.ctx.save(); G2.ctx.setLineDash([6, 4]); curve(G2.ctx, F2, 90, 0, Math.PI / 2, u => deg(u), u => state(u).M.y, C.r, 2.2); G2.ctx.restore();
+  TM1.cursor(G2.ctx, F2, deg(th)); dot(G2.ctx, F2.X(deg(th)), F2.Y(st.M.x), C.r); dot(G2.ctx, F2.X(deg(th)), F2.Y(st.M.y), C.r);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = u => `(${fmt(u.x, 3)}, ${fmt(u.y, 3)}) m`;
+function drawReadout() {
+  const st = state();
+  TM1.uitlezing(ro, [
+    ['θ', `${fmt(deg(th), 1)}°`],
+    ['‖<span class="k-r"><span class="v">r</span><sub>M/O</sub></span>‖', `${fmt(Math.hypot(st.M.x, st.M.y), 3)} m`],
+    ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A), true],
+    ['<span class="k-r"><span class="v">r</span><sub>B/A</sub></span>', vec({ x: st.B.x - st.A.x, y: st.B.y - st.A.y }), true],
+    ['<span class="k-r"><span class="v">r</span><sub>M/B</sub></span>', vec({ x: st.M.x - st.B.x, y: st.M.y - st.B.y }), true],
+    ['<span class="k-r"><span class="v">r</span><sub>M/O</sub></span> (som)', vec(st.M), true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('thval').textContent = `${deg(th).toFixed(1)}°`; $('th').value = deg(th);
+  $('Lval').textContent = `${L.toFixed(1)} m`;
+  $('bhval').textContent = `b = ${b.toFixed(1)} m, h = ${h.toFixed(1)} m`;
+}
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+const naar = d => { setPlaying(false); th = rad(d); render(); };
+
+playBtn.onclick = () => setPlaying(!playing);
+$('j0').onclick = () => naar(0);
+$('j90').onclick = () => naar(90);
+$('th').oninput = e => naar(+e.target.value);
+$('L').oninput = e => { L = +e.target.value; render(); };
+$('b').oninput = e => { b = +e.target.value; render(); };
+$('h').oninput = e => { h = +e.target.value; render(); };
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G2, () => F2, x => naar(Math.min(Math.max(x, 0), 90)));
+
+TM1.bijGrootte([sc, G1, G2], render);
+// heen en weer kantelen tussen 0° en 90° (positieniveau: enkel de stand doet ertoe)
+TM1.lus(dt => {
+  th += zin * 0.25 * dt;
+  if (th > Math.PI / 2) { th = Math.PI / 2; zin = -1; } else if (th < 0) { th = 0; zin = 1; }
+  render();
+}, () => playing);
+})();
+</script>
+</body>
+</html>

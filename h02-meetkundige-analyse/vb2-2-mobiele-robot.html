@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 2.2 – Mobiele robot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* vaste schaal: x van −0.5 tot 7 m, y van −0.5 tot 4.6 m */
+  .scene canvas{height:auto;aspect-ratio:75/51;max-height:520px}
+  .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 2.2 — Mobiele robot</h1>
+    <span class="kicker">Vectoren voor meetkundige analyse · de positie van de hoek B van een robot via de vectoriële ketting O-A-B</span>
+  </header>
+  <div class="vervolg">Op snelheidsniveau komt deze robot terug in <a href="../h15-snelheden-meetkundig/vb15-2-mobiele-robot.html">Voorbeeld 15.2</a>.</div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Bovenaanzicht van een mobiele robot met de vectoriële ketting O-A-B naar de hoek B"></canvas>
+      <div class="hint">Stel de stand in met de schuifregelaars, of laat de robot rijden</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Stand van de robot</h2>
+        <div class="slider">
+          <div class="lab"><span>Positie <span class="i">x<sub>r</sub></span> van A</span><b id="xval"></b></div>
+          <input type="range" id="xr" min="0.5" max="6.5" step="0.05" value="3.5">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Positie <span class="i">y<sub>r</sub></span> van A</span><b id="yval"></b></div>
+          <input type="range" id="yr" min="0.5" max="4" step="0.05" value="1.6">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Rijrichting <span class="i">θ</span> t.o.v. de <span class="i">x</span>-as</span><b id="thval"></b></div>
+          <input type="range" id="th" min="-180" max="180" step="1" value="30">
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Halve breedte <span class="i">b</span> en halve lengte <span class="i">l</span></span><b id="blval"></b></div>
+          <input type="range" id="b" min="0.1" max="0.5" step="0.05" value="0.3">
+          <input type="range" id="l" min="0.2" max="0.6" step="0.05" value="0.4">
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h2>Laten rijden</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">▶ Rijden</button>
+          <button id="wis">baan wissen</button>
+        </div>
+        <div class="note">De robot rijdt met een constante voorwaartse snelheid van 0.5 m/s en draait met een constante rotatiesnelheid van 0.3 rad/s, zoals bij de baan in het handboek. De baan van B wordt getekend.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B</span></label>
+          <label><input type="checkbox" id="t_rB"> <span class="sw" style="background:var(--cr)"></span><span><span class="k-r"><span class="v">r</span><sub>B/O</sub></span></span></label>
+          <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#7a828c"></span><span>hoeken <span class="i">θ</span> en <span class="i">θ<sub>r</sub></span></span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van B</span></label>
+        </div>
+        <div class="note"><span class="i">θ<sub>r</sub></span> = atan(<span class="i">b</span>/<span class="i">l</span>) is de hoek tussen de rijrichting en de lijn AB: een eigenschap van de robot zelf.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <div class="tex">\kr{\vec r_{B/O}} = \kr{\vec r_{A/O}} + \kr{\vec r_{B/A}} = \begin{Bmatrix}x_r\\ y_r\end{Bmatrix} + \sqrt{b^2+l^2}\begin{Bmatrix}\cos(\theta+\theta_r)\\ \sin(\theta+\theta_r)\end{Bmatrix}, \qquad \theta_r = \operatorname{atan}\frac{b}{l}</div>
+      <div class="tex">\kr{\vec r_{B/O}} = \begin{Bmatrix}x_r\\ y_r\end{Bmatrix} + \sqrt{b^2+l^2}\begin{Bmatrix}\cos\left(\theta+\operatorname{atan}\frac{b}{l}\right)\\ \sin\left(\theta+\operatorname{atan}\frac{b}{l}\right)\end{Bmatrix}</div>
+      <p class="fn">A is het referentiepunt in het midden van de robot, B de hoek links vooraan. De robot is 2<span class="i">b</span> breed en 2<span class="i">l</span> lang; zijn rijrichting maakt een hoek <span class="i">θ</span> met de <span class="i">x</span>-as. Het handboek werkt met letters; de getallen hier zijn een keuze.</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Waarom is de lengte van <span class="k-r"><span class="v">r</span><sub>B/A</sub></span> altijd √(<span class="i">b</span>² + <span class="i">l</span>²), hoe de robot ook staat?</li>
+        <li>Draai de robot met de schuifregelaar voor <span class="i">θ</span>. Welke vector van de ketting verandert, en welke niet?</li>
+        <li>Laat de robot rijden. Welke vorm heeft de baan van B? Waarom?</li>
+        <li>Welk punt zou je kiezen als B rechts vooraan lag? Hoe verandert de formule dan?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const XMIN = -0.5, XMAX = 7, YMIN = -0.5, YMAX = 4.6;
+const V = 0.5, W_ = 0.3;                         // rijden: voorwaartse snelheid en rotatiesnelheid
+let xr = 3.5, yr = 1.6, th = rad(30), b = 0.3, l = 0.4, playing = false;
+let spoor = [];
+const show = { ket: true, rB: true, hoek: true, baan: true };
+
+function state() {
+  const rho = Math.hypot(b, l), thr = Math.atan(b / l), ph = th + thr;
+  return { rho, thr, A: { x: xr, y: yr }, B: { x: xr + rho * Math.cos(ph), y: yr + rho * Math.sin(ph) } };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN));
+  const X = x => (W - S * (XMAX - XMIN)) / 2 + (x - XMIN) * S, Y = y => H - (H - S * (YMAX - YMIN)) / 2 - (y - YMIN) * S;
+  const P = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state();
+
+  ctx.save(); ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let x = 0; x <= XMAX; x += 0.5) { ctx.beginPath(); ctx.moveTo(X(x), Y(YMIN)); ctx.lineTo(X(x), Y(YMAX)); ctx.stroke(); }
+  for (let y = 0; y <= YMAX; y += 0.5) { ctx.beginPath(); ctx.moveTo(X(XMIN), Y(y)); ctx.lineTo(X(XMAX), Y(y)); ctx.stroke(); }
+  ctx.restore();
+  const O = P({ x: 0, y: 0 });
+  arrow(ctx, O.x, O.y, O.x + 50, O.y, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'x', '', O.x + 52, O.y + 14, '#6b737d', { vec: false, size: 14 });
+  arrow(ctx, O.x, O.y, O.x, O.y - 50, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'y', '', O.x - 14, O.y - 42, '#6b737d', { vec: false, size: 14 });
+  label(ctx, 'O', '', O.x - 16, O.y + 16, C.ink, { vec: false, size: 14 });
+
+  // baan van B
+  if (show.baan && spoor.length > 1) {
+    ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.4; ctx.beginPath();
+    spoor.forEach((q, i) => { const p = P(q); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }); ctx.stroke(); ctx.restore();
+  }
+  // robot
+  const c = Math.cos(th), s = Math.sin(th);
+  const hoek = (u, q) => P({ x: xr + u * c - q * s, y: yr + u * s + q * c });
+  const R = [hoek(l, b), hoek(-l, b), hoek(-l, -b), hoek(l, -b)];
+  ctx.save(); ctx.fillStyle = '#eef1f4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); R.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#5b6168';
+  for (const zij of [1, -1]) {
+    const m = [[0.15, zij * (b + 0.06)], [-0.15, zij * (b + 0.06)], [-0.15, zij * (b - 0.02)], [0.15, zij * (b - 0.02)]].map(([u, q]) => hoek(u, q));
+    ctx.beginPath(); m.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+  const A = P(st.A), B = P(st.B);
+
+  // hoeken θ (rijrichting t.o.v. x) en θ_r (rijrichting t.o.v. AB)
+  if (show.hoek) {
+    const ra = 46;
+    ctx.save(); ctx.setLineDash([2, 3]); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(A.x + ra + 20, A.y); ctx.stroke();
+    const neus = hoek(l + 0.25, 0); ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(neus.x, neus.y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.arc(A.x, A.y, ra, -Math.max(th, 0), -Math.min(th, 0)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(A.x, A.y, ra - 14, -(th + st.thr), -th); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '', A.x + Math.cos(th / 2) * (ra + 10), A.y - Math.sin(th / 2) * (ra + 10) + 5, C.ink, { vec: false, size: 14, align: 'center' });
+    label(ctx, 'θ', 'r', A.x + Math.cos(th + st.thr / 2) * (ra - 26), A.y - Math.sin(th + st.thr / 2) * (ra - 26) + 5, C.ink, { vec: false, size: 13, align: 'center' });
+  }
+  // ketting
+  if (show.ket) {
+    if (arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 2, dash: [6, 4], head: 10 })) label(ctx, 'r', 'A/O', (O.x + A.x) / 2 + 6, (O.y + A.y) / 2 + 18, C.r, { size: 14 });
+    if (arrow(ctx, A.x, A.y, B.x, B.y, C.r, { w: 2, dash: [5, 3], head: 9 })) label(ctx, 'r', 'B/A', (A.x + B.x) / 2 - 30, (A.y + B.y) / 2, C.r, { size: 13 });
+  }
+  if (show.rB && arrow(ctx, O.x, O.y, B.x, B.y, C.r, { w: 2.8, head: 12 })) label(ctx, 'r', 'B/O', (O.x + B.x) / 2 - 30, (O.y + B.y) / 2 - 8, C.r, { size: 15 });
+  for (const [q, n, dx, dy] of [[A, 'A', -16, 16], [B, 'B', 8, -6]]) {
+    ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 });
+  }
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = u => `(${fmt(u.x, 3)}, ${fmt(u.y, 3)}) m`;
+function drawReadout() {
+  const st = state();
+  TM1.uitlezing(ro, [
+    ['θ', `${fmt(deg(th), 1)}°`],
+    ['θ<sub>r</sub> = atan(b/l)', `${fmt(deg(st.thr), 1)}°`],
+    ['‖<span class="k-r"><span class="v">r</span><sub>B/A</sub></span>‖ = √(b² + l²)', `${fmt(st.rho, 3)} m`, true],
+    ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A), true],
+    ['<span class="k-r"><span class="v">r</span><sub>B/A</sub></span>', vec({ x: st.B.x - st.A.x, y: st.B.y - st.A.y }), true],
+    ['<span class="k-r"><span class="v">r</span><sub>B/O</sub></span> (som)', vec(st.B), true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Stoppen' : '▶ Rijden'; }
+function hoekNorm(a) { return Math.atan2(Math.sin(a), Math.cos(a)); }
+function syncLabels() {
+  $('xval').textContent = `${xr.toFixed(2)} m`; $('xr').value = xr;
+  $('yval').textContent = `${yr.toFixed(2)} m`; $('yr').value = yr;
+  $('thval').textContent = `${deg(hoekNorm(th)).toFixed(0)}°`; $('th').value = deg(hoekNorm(th));
+  $('blval').textContent = `b = ${b.toFixed(2)} m, l = ${l.toFixed(2)} m`;
+}
+function render() { drawScene(); drawReadout(); syncLabels(); }
+
+playBtn.onclick = () => setPlaying(!playing);
+$('wis').onclick = () => { spoor = []; render(); };
+const handmatig = f => { setPlaying(false); f(); spoor = []; render(); };
+$('xr').oninput = e => handmatig(() => { xr = +e.target.value; });
+$('yr').oninput = e => handmatig(() => { yr = +e.target.value; });
+$('th').oninput = e => handmatig(() => { th = rad(+e.target.value); });
+$('b').oninput = e => handmatig(() => { b = +e.target.value; });
+$('l').oninput = e => handmatig(() => { l = +e.target.value; });
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+
+TM1.bijGrootte([sc], render);
+// rijden: A volgt dx = v cos θ dt, dy = v sin θ dt, θ neemt toe met ω dt; de baan van B wordt bijgehouden
+TM1.lus(dt => {
+  xr += V * Math.cos(th) * dt; yr += V * Math.sin(th) * dt; th += W_ * dt;
+  if (xr < XMIN + 0.3 || xr > XMAX - 0.3 || yr < YMIN + 0.3 || yr > YMAX - 0.3) { setPlaying(false); }
+  spoor.push(state().B); if (spoor.length > 2000) spoor.shift();
+  render();
+}, () => playing);
+})();
+</script>
+</body>
+</html>

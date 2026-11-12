@@ -85,7 +85,7 @@
       <div class="tex">\alpha = 13^\circ:\quad |BE| = 2.685\ \text{m},\quad \beta = 45.0^\circ</div>
       <div class="tex">\frac{\mathrm{d}\alpha}{\mathrm{d}t} = 0.0707\ \text{rad/s},\quad \frac{\mathrm{d}\beta}{\mathrm{d}t} = 0.0893\ \text{rad/s}</div>
       <div class="tex">\kvl{\vec v_{B/A}} = |AB|\,\frac{\mathrm{d}\alpha}{\mathrm{d}t}\begin{Bmatrix}-\sin\alpha\\ \cos\alpha\end{Bmatrix} = \begin{Bmatrix}-0.064\\ 0.276\end{Bmatrix}\text{m/s}, \qquad \|\kvl{\vec v_{B/A}}\| = 0.283\ \text{m/s}</div>
-      <p class="fn">Gegeven: |<span class="i">AB</span>| = 4 m, A ligt 2 m horizontaal en 1 m verticaal van E, d|<span class="i">BE</span>|/d<span class="i">t</span> = 150 mm/s. De <span class="i">x</span>-as wijst naar links; <span class="i">α</span> en <span class="i">β</span> zijn de hoeken van AB en EB met de horizontale naar links. A en E liggen op hetzelfde onderdeel, dus <span class="v">v</span><sub>A/E</sub> = <span class="v">0</span>; omdat A niet beweegt is <span class="k-vl"><span class="v">v</span><sub>B/A</sub></span> de absolute snelheid van B. Het handboek stelt het stelsel op; de oplossing en de getallen zijn een uitwerking. Dat de afstand AC vergroot met 250 mm/s, speelt geen rol voor de snelheid van B.</p>
+      <p class="fn">Gegeven: |<span class="i">AB</span>| = 4 m, A ligt 2 m horizontaal en 1 m verticaal van E, d|<span class="i">BE</span>|/d<span class="i">t</span> = 150 mm/s. De <span class="i">x</span>-as wijst naar links; <span class="i">α</span> en <span class="i">β</span> zijn de hoeken van AB en EB met de horizontale naar links. A en E liggen op hetzelfde onderdeel, dus <span class="v">v</span><sub>A/E</sub> = <span class="v">0</span>; omdat A niet beweegt is <span class="k-vl"><span class="v">v</span><sub>B/A</sub></span> de absolute snelheid van B. Het handboek stelt het stelsel op; de oplossing en de getallen zijn een uitwerking. Dat de afstand AC vergroot met 250 mm/s, speelt geen rol voor de snelheid van B; in de animatie schuift de arm daarom niet uit.</p>
     </div>
     <details class="card" open>
       <summary>Denkvragen bij de animatie</summary>
@@ -157,8 +157,8 @@ function drawScene() {
   ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(1), Y(-0.3)); ctx.lineTo(X(1), Y(-0.75)); ctx.stroke();
   ctx.restore();
 
-  // telescopische arm: buitenste balk vanaf A, binnenste balk schuift uit (|AC| groeit met 250 mm/s)
-  const t = (lenBE(al) - lenBE(0)) / VBE, LAC = 7 + 0.25 * t;
+  // telescopische arm: buitenste balk vanaf A en binnenste balk; in de animatie schuift de arm niet uit (|AC| constant)
+  const LAC = 7;
   const u = { x: Math.cos(al), y: Math.sin(al) };
   const pt = s => P({ x: AE.x + s * u.x, y: AE.y + s * u.y });
   ctx.save(); ctx.lineCap = 'butt';
