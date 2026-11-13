@@ -12,7 +12,9 @@
     return {
       ink: css('--ink'), muted: css('--muted'), grid: css('--grid'), line: css('--line'), accent: css('--accent'),
       r: css('--cr'), v: css('--cv'), vx: css('--cvx'), vy: css('--cvy'),
-      a: css('--ca'), at: css('--cat'), an: css('--can'), F: css('--cf'), M: css('--cm')
+      a: css('--ca'), at: css('--cat'), an: css('--can'), F: css('--cf'), M: css('--cm'),
+      // schakels van een vectoriële ketting (hoofdstuk 2): elke schakel een eigen kleur
+      ka: css('--cka'), kb: css('--ckb'), kc: css('--ckc'), kd: css('--ckd'), ke: css('--cke')
     };
   }
 
@@ -252,7 +254,9 @@
   /** Hertekent alle canvassen als de pagina van grootte verandert, en opnieuw als de lettertypes geladen zijn. */
   function bijGrootte(canvassen, render) {
     const doe = () => { canvassen.forEach(o => o.resize()); render(); };
-    new ResizeObserver(doe).observe(document.body);
+    const ro = new ResizeObserver(doe);
+    ro.observe(document.body);
+    canvassen.forEach(o => ro.observe(o.c));   // ook als enkel een canvas van grootte verandert (werkblad-indeling)
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
     doe();
   }
@@ -299,7 +303,8 @@
   function texMacros() {
     const C = kleuren(), m = {};
     const k = { r: C.r, v: C.v, a: C.a, at: C.at, an: C.an, e: '#4f5862', vx: C.vx, vy: C.vy, F: C.F, M: C.M,
-      vl: css('--cvl'), w: css('--cw'), vm: css('--cvm') };   // paginakleuren voor extra (deel)snelheden
+      vl: css('--cvl'), w: css('--cw'), vm: css('--cvm'),     // paginakleuren voor extra (deel)snelheden
+      ka: C.ka, kb: C.kb, kc: C.kc, kd: C.kd, ke: C.ke };     // schakels van een vectoriële ketting: \kka … \kke
     // in een macro is # het argumentteken: een kleurcode #rrggbb moet daarom als ##rrggbb geschreven worden
     const kl = hex => hex.replace(/^#/, '##');
     for (const [n, hex] of Object.entries(k)) {
@@ -321,8 +326,112 @@
   }
   if (document.readyState === 'complete') tex(); else global.addEventListener('load', () => tex());
 
+  /** Werkblad-indeling: zet de figuur en de grafieken naast elkaar, zodat een student ze samen ziet.
+      De pagina's zelf blijven eenvoudig opgebouwd (scène, zijpanelen, grafieken eronder); deze functie
+      verhuist de onderdelen bij het laden, nog vóór het paginascript de canvassen opmeet:
+        - de toon-opties (paneel "Tonen") komen als uitklapbaar kader linksboven in de figuur,
+        - de overige panelen (Bediening, Spring naar …) komen als balk onder de figuur,
+        - de uitleestabel komt dichtgeklapt onder die balk,
+        - de grafieken komen in een kolom rechts van de figuur,
+        - korte toelichtingen (.note, .hint) en de doorverwijzing komen onder het werkblad.
+      Een pagina die al een .werkblad heeft, wordt niet aangepast. */
+  function werkblad() {
+    const main = document.querySelector('.wrap > .main');
+    if (!main || document.querySelector('.werkblad')) return;
+    const scene = main.querySelector('.scene'), side = main.querySelector('.side');
+    const graphs = document.querySelector('.wrap > .graphs');
+    const maak = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html) e.innerHTML = html; return e; };
+    const blad = maak('div', 'werkblad'), toel = maak('div', 'card toelichting');
+
+    // figuur: alles vóór de uitleestabel gaat in een .doek (positie-anker voor de toon-opties)
+    const doek = maak('div', 'doek'), readout = scene.querySelector('.readout');
+    [...scene.children].forEach(el => { if (el !== readout) doek.appendChild(el); });
+    scene.insertBefore(doek, readout);
+    // vaste hints gaan naar de toelichting; een hint met een id wordt door de pagina bijgewerkt en blijft in de figuur
+    doek.querySelectorAll('.hint').forEach(h => { if (!h.id) { toel.appendChild(maak('p', 'note', h.innerHTML)); h.remove(); } });
+    // canvassen met een vaste verhouding (page-CSS aspect-ratio) houden die; de andere krijgen de werkbladhoogte
+    doek.querySelectorAll('canvas').forEach(c => { if (getComputedStyle(c).aspectRatio === 'auto') c.classList.add('vrij'); });
+
+    const bed = maak('div', 'bediening');
+    [...(side ? side.children : [])].forEach(p => {
+      const h2 = p.querySelector(':scope > h2'), titel = h2 ? h2.textContent.trim() : '';
+      p.querySelectorAll('.note').forEach(n => toel.appendChild(n));   // het element zelf verhuist (een id blijft werken)
+      if (h2) h2.remove();
+      if (/^Tonen/.test(titel)) {
+        const lagen = maak('div', 'lagen');
+        lagen.appendChild(maak('span', 'titel', 'Tonen'));
+        const t = p.querySelector('.toggles'); if (t) { t.removeAttribute('style'); lagen.appendChild(t); }
+        doek.appendChild(lagen);
+        if (p.children.length) { const g = maak('div', 'groep'); [...p.children].forEach(el => g.appendChild(el)); bed.appendChild(g); }
+      } else if (/^Bediening/.test(titel)) {
+        [...p.children].forEach(el => bed.appendChild(el));
+      } else {
+        const g = maak('div', 'groep'); if (titel) g.appendChild(maak('span', 'groeptitel', h2.innerHTML));
+        [...p.children].forEach(el => g.appendChild(el));
+        bed.appendChild(g);
+      }
+    });
+    // de eerste schuifregelaar blijft in de balk; de overige gaan in een uitklapbaar "Meer instellingen"
+    const extra = [...bed.querySelectorAll(':scope > .slider')].slice(1);
+    if (extra.length) {
+      const d = maak('details', 'meer'); d.appendChild(maak('summary', '', 'Meer instellingen'));
+      const r = maak('div', 'rij'); extra.forEach(s => r.appendChild(s)); d.appendChild(r); bed.appendChild(d);
+    }
+    scene.insertBefore(bed, readout);
+    if (readout) {
+      const d = maak('details', 'waarden'); d.appendChild(maak('summary', '', 'Waarden in deze stand'));
+      scene.insertBefore(d, readout); d.appendChild(readout);
+    }
+    blad.appendChild(scene);
+
+    // grafieken in een kolom rechts
+    const kaarten = graphs ? [...graphs.querySelectorAll(':scope > .graph')] : [];
+    if (kaarten.length) {
+      const kol = maak('div', 'grafiekkolom n' + Math.min(kaarten.length, 6));
+      kaarten.forEach(k => kol.appendChild(k));
+      blad.appendChild(kol);
+      graphs.remove();
+    } else blad.classList.add('zonder-grafieken');
+
+    main.replaceWith(blad);
+    const vervolg = document.querySelector('.wrap > .vervolg');
+    if (vervolg) blad.after(vervolg);
+    if (toel.children.length) (vervolg || blad).after(toel);
+
+    // hoogte van de figuur: wat er op het scherm overblijft naast de kop en onder de bedieningsbalk
+    const waarden = scene.querySelector('details.waarden');
+    const kol = blad.querySelector('.grafiekkolom');
+    const pas = () => {
+      const kaarten = kol ? [...kol.children] : [];
+      if (global.innerWidth <= 900) {
+        blad.style.removeProperty('--h');
+        kaarten.forEach(k => { const c = k.querySelector('canvas'); if (c) c.style.removeProperty('height'); });
+        return;
+      }
+      const boven = blad.getBoundingClientRect().top + global.scrollY;
+      const lagen = doek.querySelector('.lagen');
+      const onder = bed.offsetHeight + (lagen ? lagen.offsetHeight : 0) + (waarden ? waarden.querySelector('summary').offsetHeight + 2 : 0);
+      const beschikbaar = Math.max(420, global.innerHeight - boven - 14);
+      blad.style.setProperty('--h', Math.max(260, Math.min(680, beschikbaar - onder)) + 'px');
+      // grafieken: de kolom vult dezelfde hoogte als de figuur met haar bediening
+      if (kaarten.length) {
+        const rijen = kaarten.length <= 3 ? kaarten.length : Math.ceil(kaarten.length / 2), gap = 12;
+        const totaal = Math.max(beschikbaar, scene.offsetHeight), per = (totaal - gap * (rijen - 1)) / rijen;
+        kaarten.forEach(k => {
+          const c = k.querySelector('canvas'); if (!c) return;
+          const rest = k.offsetHeight - c.offsetHeight;
+          c.style.height = Math.max(110, Math.floor(per - rest)) + 'px';
+        });
+      }
+    };
+    pas();
+    global.addEventListener('resize', pas);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(pas);
+  }
+  werkblad();
+
   global.TM1 = Object.assign(global.TM1 || {}, {
-    tex,
+    tex, werkblad,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
     frame, curve, dot, cursor, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });

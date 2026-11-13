@@ -11,6 +11,8 @@
   --ca:#d9480f; --cat:#e8890c; --can:#c2255c; /* versnelling, tangentieel, normaal */
   --cf:#8a5a12;               /* kracht F */
   --cm:#6741d9;               /* moment M */
+  /* schakels van een vectoriële ketting (hoofdstuk 2): elke schakel een eigen kleur, het resultaat blijft groen */
+  --cka:#1d6fd6; --ckb:#e8590c; --ckc:#8b3fb0; --ckd:#0d9488; --cke:#c2255c;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
@@ -30,6 +32,56 @@ h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:28px;mar
 .scene canvas{display:block;width:100%;height:500px;touch-action:none}
 .scene .hint{position:absolute;right:12px;top:10px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.85);padding:2px 8px;border-radius:6px}
 @media (max-width:600px){.scene .hint{display:none}}   /* op een gsm zou de hint over de figuur en de vectorschaal vallen */
+
+/* werkblad: figuur links, grafieken rechts, zodat ze samen op een laptopscherm passen.
+   De indeling wordt bij het laden opgebouwd door TM1.werkblad() in tm1.js.
+   --h is de hoogte die de figuur mag innemen: schermhoogte min de kop en de bedieningsbalk. */
+.werkblad{--h:clamp(360px, calc(100vh - 240px), 640px);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start}
+.werkblad.zonder-grafieken{grid-template-columns:minmax(0,1fr)}
+.werkblad .doek{position:relative}
+.werkblad .scene .doek canvas{max-height:var(--h)}
+.werkblad .scene .doek canvas.vrij{height:var(--h)}
+/* toon-opties: een smalle strook direct onder de figuur (een kader in de figuur zou drukke figuren afdekken) */
+.lagen{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:6px 12px;border-top:1px solid var(--line);background:#fbfaf7}
+.lagen .titel{font:600 10.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.lagen .toggles{display:contents}
+.lagen .toggles label{font-size:12.5px;white-space:nowrap;gap:6px}
+/* bedieningsbalk onder de figuur */
+.bediening{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border-top:1px solid var(--line)}
+.bediening > *, .bediening .groep > *{margin:0}
+.bediening .btnrow{margin:0;gap:6px}
+.bediening .slider{flex:1 1 220px;margin:0}
+.bediening button{padding:6px 10px;font-size:13px}
+.bediening .groep{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex-basis:100%}
+.bediening .groeptitel{font:600 11px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.bediening .groeptitel :is(.v,.i,sub){text-transform:none;letter-spacing:0}
+.bediening .groep p{font-size:13px;color:var(--muted);flex-basis:100%}
+.bediening details{padding:0;flex-basis:100%}
+.bediening details.meer .rij{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px}
+.bediening details summary,details.waarden summary{font:500 12.5px Inter,sans-serif;text-transform:none;letter-spacing:0;color:var(--muted)}
+details.waarden{padding:0;border-top:1px solid var(--line)}
+details.waarden summary{padding:8px 12px}
+details.waarden .readout{border-top:1px solid var(--line)}
+/* grafieken in een kolom rechts; hun hoogte volgt de figuur */
+.grafiekkolom{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.grafiekkolom.n4,.grafiekkolom.n5,.grafiekkolom.n6{grid-template-columns:repeat(2,minmax(0,1fr))}
+.werkblad .grafiekkolom .graph{padding:8px 10px 4px}
+.werkblad .grafiekkolom .graph h3{font-size:13px}
+.werkblad .grafiekkolom .graph .sub{min-height:0;font-size:12px}
+.werkblad .grafiekkolom.n1 .graph canvas{height:calc(var(--h) + 20px)}
+.werkblad .grafiekkolom:is(.n2,.n4) .graph canvas{height:calc((var(--h) + 60px) / 2 - 52px)}
+.werkblad .grafiekkolom:is(.n3,.n5,.n6) .graph canvas{height:calc((var(--h) + 60px) / 3 - 56px)}
+.toelichting{padding:10px 16px;margin-top:14px}
+.toelichting .note{font-size:13px;margin:4px 0}
+.wrap > .vervolg{margin:14px 0 0}
+@media (max-width:900px){
+  .werkblad{grid-template-columns:minmax(0,1fr)}
+  .werkblad .scene .doek canvas.vrij{height:380px}
+  .werkblad .grafiekkolom .graph canvas{height:230px!important}
+}
+@media (max-width:600px){
+  .grafiekkolom.n4,.grafiekkolom.n5,.grafiekkolom.n6{grid-template-columns:minmax(0,1fr)}
+}
 
 /* uitleestabel */
 .readout{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border-top:1px solid var(--line)}
@@ -92,6 +144,7 @@ details li{margin:0 0 8px}
 /* vectoren in formules in dezelfde kleur als in de animatie: <span class="k-r"><span class="v">r</span><sub>P</sub></span> */
 .k-r{color:var(--cr)} .k-v{color:var(--cv)} .k-a{color:var(--ca)} .k-at{color:var(--cat)} .k-an{color:var(--can)}
 .k-e{color:#4f5862} .k-F{color:var(--cf)} .k-M{color:var(--cm)} .k-vx{color:var(--cvx)} .k-vy{color:var(--cvy)}
+.k-ka{color:var(--cka)} .k-kb{color:var(--ckb)} .k-kc{color:var(--ckc)} .k-kd{color:var(--ckd)} .k-ke{color:var(--cke)}
 /* formules in TeX (KaTeX): brede formules scrollen horizontaal in plaats van de pagina te verbreden */
 .tex{margin:12px 0;overflow-x:auto;overflow-y:hidden;color:var(--ink)}
 .tex .katex-display{margin:0;text-align:left}

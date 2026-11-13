@@ -189,10 +189,11 @@ function drawGraphs() {
   const st = state();
   // baan: gelijke schaal op beide assen
   const ctx = G1.ctx, W = G1.w, H = G1.h; ctx.clearRect(0, 0, W, H);
-  const lo = -2, hi = 9.5, m = 40, S = Math.min((W - 2 * m) / (hi - lo), (H - 2 * m) / (hi - lo));
-  const X = x => m + (x - lo) * S, Y = y => H - m - (y - lo) * S;
+  const lo = -2, hi = 8, m = 26, S = Math.min((W - 2 * m) / (hi - lo), (H - 2 * m) / (hi - lo));
+  const ox0 = (W - S * (hi - lo)) / 2;                   // gecentreerd, gelijke schaal op beide assen
+  const X = x => ox0 + (x - lo) * S, Y = y => H - m - (y - lo) * S;
   ctx.save(); ctx.font = '11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.strokeStyle = C.grid;
-  for (let v = -2; v <= 9; v++) {
+  for (let v = -2; v <= 8; v++) {
     ctx.beginPath(); ctx.moveTo(X(v), Y(lo)); ctx.lineTo(X(v), Y(hi)); ctx.stroke(); ctx.beginPath(); ctx.moveTo(X(lo), Y(v)); ctx.lineTo(X(hi), Y(v)); ctx.stroke();
     if (v % 2 === 0) { ctx.textAlign = 'center'; ctx.fillText(v, X(v), Y(0) + 13); ctx.textAlign = 'right'; ctx.fillText(v, X(0) - 4, Y(v) + 4); }
   }
