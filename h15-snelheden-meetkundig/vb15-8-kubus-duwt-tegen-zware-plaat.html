@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 15.8 – Kubus duwt tegen zware plaat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* kleuren zoals bij Voorbeeld 15.5: component volgens AH groen, loodrecht op AH rood, snelheid van H lichtblauw */
+  :root{ --cvm:#2e9e3e; --cw:#d62828; --cvl:#1a9bd7; --cv:#1a9bd7; }
+  .k-vl{color:var(--cvl)} .k-w{color:var(--cw)} .k-vm{color:var(--cvm)}
+  /* vaste schaal: x van −1 tot 7.5 m, y van −0.9 tot 5.6 m */
+  .scene canvas{height:auto;aspect-ratio:85/65;max-height:520px}
+  .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 15.8 — Kubus duwt tegen zware plaat</h1>
+    <span class="kicker">Meetkundige analyses voor snelheden · de hoeksnelheid <span class="i">ω</span> van de plaat door de vectoriële ketting A-E-H af te leiden naar de tijd</span>
+  </header>
+  <div class="vervolg">Op positieniveau: <a href="../h02-meetkundige-analyse/vb2-11-kubus-duwt-tegen-zware-plaat.html">Voorbeeld 2.11</a>.</div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Kubus die met snelheid v naar links schuift en een plaat omhoog duwt; de snelheid van H ontbonden volgens AH en loodrecht op AH"></canvas>
+      <div class="hint">Klik of sleep in een grafiek om naar die stand te springen</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow">
+          <button class="primary" id="play">⏸ Pauze</button>
+          <button id="reset">⟲ Opnieuw</button>
+          <button id="j45"><span class="i">x<sub>E</sub></span> = <span class="i">b</span></button>
+        </div>
+        <div class="slider">
+          <div class="lab"><span>Positie van de kubus <span class="i">x<sub>E</sub></span></span><b id="xval"></b></div>
+          <input type="range" id="x" min="0" max="4.583" step="0.001" value="4.583">
+        </div>
+        <div class="note"><span class="i">l</span> = 5.00 m, <span class="i">b</span> = 2.00 m, <span class="i">v</span> = 0.500 m/s naar links, in werkelijke tijd. De kubus start bij <span class="i">x<sub>E</sub></span>(0) = √(<span class="i">l</span>² − <span class="i">b</span>²) = 4.58 m (de rand BC op de ribbe H) en de animatie stopt als de plaat verticaal staat.</div>
+      </div>
+
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+          <label><input type="checkbox" id="t_vH"> <span class="sw" style="background:var(--cvl)"></span><span><span class="k-vl"><span class="v">v</span><sub>H</sub></span> (snelheid van de kubus)</span></label>
+          <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:var(--cvm)"></span><span>componenten volgens en loodrecht op AH</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting A-E-H</span></label>
+          <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoek <span class="i">θ</span></span></label>
+        </div>
+        <div class="note"><span class="k-vm">groen</span>: d|<span class="i">AH</span>|/d<span class="i">t</span>, het punt H van de kubus schuift langs de plaat. <span class="k-w">rood</span>: |<span class="i">AH</span>|<span class="i">ω</span>, de snelheid van het punt van de plaat dat op dat ogenblik in H ligt.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs two">
+    <div class="card graph">
+      <h3>Hoeksnelheid <span class="i">ω</span> in functie van <span class="i">x<sub>E</sub></span></h3>
+      <canvas id="g1"></canvas>
+    </div>
+    <div class="card graph">
+      <h3>Hoeksnelheid <span class="i">ω</span> in functie van de tijd</h3>
+      <canvas id="g2"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Uitdrukkingen uit het handboek</h2>
+      <p class="fn"><b>1. Afleiden van de vectoriële ketting</b> uit Voorbeeld 2.11:</p>
+      <div class="tex">|AH(t)|\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix} = \begin{Bmatrix}x_E(t)\\ 0\end{Bmatrix} + \begin{Bmatrix}0\\ b\end{Bmatrix}</div>
+      <div class="tex">\ubvm{\frac{\mathrm{d}|AH(t)|}{\mathrm{d}t}\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}}{} + \ubw{|AH(t)|\,\omega\begin{Bmatrix}-\sin\theta(t)\\ \cos\theta(t)\end{Bmatrix}}{}</div>
+      <div class="tex">\qquad = \ubvl{\begin{Bmatrix}\dot x_E(t)\\ 0\end{Bmatrix}}{\kvl{\vec v_H}}</div>
+      <div class="tex">\omega = -\frac{\sin\theta(t)}{|AH|}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t},</div>
+      <div class="tex">\sin\theta = \frac{b}{|AH|}, \quad |AH|^2 = b^2 + x_E^2(t)</div>
+      <div class="tex">\omega(t) = -\frac{b}{b^2 + x_E^2(t)}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t}, \qquad \frac{\mathrm{d}x_E}{\mathrm{d}t} = -\|\vec v\|</div>
+      <div class="tex">\omega(t) = \frac{b}{b^2 + x_E^2(t)}\,v</div>
+      <div class="tex">\omega(t) = \frac{b}{b^2 + \big(x_E(0) - v\,t\big)^2}\,v</div>
+      <p class="fn"><b>2. Afleiden van de driehoeksmeetkunde:</b></p>
+      <div class="tex">\theta(t) = \operatorname{atan}\frac{b}{x_E(t)}</div>
+      <div class="tex">\frac{\mathrm{d}\theta(t)}{\mathrm{d}t} = \frac{-b}{b^2 + x_E^2(t)}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t}</div>
+      <div class="tex">\phantom{\frac{\mathrm{d}\theta(t)}{\mathrm{d}t}} = \frac{b}{b^2 + x_E^2(t)}\,v</div>
+      <p class="fn">De grafieken volgen de opgave: de kubus start bij <span class="i">x<sub>E</sub></span> = 4.58 m en <span class="i">ω</span> loopt op van <span class="i">b</span><span class="i">v</span>/<span class="i">l</span>² = 0.040 rad/s tot <span class="i">v</span>/<span class="i">b</span> = 0.25 rad/s als de plaat verticaal staat. (De grafieken in het handboek gebruiken een ruimer bereik voor <span class="i">x<sub>E</sub></span> en <span class="i">t</span>.)</p>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>De kubus beweegt met een constante snelheid. Waarom neemt <span class="i">ω</span> toe naarmate de plaat rechter staat?</li>
+        <li>Waarom is de groene component niet de snelheid van een punt van de plaat? Wat stelt ze voor?</li>
+        <li>Bij welke stand is de rode component gelijk aan de volledige snelheid van H? Klopt dat met de figuur?</li>
+        <li>Vergelijk met de telescopische kraanwagen in <a href="vb15-5-telescopische-kraanwagen.html">Voorbeeld 15.5</a>: welke component hoort daar bij een lengteverandering, welke bij een rotatie?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, tipLabel, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const K1 = css('--cvm'), K2 = css('--cw'), KH = css('--cvl');
+const L = 5, B = 2, V = 0.5, X0 = Math.sqrt(L * L - B * B), TEND = X0 / V;
+const XMIN = -1, XMAX = 7.5, YMIN = -0.9, YMAX = 5.6;
+const KV = 3;                                           // vectorschaal: m per (m/s), vast
+let xE = X0, playing = true;
+const show = { vH: true, comp: true, ket: false, hoek: true };
+
+function state(x = xE) {
+  const th = Math.atan2(B, x), AH = Math.hypot(x, B);
+  const om = B / (B * B + x * x) * V;                   // ω
+  const dAH = -x * V / AH;                              // d|AH|/dt
+  const u = { x: Math.cos(th), y: Math.sin(th) }, n = { x: -Math.sin(th), y: Math.cos(th) };
+  return { th, AH, om, dAH, u, n, v1: { x: dAH * u.x, y: dAH * u.y }, v2: { x: AH * om * n.x, y: AH * om * n.y } };
+}
+
+// ---------- scène ----------
+const sc = setup(document.getElementById('scene'));
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, H_ = sc.h; ctx.clearRect(0, 0, W, H_);
+  const S = Math.min(W / (XMAX - XMIN), H_ / (YMAX - YMIN));
+  const X = x => (W - S * (XMAX - XMIN)) / 2 + (x - XMIN) * S, Y = y => H_ - (H_ - S * (YMAX - YMIN)) / 2 - (y - YMIN) * S;
+  const Pt = q => ({ x: X(q.x), y: Y(q.y) });
+  const st = state(), th = st.th, u = st.u, n = st.n;
+  const A = Pt({ x: 0, y: 0 }), E = Pt({ x: xE, y: 0 }), H = Pt({ x: xE, y: B }), F = Pt({ x: xE + B, y: 0 }), G = Pt({ x: xE + B, y: B });
+
+  ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(-0.6), Y(0)); ctx.lineTo(W, Y(0)); ctx.stroke();
+  ctx.strokeStyle = '#b9bec5'; ctx.lineWidth = 1;
+  for (let x = -0.5; x < XMAX; x += 0.25) { ctx.beginPath(); ctx.moveTo(X(x), Y(0)); ctx.lineTo(X(x) - 6, Y(0) + 8); ctx.stroke(); }
+  ctx.restore();
+  // kubus
+  ctx.save(); ctx.fillStyle = 'rgba(220,232,243,0.85)'; ctx.strokeStyle = '#4c5560'; ctx.lineWidth = 1.8;
+  ctx.fillRect(E.x, H.y, F.x - E.x, E.y - H.y); ctx.strokeRect(E.x, H.y, F.x - E.x, E.y - H.y); ctx.restore();
+  // plaat
+  const tip = { x: L * u.x, y: L * u.y }, d = 0.18;
+  const p1 = A, p2 = Pt(tip), p3 = Pt({ x: tip.x + d * n.x, y: tip.y + d * n.y }), p4 = Pt({ x: d * n.x, y: d * n.y });
+  ctx.save(); ctx.fillStyle = 'rgba(150,156,165,0.75)'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(A.x - 11, A.y + 18); ctx.lineTo(A.x + 11, A.y + 18); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  if (show.hoek) {
+    ctx.save(); ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(A.x, A.y, 0.75 * S, 0, -th, true); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '', A.x + 0.9 * S * Math.cos(th / 2) - 2, A.y - 0.9 * S * Math.sin(th / 2) + 6, '#4f5862', { vec: false, size: 15 });
+  }
+  if (show.ket) {
+    if (arrow(ctx, A.x, A.y, E.x, E.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'E/A', (A.x + E.x) / 2 - 10, A.y + 22, C.r, { size: 13 });
+    if (arrow(ctx, E.x, E.y, H.x, H.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'H/E', E.x + 8, (E.y + H.y) / 2 + 4, C.r, { size: 13 });
+    if (arrow(ctx, A.x, A.y, H.x, H.y, C.r, { w: 2.2, head: 10 })) label(ctx, 'r', 'H/A', A.x + 0.55 * (H.x - A.x) - 14, A.y + 0.55 * (H.y - A.y) - 16, C.r, { size: 13 });
+  }
+  // snelheden in H
+  const tipv = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
+  if (show.comp) {
+    const t1 = tipv(H, st.v1), t2 = tipv(t1, st.v2);
+    if (arrow(ctx, H.x, H.y, t1.x, t1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) TM1.formule(ctx, '$\\frac{d|AH|}{dt}$', t1.x - 8, t1.y + 16, { align: 'right', color: K1, size: 12 });
+    if (arrow(ctx, t1.x, t1.y, t2.x, t2.y, K2, { w: 2.4, dash: [7, 4], head: 10 })) TM1.formule(ctx, '$|AH|\\omega$', (t1.x + t2.x) / 2 - 10, (t1.y + t2.y) / 2 - 2, { align: 'right', color: K2, size: 12 });
+  }
+  if (show.vH) {
+    const t3 = tipv(H, { x: -V, y: 0 });
+    if (arrow(ctx, H.x, H.y, t3.x, t3.y, KH, { w: 3, head: 12 })) label(ctx, 'v', 'H', t3.x - 4, t3.y + 20, KH, { size: 14 });
+  }
+  // snelheid van de kubus (rechts)
+  arrow(ctx, G.x + 0.9 * S, (G.y + F.y) / 2, G.x + 0.15 * S, (G.y + F.y) / 2, KH, { w: 2.4, head: 10 });
+  label(ctx, 'v', '', G.x + 0.55 * S, (G.y + F.y) / 2 - 10, KH, { size: 14 });
+  for (const [q, nm, dx, dy] of [[A, 'A', -18, 4], [E, 'E', -4, 22], [H, 'H', 8, 16], [F, 'F', 6, 18], [G, 'G', 6, -6], [p2, 'B', 6, -4]]) {
+    if (nm !== 'B') { ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore(); }
+    label(ctx, nm, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 13 });
+  }
+  const ax = X(-0.8), ay = Y(4.2);
+  arrow(ctx, ax, ay, ax + 34, ay, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', ax + 37, ay + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, ax, ay, ax, ay - 34, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', ax - 13, ay - 28, '#6b737d', { vec: false, size: 13 });
+  TM1.schaalLegende(ctx, H_, [[0.25 * KV * S, KH, '0.25 m/s']], { rechtsboven: { w: W, y: 40 } });
+}
+
+// ---------- grafieken ----------
+const G1 = setup(document.getElementById('g1'));
+const G2 = setup(document.getElementById('g2'));
+let F1, F2;
+function drawGraphs() {
+  const om = state().om, t = (X0 - xE) / V;
+  F1 = frame(G1, [0, 5], [0, 0.3], '$x_E$ [m]', '$\\omega$ [rad/s]');
+  curve(G1.ctx, F1, 150, 0, X0, x => x, x => state(x).om, K2, 2.2);
+  TM1.cursor(G1.ctx, F1, xE); dot(G1.ctx, F1.X(xE), F1.Y(om), K2);
+  F2 = frame(G2, [0, 10], [0, 0.3], '$t$ [s]', '$\\omega$ [rad/s]');
+  curve(G2.ctx, F2, 150, 0, TEND, s => s, s => state(X0 - V * s).om, K2, 2.2);
+  TM1.cursor(G2.ctx, F2, t); dot(G2.ctx, F2.X(t), F2.Y(om), K2);
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const vec = v => `(${fmt(v.x, 3)}, ${fmt(v.y, 3)}) m/s`;
+function drawReadout() {
+  const st = state();
+  TM1.uitlezing(ro, [
+    ['<span class="i">t</span>', `${fmt((X0 - xE) / V, 2)} s`],
+    ['<span class="i">x<sub>E</sub></span>', `${fmt(xE, 3)} m`],
+    ['θ', `${fmt(deg(st.th), 2)}°`],
+    ['|<span class="i">AH</span>|', `${fmt(st.AH, 3)} m`],
+    ['<span class="i">ω</span>', `${fmt(st.om, 4)} rad/s`],
+    ['<span class="k-vm">d|<span class="i">AH</span>|/d<span class="i">t</span></span>', `${fmt(st.dAH, 3)} m/s`],
+    ['<span class="k-w">|<span class="i">AH</span>|<span class="i">ω</span></span>', `${fmt(st.AH * st.om, 3)} m/s`],
+    ['<span class="k-vl"><span class="v">v</span><sub>H</sub></span> (som)', vec({ x: st.v1.x + st.v2.x, y: st.v1.y + st.v2.y }), true]
+  ]);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play');
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() { $('xval').textContent = `${xE.toFixed(2)} m`; $('x').value = xE; }
+function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+const naar = x => { setPlaying(false); xE = Math.min(Math.max(x, 0), X0); render(); };
+
+playBtn.onclick = () => { if (!playing && xE <= 0) xE = X0; setPlaying(!playing); };
+$('reset').onclick = () => { xE = X0; setPlaying(true); render(); };
+$('j45').onclick = () => naar(B);
+$('x').oninput = e => naar(+e.target.value);
+for (const k of Object.keys(show)) {
+  const el = $('t_' + k); if (!el) continue;
+  el.checked = show[k];
+  el.onchange = () => { show[k] = el.checked; render(); };
+}
+TM1.scrub(G1, () => F1, naar);
+TM1.scrub(G2, () => F2, s => naar(X0 - V * Math.min(Math.max(s, 0), TEND)));
+
+TM1.bijGrootte([sc, G1, G2], render);
+TM1.lus(dt => { xE -= V * dt; if (xE <= 0) { xE = 0; setPlaying(false); } render(); }, () => playing);
+})();
+</script>
+</body>
+</html>

@@ -99,8 +99,8 @@ TM1.catalogus = [
       { id: '15.5', titel: 'Telescopische kraanwagen', status: 'klaar' },
       { id: '15.6', titel: 'Telescopische kraanwagen', status: 'klaar', opmerking: 'oplossing met driehoeksmeetkunde' },
       { id: '15.7', titel: 'Plooiladder', status: 'klaar' },
-      { id: '15.8', titel: 'Kubus duwt tegen zware plaat' },
-      { id: '15.9', titel: 'Van rotatie naar rotatie' },
+      { id: '15.8', titel: 'Kubus duwt tegen zware plaat', status: 'klaar' },
+      { id: '15.9', titel: 'Van rotatie naar rotatie', status: 'klaar' },
       { id: '15.10', titel: 'Windturbine' }]}
   ]},
   { deel: 'V', titel: 'Kinematica via bewegende assenstelsels', hoofdstukken: [
