@@ -62,6 +62,7 @@
   <div class="graphs two">
     <div class="card graph">
       <h3>Baan van A voor drie omwentelingen: een cycloïde</h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cr)"></span>A</span><label style="cursor:pointer;display:inline-flex;align-items:center;gap:5px"><input type="checkbox" id="t_baanM"> <span class="sw d" style="color:var(--cka)"></span>baan van M</label></div>
       <canvas id="g1"></canvas>
     </div>
     <div class="card graph">
@@ -76,9 +77,8 @@
       <h2>Uitdrukkingen uit het handboek</h2>
       <div class="tex">\kr{\vec r_{A/O}} = \kka{\vec r_{M/O}} + \kkb{\vec r_{A/M}}</div>
       <div class="tex">\phantom{\kr{\vec r_{A/O}}} = \kka{\begin{Bmatrix}x_M\\ R\end{Bmatrix}} + \kkb{R\begin{Bmatrix}-\sin\theta\\ -\cos\theta\end{Bmatrix}}</div>
-      <div class="tex">x_M = R\,\theta \qquad \text{(rolvoorwaarde, (2.5))}</div>
-      <div class="tex">\kr{\vec r_{A/O}} = \begin{Bmatrix}R\,\theta - R\sin\theta\\ R - R\cos\theta\end{Bmatrix}</div>
-      <div class="tex">\phantom{\kr{\vec r_{A/O}}} =\begin{Bmatrix}R(\theta - \sin\theta)\\ R(1 - \cos\theta)\end{Bmatrix}</div>
+      <div class="tex">\kka{x_M} = \kka{R\,\theta} \qquad \text{(rolvoorwaarde, (2.5))}</div>
+      <div class="tex">\kr{\vec r_{A/O}} = \kr{\begin{Bmatrix}\kka{R\,\theta} - \kkb{R\sin\theta}\\ \kka{R} - \kkb{R\cos\theta}\end{Bmatrix}} = \begin{Bmatrix}R(\theta - \sin\theta)\\ R(1 - \cos\theta)\end{Bmatrix}</div>
       <p class="fn"><span class="i">θ</span> is de hoek waarover het wiel gedraaid is ten opzichte van de startpositie, uitgedrukt in radialen; hij loopt op en kan groter worden dan 360°. Bij de start (<span class="i">θ</span> = 0) raakt A de vloer in O.</p>
     </div>
     <details class="card" open>
@@ -101,7 +101,7 @@ const C = TM1.kleuren();
 const R = 2.5, THMAX = 6 * Math.PI;                    // straal [m], drie omwentelingen
 const VW = 20, VH = 8, YMIN = -1.5;                    // venster van de scène [m]
 let th = 0, playing = true;
-const show = { ket: true, rA: true, baan: true, rol: false };
+const show = { ket: true, rA: true, baan: true, baanM: false, rol: false };   // baanM: enkel op verzoek
 
 const state = (t = th) => {
   const M = { x: R * t, y: R };
@@ -186,8 +186,13 @@ const G2 = setup(document.getElementById('g2'));
 let F1, F2;
 function drawGraphs() {
   const st = state();
-  F1 = frame(G1, [0, 48], [0, 6], '$x_A$ [m]', '$y_A$ [m]');
+  F1 = frame(G1, [0, 48], [0, 6], '$x$ [m]', '$y$ [m]');
   curve(G1.ctx, F1, 360, 0, THMAX, u => state(u).A.x, u => state(u).A.y, C.r, 2.2);
+  if (show.baanM) {                                   // baan van M: rechte op hoogte R, blauwe stippellijn
+    G1.ctx.save(); G1.ctx.setLineDash([2, 4]); G1.ctx.lineCap = 'round';
+    curve(G1.ctx, F1, 2, 0, THMAX, u => state(u).M.x, u => state(u).M.y, C.ka, 2); G1.ctx.restore();
+    dot(G1.ctx, F1.X(st.M.x), F1.Y(st.M.y), C.ka);
+  }
   dot(G1.ctx, F1.X(st.A.x), F1.Y(st.A.y), C.r);
 
   F2 = frame(G2, [0, 1080], [0, 48], '$\\theta$ [°]', '$x_A$, $y_A$ [m]');
