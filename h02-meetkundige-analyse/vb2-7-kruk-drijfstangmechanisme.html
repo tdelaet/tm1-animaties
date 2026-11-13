@@ -56,13 +56,13 @@
       <div class="card panel">
         <h2>Tonen</h2>
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
-          <label><input type="checkbox" id="t_OAB"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B</span></label>
+          <label><input type="checkbox" id="t_OAB"> <span class="sw ketting"></span><span>ketting O-A-B</span></label>
           <label><input type="checkbox" id="t_OB"> <span class="sw" style="background:var(--cr)"></span><span>ketting O-B: <span class="k-r"><span class="v">r</span><sub>B/O</sub></span></span></label>
           <label><input type="checkbox" id="t_C"> <span class="sw" style="background:var(--cr)"></span><span><span class="k-r"><span class="v">r</span><sub>C/O</sub></span></span></label>
           <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van C</span></label>
           <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoeken <span class="i">θ</span><sub>1</sub>, <span class="i">θ</span><sub>2</sub></span></label>
         </div>
-        <div class="note"><span class="i">θ</span><sub>1</sub> wordt gemeten vanaf de <span class="i">x</span>-as tegen de wijzers in, <span class="i">θ</span><sub>2</sub> is de hoek van de drijfstang met de horizontale, positief als A boven de geleiding ligt (zie de vector <span class="k-r"><span class="v">r</span><sub>B/A</sub></span>).</div>
+        <div class="note"><span class="i">θ</span><sub>1</sub> wordt gemeten vanaf de <span class="i">x</span>-as tegen de wijzers in, <span class="i">θ</span><sub>2</sub> is de hoek van de drijfstang met de horizontale, positief als A boven de geleiding ligt (zie de vector <span class="k-kb"><span class="v">r</span><sub>B/A</sub></span>).</div>
       </div>
     </div>
   </div>
@@ -85,22 +85,22 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="tex">\kr{\vec r_{B/O}} = \kr{\vec r_{A/O}} + \kr{\vec r_{B/A}}</div>
-      <div class="tex">\phantom{\kr{\vec r_{B/O}}} = L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix} + L_2\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}</div>
+      <div class="tex">\kr{\vec r_{B/O}} = \kka{\vec r_{A/O}} + \kkb{\vec r_{B/A}}</div>
+      <div class="tex">\phantom{\kr{\vec r_{B/O}}} = \kka{L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}} + \kkb{L_2\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}}</div>
       <div class="tex">\kr{\vec r_{B/O}} = \begin{Bmatrix}x_B\\ 0\end{Bmatrix}</div>
       <div class="tex">\begin{aligned} L_1\cos\theta_1 + L_2\cos\theta_2 &amp;= x_B\\ L_1\sin\theta_1 - L_2\sin\theta_2 &amp;= 0 \end{aligned}</div>
       <div class="tex">\theta_2 = \arcsin\left(\frac{L_1}{L_2}\sin\theta_1\right)</div>
       <div class="tex">x_B = L_1\cos\theta_1 + \sqrt{L_2^2 - L_1^2\sin^2\theta_1}</div>
-      <div class="tex">\kr{\vec r_{C/O}} = \kr{\vec r_{A/O}} + \kr{\vec r_{C/A}}</div>
-      <div class="tex">\phantom{\kr{\vec r_{C/O}}} = L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix} + \frac{L_2}{2}\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}</div>
+      <div class="tex">\kr{\vec r_{C/O}} = \kka{\vec r_{A/O}} + \kkc{\vec r_{C/A}}</div>
+      <div class="tex">\phantom{\kr{\vec r_{C/O}}} = \kka{L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}} + \kkc{\frac{L_2}{2}\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}}</div>
       <div class="tex">\phantom{\kr{\vec r_{C/O}}} = \begin{Bmatrix}L_1\cos\theta_1 + \frac{L_2}{2}\cos\theta_2\\ \frac{L_1}{2}\sin\theta_1\end{Bmatrix}</div>
       <p class="fn">en na invullen van <span class="i">θ</span><sub>2</sub>:</p>
       <div class="tex">\kr{\vec r_{C/O}} = \begin{Bmatrix}L_1\cos\theta_1 + \frac{L_2}{2}\cos\left(\arcsin\left(\frac{L_1}{L_2}\sin\theta_1\right)\right)\\ \frac{L_1}{2}\sin\theta_1\end{Bmatrix}</div>
-      <p class="fn">Het mechanisme heeft één kinematische vrijheidsgraad: <span class="i">θ</span><sub>1</sub> legt de hele stand vast. Controle: C ligt steeds in het midden van A en B, dus <span class="k-r"><span class="v">r</span><sub>C/O</sub></span> = (<span class="k-r"><span class="v">r</span><sub>A/O</sub></span> + <span class="k-r"><span class="v">r</span><sub>B/O</sub></span>)/2.</p>
+      <p class="fn">Het mechanisme heeft één kinematische vrijheidsgraad: <span class="i">θ</span><sub>1</sub> legt de hele stand vast. Controle: C ligt steeds in het midden van A en B, dus <span class="k-r"><span class="v">r</span><sub>C/O</sub></span> = (<span class="k-ka"><span class="v">r</span><sub>A/O</sub></span> + <span class="k-r"><span class="v">r</span><sub>B/O</sub></span>)/2.</p>
       <div class="tabelwrap">
         <table class="tabel">
           <tr><th></th><th><span class="i">θ</span><sub>1</sub> = 0°</th><th><span class="i">θ</span><sub>1</sub> = 60°</th><th><span class="i">θ</span><sub>1</sub> = 135°</th><th><span class="i">θ</span><sub>1</sub> = 270°</th></tr>
-          <tr><td><span class="k-r"><span class="v">r</span><sub>A/O</sub></span></td><td>(1.00, 0.00) m</td><td>(0.500, 0.866) m</td><td>(−0.707, 0.707) m</td><td>(0.00, −1.00) m</td></tr>
+          <tr><td><span class="k-ka"><span class="v">r</span><sub>A/O</sub></span></td><td>(1.00, 0.00) m</td><td>(0.500, 0.866) m</td><td>(−0.707, 0.707) m</td><td>(0.00, −1.00) m</td></tr>
           <tr><td><span class="k-r"><span class="v">r</span><sub>B/O</sub></span></td><td>(4.00, 0.00) m</td><td>(3.37, 0.00) m</td><td>(2.21, 0.00) m</td><td>(2.82, 0.00) m</td></tr>
           <tr><td><span class="k-r"><span class="v">r</span><sub>C/O</sub></span></td><td>(2.50, 0.00) m</td><td>(1.94, 0.433) m</td><td>(0.750, 0.354) m</td><td>(1.41, −0.500) m</td></tr>
         </table>
@@ -189,11 +189,11 @@ function drawScene() {
   // kettingen
   if (show.OB && arrow(ctx, O.x, O.y, B.x, B.y, C.r, { w: 2.6, head: 12 })) label(ctx, 'r', 'B/O', (O.x + B.x) / 2 + 30, O.y + (st.A.y > 0 ? 22 : -10), C.r, { size: 14 });
   if (show.OAB) {
-    if (arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) {
+    if (arrow(ctx, O.x, O.y, A.x, A.y, C.ka, { w: 1.9, dash: [5, 3], head: 9 })) {
       const n = { x: -Math.sin(th1), y: -Math.cos(th1) };
-      label(ctx, 'r', 'A/O', (O.x + A.x) / 2 + 24 * n.x - 10, (O.y + A.y) / 2 + 24 * n.y + 4, C.r, { size: 13 });
+      label(ctx, 'r', 'A/O', (O.x + A.x) / 2 + 24 * n.x - 10, (O.y + A.y) / 2 + 24 * n.y + 4, C.ka, { size: 13 });
     }
-    if (arrow(ctx, A.x, A.y, B.x, B.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'B/A', A.x + 0.72 * (B.x - A.x), A.y + 0.72 * (B.y - A.y) + (st.A.y >= 0 ? -10 : 22), C.r, { size: 13 });
+    if (arrow(ctx, A.x, A.y, B.x, B.y, C.kb, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'B/A', A.x + 0.72 * (B.x - A.x), A.y + 0.72 * (B.y - A.y) + (st.A.y >= 0 ? -10 : 22), C.kb, { size: 13 });
   }
   if (show.C && arrow(ctx, O.x, O.y, Cc.x, Cc.y, C.r, { w: 2.2, head: 10 })) label(ctx, 'r', 'C/O', (O.x + Cc.x) / 2 + 4, (O.y + Cc.y) / 2 + (st.A.y >= 0 ? 18 : -8), C.r, { size: 13 });
   // punten
@@ -248,7 +248,7 @@ function drawReadout() {
     ['θ<sub>1</sub>', `${fmt(deg(wrap(th1)), 1)}°`],
     ['θ<sub>2</sub>', `${fmt(deg(st.t2), 2)}°`],
     ['<span class="i">x<sub>B</sub></span>', `${fmt(st.B.x, 3)} m`],
-    ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A), true],
+    ['<span class="k-ka"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A), true],
     ['<span class="k-r"><span class="v">r</span><sub>B/O</sub></span>', vec(st.B), true],
     ['<span class="k-r"><span class="v">r</span><sub>C/O</sub></span>', vec(st.C), true]
   ]);

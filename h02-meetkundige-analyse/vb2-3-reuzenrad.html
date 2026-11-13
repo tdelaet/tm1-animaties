@@ -54,7 +54,7 @@
       <div class="card panel">
         <h2>Tonen</h2>
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-B-A-C-D-P</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw ketting"></span><span>ketting O-B-A-C-D-P</span></label>
           <label><input type="checkbox" id="t_rP"> <span class="sw" style="background:var(--cr)"></span><span><span class="k-r"><span class="v">r</span><sub>P/O</sub></span></span></label>
           <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van P</span></label>
         </div>
@@ -79,10 +79,10 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="tex">\kr{\vec r_{P/O}} = \kr{\vec r_{B/O}} + \kr{\vec r_{A/B}} + \kr{\vec r_{C/A}} + \kr{\vec r_{D/C}} + \kr{\vec r_{P/D}}</div>
-      <div class="tex">\kr{\vec r_{P/O}} = \begin{Bmatrix}x_r\\ 0\end{Bmatrix} + \begin{Bmatrix}0\\ h\end{Bmatrix} + r\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}</div>
-      <div class="tex">\phantom{\kr{\vec r_{P/O}}} + l\begin{Bmatrix}\sin\theta_2\\ -\cos\theta_2\end{Bmatrix} + d\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}</div>
-      <p class="fn">Elke vector is geschreven als zijn grootte maal een eenheidsvector volgens de zin van de vector. <span class="i">θ</span><sub>1</sub> geeft de stand van het scharnier C ten opzichte van het centrum A, <span class="i">θ</span><sub>2</sub> de kanteling van de as van de gondel ten opzichte van de verticale. Bij een vaste <span class="i">θ</span><sub>2</sub> zijn de laatste twee termen constant: P beschrijft dan een cirkel met straal <span class="i">r</span>, waarvan het middelpunt verschoven is over <span class="k-r"><span class="v">r</span><sub>D/C</sub></span> + <span class="k-r"><span class="v">r</span><sub>P/D</sub></span>.</p>
+      <div class="tex">\kr{\vec r_{P/O}} = \kka{\vec r_{B/O}} + \kkb{\vec r_{A/B}} + \kkc{\vec r_{C/A}} + \kkd{\vec r_{D/C}} + \kke{\vec r_{P/D}}</div>
+      <div class="tex">\kr{\vec r_{P/O}} = \kka{\begin{Bmatrix}x_r\\ 0\end{Bmatrix}} + \kkb{\begin{Bmatrix}0\\ h\end{Bmatrix}} + \kkc{r\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}}</div>
+      <div class="tex">\phantom{\kr{\vec r_{P/O}}} + \kkd{l\begin{Bmatrix}\sin\theta_2\\ -\cos\theta_2\end{Bmatrix}} + \kke{d\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}}</div>
+      <p class="fn">Elke vector is geschreven als zijn grootte maal een eenheidsvector volgens de zin van de vector. <span class="i">θ</span><sub>1</sub> geeft de stand van het scharnier C ten opzichte van het centrum A, <span class="i">θ</span><sub>2</sub> de kanteling van de as van de gondel ten opzichte van de verticale. Bij een vaste <span class="i">θ</span><sub>2</sub> zijn de laatste twee termen constant: P beschrijft dan een cirkel met straal <span class="i">r</span>, waarvan het middelpunt verschoven is over <span class="k-kd"><span class="v">r</span><sub>D/C</sub></span> + <span class="k-ke"><span class="v">r</span><sub>P/D</sub></span>.</p>
     </div>
     <details class="card" open>
       <summary>Denkvragen bij de animatie</summary>
@@ -155,8 +155,9 @@ function drawScene() {
   }
   // ketting
   if (show.ket) {
-    const k = (a, c_, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, c_.x, c_.y, C.r, { w: 1.7, dash: [5, 3], head: 8 })) label(ctx, 'r', sub, (a.x + c_.x) / 2 + dx, (a.y + c_.y) / 2 + dy, C.r, { size: 12 }); };
-    k(O, B, 'B/O', -10, 18); k(B, A, 'A/B', 6, 0); k(A, Cc, 'C/A', -34, -6); k(Cc, D, 'D/C', 6, 0); k(D, P, 'P/D', -6, 18);
+    // elke schakel van de ketting in een eigen kleur (zoals in de formules)
+    const k = (a, c_, sub, dx, dy, kl) => { if (arrow(ctx, a.x, a.y, c_.x, c_.y, kl, { w: 2, dash: [5, 3], head: 8 })) label(ctx, 'r', sub, (a.x + c_.x) / 2 + dx, (a.y + c_.y) / 2 + dy, kl, { size: 12 }); };
+    k(O, B, 'B/O', -10, 18, C.ka); k(B, A, 'A/B', 6, 0, C.kb); k(A, Cc, 'C/A', -34, -6, C.kc); k(Cc, D, 'D/C', 6, 0, C.kd); k(D, P, 'P/D', -6, 18, C.ke);
   }
   if (show.rP && arrow(ctx, O.x, O.y, P.x, P.y, C.r, { w: 2.6, head: 12 })) label(ctx, 'r', 'P/O', (O.x + P.x) / 2 - 36, (O.y + P.y) / 2, C.r, { size: 14 });
   for (const [q, n, dx, dy] of [[B, 'B', 6, 14], [A, 'A', -18, -4], [Cc, 'C', 6, -6], [D, 'D', -16, 4], [P, 'P', 6, 14]]) {
@@ -204,9 +205,9 @@ function drawReadout() {
   TM1.uitlezing(ro, [
     ['θ<sub>1</sub>', `${fmt(deg(((th1 % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)), 1)}°`],
     ['θ<sub>2</sub>', `${fmt(deg(th2), 1)}°`],
-    ['<span class="k-r"><span class="v">r</span><sub>C/A</sub></span>', vec(verschil(st.C, st.A)), true],
-    ['<span class="k-r"><span class="v">r</span><sub>D/C</sub></span>', vec(verschil(st.D, st.C)), true],
-    ['<span class="k-r"><span class="v">r</span><sub>P/D</sub></span>', vec(verschil(st.P, st.D)), true],
+    ['<span class="k-kc"><span class="v">r</span><sub>C/A</sub></span>', vec(verschil(st.C, st.A)), true],
+    ['<span class="k-kd"><span class="v">r</span><sub>D/C</sub></span>', vec(verschil(st.D, st.C)), true],
+    ['<span class="k-ke"><span class="v">r</span><sub>P/D</sub></span>', vec(verschil(st.P, st.D)), true],
     ['<span class="k-r"><span class="v">r</span><sub>P/O</sub></span> (som)', vec(st.P), true]
   ]);
 }

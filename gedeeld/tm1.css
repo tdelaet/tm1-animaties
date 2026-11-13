@@ -110,6 +110,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .toggles label{display:flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer}
 .sw{width:14px;height:4px;border-radius:2px;display:inline-block}
 .sw.d{background:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 7px)!important;height:3px}
+.sw.ketting{width:18px;background:linear-gradient(90deg,var(--cka) 0 33%,var(--ckb) 33% 66%,var(--ckc) 66%)!important}   /* schakels van een ketting, elk in een eigen kleur */
 .note{font-size:12.5px;color:var(--muted);margin-top:6px}
 .q1 p{margin:0 0 8px;font-size:13.5px;color:var(--muted)}
 .q1 .btnrow{margin:0}

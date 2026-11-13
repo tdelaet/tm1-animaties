@@ -49,7 +49,7 @@
         <h2>Tonen</h2>
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_EB"> <span class="sw" style="background:var(--cr)"></span><span>ketting E-B: <span class="k-r"><span class="v">r</span><sub>B/E</sub></span></span></label>
-          <label><input type="checkbox" id="t_EAB"> <span class="sw d" style="color:var(--cr)"></span><span>ketting E-A-B</span></label>
+          <label><input type="checkbox" id="t_EAB"> <span class="sw ketting"></span><span>ketting E-A-B</span></label>
           <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#e8a35a"></span><span>hoeken <span class="i">α</span> en <span class="i">β</span></span></label>
           <label><input type="checkbox" id="t_tweede"> <span class="sw d" style="color:#7a828c"></span><span>tweede oplossing voor <span class="i">α</span></span></label>
         </div>
@@ -72,12 +72,12 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="tex">\kr{\vec r_{B/E}} = \kr{\vec r_{A/E}} + \kr{\vec r_{B/A}}</div>
-      <div class="tex">\kr{\vec r_{A/E}} = \begin{Bmatrix}-2\ \text{m}\\ 1\ \text{m}\end{Bmatrix},</div>
-      <div class="tex">\kr{\vec r_{B/A}} = \begin{Bmatrix}|AB|\cos\alpha\\ |AB|\sin\alpha\end{Bmatrix},</div>
-      <div class="tex">\kr{\vec r_{B/E}} = \begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix}</div>
-      <div class="tex">\begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix} = \begin{Bmatrix}-2\ \text{m}\\ 1\ \text{m}\end{Bmatrix}</div>
-      <div class="tex">\phantom{\begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix}} + \begin{Bmatrix}|AB|\cos\alpha\\ |AB|\sin\alpha\end{Bmatrix} \qquad (2.6)</div>
+      <div class="tex">\kr{\vec r_{B/E}} = \kka{\vec r_{A/E}} + \kkb{\vec r_{B/A}}</div>
+      <div class="tex">\kka{\vec r_{A/E}} = \kka{\begin{Bmatrix}-2\ \text{m}\\ 1\ \text{m}\end{Bmatrix}},</div>
+      <div class="tex">\kkb{\vec r_{B/A}} = \kkb{\begin{Bmatrix}|AB|\cos\alpha\\ |AB|\sin\alpha\end{Bmatrix}},</div>
+      <div class="tex">\kr{\vec r_{B/E}} = \kr{\begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix}}</div>
+      <div class="tex">\kr{\begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix}} = \kka{\begin{Bmatrix}-2\ \text{m}\\ 1\ \text{m}\end{Bmatrix}}</div>
+      <div class="tex">\phantom{\begin{Bmatrix}|BE|\cos\beta\\ |BE|\sin\beta\end{Bmatrix}} + \kkb{\begin{Bmatrix}|AB|\cos\alpha\\ |AB|\sin\alpha\end{Bmatrix}} \qquad (2.6)</div>
       <p class="fn">Twee vergelijkingen in drie onbekenden <span class="i">α</span>, |<span class="i">BE</span>| en <span class="i">β</span>. Kwadrateren en optellen elimineert <span class="i">β</span>:</p>
       <div class="tex">|BE|^2 = 5\ \text{m}^2 + |AB|^2</div>
       <div class="tex">\phantom{|BE|^2 =}\ - 4\ \text{m}\,|AB|\cos\alpha + 2\ \text{m}\,|AB|\sin\alpha</div>
@@ -178,8 +178,9 @@ function drawScene() {
   }
   // kettingen
   if (show.EAB) {
-    const k = (a, c, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, c.x, c.y, C.r, { w: 1.7, dash: [5, 3], head: 9 })) label(ctx, 'r', sub, (a.x + c.x) / 2 + dx, (a.y + c.y) / 2 + dy, C.r, { size: 13 }); };
-    k(E, A, 'A/E', -10, 20); k(A, B, 'B/A', -6, -12);
+    // elke schakel van de ketting in een eigen kleur (zoals in de formules)
+    const k = (a, c, sub, dx, dy, kl) => { if (arrow(ctx, a.x, a.y, c.x, c.y, kl, { w: 2, dash: [5, 3], head: 9 })) label(ctx, 'r', sub, (a.x + c.x) / 2 + dx, (a.y + c.y) / 2 + dy, kl, { size: 13 }); };
+    k(E, A, 'A/E', -10, 20, C.ka); k(A, B, 'B/A', -6, -12, C.kb);
   }
   if (show.EB && arrow(ctx, E.x, E.y, B.x, B.y, C.r, { w: 2.6, head: 12 })) label(ctx, 'r', 'B/E', (E.x + B.x) / 2 - 44, (E.y + B.y) / 2, C.r, { size: 14 });
 
@@ -216,7 +217,7 @@ function drawReadout() {
     ['α', `${fmt(deg(al), 2)}°`],
     ['β', `${fmt(deg(st.be), 2)}°`],
     ['|BE|', `${fmt(st.L, 3)} m`],
-    ['<span class="k-r"><span class="v">r</span><sub>B/A</sub></span>', `(${fmt(st.B.x - AE.x, 3)}, ${fmt(st.B.y - AE.y, 3)}) m`, true],
+    ['<span class="k-kb"><span class="v">r</span><sub>B/A</sub></span>', `(${fmt(st.B.x - AE.x, 3)}, ${fmt(st.B.y - AE.y, 3)}) m`, true],
     ['<span class="k-r"><span class="v">r</span><sub>B/E</sub></span>', `(${fmt(st.B.x, 3)}, ${fmt(st.B.y, 3)}) m`, true]
   ];
   if (show.tweede) rij.push(['tweede oplossing α′', `${fmt(deg(norm(st.a2)), 2)}°`]);

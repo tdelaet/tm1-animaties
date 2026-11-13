@@ -60,7 +60,7 @@
       <div class="card panel">
         <h2>Tonen</h2>
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B-M</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw ketting"></span><span>ketting O-A-B-M</span></label>
           <label><input type="checkbox" id="t_rM"> <span class="sw" style="background:var(--cr)"></span><span><span class="k-r"><span class="v">r</span><sub>M/O</sub></span></span></label>
           <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van M</span></label>
           <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:#7a828c"></span><span>componenten <span class="i">x<sub>M</sub></span>, <span class="i">y<sub>M</sub></span></span></label>
@@ -85,7 +85,7 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="tex">\begin{aligned} \kr{\vec r_{M/O}} &amp;= \kr{\vec r_{A/O}} + \kr{\vec r_{B/A}} + \kr{\vec r_{M/B}} \\ &amp;= L\begin{Bmatrix}\sin\theta\\ \cos\theta\end{Bmatrix} + \frac{b}{2}\begin{Bmatrix}\cos\theta\\ -\sin\theta\end{Bmatrix} + \frac{h}{2}\begin{Bmatrix}-\sin\theta\\ -\cos\theta\end{Bmatrix} \end{aligned}</div>
+      <div class="tex">\begin{aligned} \kr{\vec r_{M/O}} &amp;= \kka{\vec r_{A/O}} + \kkb{\vec r_{B/A}} + \kkc{\vec r_{M/B}} \\ &amp;= \kka{L\begin{Bmatrix}\sin\theta\\ \cos\theta\end{Bmatrix}} + \kkb{\frac{b}{2}\begin{Bmatrix}\cos\theta\\ -\sin\theta\end{Bmatrix}} + \kkc{\frac{h}{2}\begin{Bmatrix}-\sin\theta\\ -\cos\theta\end{Bmatrix}} \end{aligned}</div>
       <div class="tex">\kr{\vec r_{M/O}} = \left(L-\frac{h}{2}\right)\begin{Bmatrix}\sin\theta\\ \cos\theta\end{Bmatrix} + \frac{b}{2}\begin{Bmatrix}\cos\theta\\ -\sin\theta\end{Bmatrix} = \begin{Bmatrix}\left(L-\frac{h}{2}\right)\sin\theta + \frac{b}{2}\cos\theta\\ \left(L-\frac{h}{2}\right)\cos\theta - \frac{b}{2}\sin\theta\end{Bmatrix}</div>
       <div class="tex">\|\kr{\vec r_{M/O}}\| = \sqrt{\left(L-\frac{h}{2}\right)^2 + \left(\frac{b}{2}\right)^2} = \sqrt{(8\ \text{m}-1\ \text{m})^2 + (1.5\ \text{m})^2} = 7.16\ \text{m}</div>
       <p class="fn"><b>Controle:</b> de eenheden kloppen (m). Bij <span class="i">θ</span> = 0 staat de mast verticaal: <span class="k-r"><span class="v">r</span><sub>M/O</sub></span> = (<span class="i">b</span>/2, <span class="i">L</span> − <span class="i">h</span>/2) = (1.5 m, 7 m). Bij <span class="i">θ</span> = 90° ligt de mast horizontaal: <span class="k-r"><span class="v">r</span><sub>M/O</sub></span> = (<span class="i">L</span> − <span class="i">h</span>/2, −<span class="i">b</span>/2) = (7 m, −1.5 m). Elke vector is geschreven als zijn lengte maal een eenheidsvector met dezelfde zin. <span class="i">θ</span> is de hoek met de <span class="i">y</span>-as, positief in wijzerzin.</p>
@@ -161,11 +161,12 @@ function drawScene() {
 
   // vectoriële ketting O-A-B-M (gestreept) en het resultaat r_M/O (vol)
   if (show.ket) {
-    const k = (a, c_, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, c_.x, c_.y, C.r, { w: 2, dash: [6, 4], head: 10 })) label(ctx, 'r', sub, (a.x + c_.x) / 2 + dx, (a.y + c_.y) / 2 + dy, C.r, { size: 14 }); };
+    // elke schakel van de ketting in een eigen kleur (zoals in de formules)
+    const k = (a, c_, sub, dx, dy, kl) => { if (arrow(ctx, a.x, a.y, c_.x, c_.y, kl, { w: 2.2, dash: [6, 4], head: 10 })) label(ctx, 'r', sub, (a.x + c_.x) / 2 + dx, (a.y + c_.y) / 2 + dy, kl, { size: 14 }); };
     const n = { x: Math.cos(th) * 8, y: Math.sin(th) * 8 };   // kleine verschuiving naast de mast
-    if (arrow(ctx, O.x - n.x, O.y - n.y, A.x - n.x, A.y - n.y, C.r, { w: 2, dash: [6, 4], head: 10 })) label(ctx, 'r', 'A/O', (O.x + A.x) / 2 - 44, (O.y + A.y) / 2, C.r, { size: 14 });
-    if (b > 0.05) k(A, B, 'B/A', 4, -10);
-    if (h > 0.05) k(B, M, 'M/B', 8, 4);
+    if (arrow(ctx, O.x - n.x, O.y - n.y, A.x - n.x, A.y - n.y, C.ka, { w: 2.2, dash: [6, 4], head: 10 })) label(ctx, 'r', 'A/O', (O.x + A.x) / 2 - 44, (O.y + A.y) / 2, C.ka, { size: 14 });
+    if (b > 0.05) k(A, B, 'B/A', 4, -10, C.kb);
+    if (h > 0.05) k(B, M, 'M/B', 8, 4, C.kc);
   }
   if (show.rM && arrow(ctx, O.x, O.y, M.x, M.y, C.r, { w: 2.8, head: 12 })) label(ctx, 'r', 'M/O', (O.x + M.x) / 2 + 10, (O.y + M.y) / 2 + 16, C.r, { size: 15 });
   if (show.comp) {
@@ -219,9 +220,9 @@ function drawReadout() {
   TM1.uitlezing(ro, [
     ['θ', `${fmt(deg(th), 1)}°`],
     ['‖<span class="k-r"><span class="v">r</span><sub>M/O</sub></span>‖', `${fmt(Math.hypot(st.M.x, st.M.y), 3)} m`],
-    ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A), true],
-    ['<span class="k-r"><span class="v">r</span><sub>B/A</sub></span>', vec({ x: st.B.x - st.A.x, y: st.B.y - st.A.y }), true],
-    ['<span class="k-r"><span class="v">r</span><sub>M/B</sub></span>', vec({ x: st.M.x - st.B.x, y: st.M.y - st.B.y }), true],
+    ['<span class="k-ka"><span class="v">r</span><sub>A/O</sub></span>', vec(st.A), true],
+    ['<span class="k-kb"><span class="v">r</span><sub>B/A</sub></span>', vec({ x: st.B.x - st.A.x, y: st.B.y - st.A.y }), true],
+    ['<span class="k-kc"><span class="v">r</span><sub>M/B</sub></span>', vec({ x: st.M.x - st.B.x, y: st.M.y - st.B.y }), true],
     ['<span class="k-r"><span class="v">r</span><sub>M/O</sub></span> (som)', vec(st.M), true]
   ]);
 }

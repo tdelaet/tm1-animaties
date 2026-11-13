@@ -50,7 +50,7 @@
       <div class="card panel">
         <h2>Tonen</h2>
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting K-H-O</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw ketting"></span><span>ketting K-H-O</span></label>
           <label><input type="checkbox" id="t_rOK"> <span class="sw" style="background:var(--cr)"></span><span>ketting K-O: <span class="k-r"><span class="v">r</span><sub>O/K</sub></span></span></label>
           <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoeken <span class="i">θ</span><sub>1</sub>, <span class="i">θ</span><sub>2</sub></span></label>
           <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van H</span></label>
@@ -74,12 +74,12 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <div class="tex">\kr{\vec r_{O/K}} = \kr{\vec r_{H/K}} + \kr{\vec r_{O/H}}</div>
+      <div class="tex">\kr{\vec r_{O/K}} = \kka{\vec r_{H/K}} + \kkb{\vec r_{O/H}}</div>
       <div class="tex">\kr{\vec r_{O/K}} = \begin{Bmatrix}-0.2\ \text{m}\\ 0.5\ \text{m}\end{Bmatrix},</div>
-      <div class="tex">\kr{\vec r_{H/K}} = l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix},</div>
-      <div class="tex">\kr{\vec r_{O/H}} = l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}</div>
-      <div class="tex">l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix} = \begin{Bmatrix}-0.2\ \text{m}\\ 0.5\ \text{m}\end{Bmatrix}</div>
-      <div class="tex">\phantom{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}} - l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}</div>
+      <div class="tex">\kka{\vec r_{H/K}} = \kka{l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}},</div>
+      <div class="tex">\kkb{\vec r_{O/H}} = \kkb{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}}</div>
+      <div class="tex">\kkb{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}} = \kr{\begin{Bmatrix}-0.2\ \text{m}\\ 0.5\ \text{m}\end{Bmatrix}}</div>
+      <div class="tex">\phantom{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}} - \kka{l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}}</div>
       <div class="tex">\tan\theta_2 = \frac{l_2\sin\theta_2}{l_2\cos\theta_2} = \frac{0.5\ \text{m} - 0.4\ \text{m}\,\sin\theta_1}{-0.2\ \text{m} - 0.4\ \text{m}\,\cos\theta_1}</div>
       <div class="tex">\phantom{\tan\theta_2} = \frac{4\sin\theta_1 - 5}{2 + 4\cos\theta_1}</div>
       <div class="tex">\theta_2 = \operatorname{atan}\frac{4\sin\theta_1 - 5}{2 + 4\cos\theta_1} + 180^\circ</div>
@@ -172,11 +172,11 @@ function drawScene() {
   // kettingen
   if (show.rOK && arrow(ctx, K.x, K.y, O.x, O.y, C.r, { w: 2.6, head: 12 })) label(ctx, 'r', 'O/K', (K.x + O.x) / 2 - 46, (K.y + O.y) / 2 + 4, C.r, { size: 14 });
   if (show.ket) {
-    if (arrow(ctx, K.x, K.y, H.x, H.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) {
+    if (arrow(ctx, K.x, K.y, H.x, H.y, C.ka, { w: 1.9, dash: [5, 3], head: 9 })) {
       const nx = -Math.sin(th1), ny = -Math.cos(th1);
-      label(ctx, 'r', 'H/K', (K.x + H.x) / 2 + 22 * nx + 10, (K.y + H.y) / 2 + 22 * ny + 16, C.r, { size: 13 });
+      label(ctx, 'r', 'H/K', (K.x + H.x) / 2 + 22 * nx + 10, (K.y + H.y) / 2 + 22 * ny + 16, C.ka, { size: 13 });
     }
-    if (arrow(ctx, H.x, H.y, O.x, O.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'O/H', (H.x + O.x) / 2 - 8, (H.y + O.y) / 2 - 12, C.r, { size: 13 });
+    if (arrow(ctx, H.x, H.y, O.x, O.y, C.kb, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'O/H', (H.x + O.x) / 2 - 8, (H.y + O.y) / 2 - 12, C.kb, { size: 13 });
   }
   // punten
   for (const [q, n, dx, dy] of [[K, 'K', -18, 16], [O, 'O', -8, -12], [H, 'H', 8, 16], [Cc, 'C', 10, 4]]) {
@@ -212,8 +212,8 @@ function drawReadout() {
     ['θ<sub>1</sub>', `${fmt(deg(th1), 1)}°`],
     ['θ<sub>2</sub>', `${fmt(deg(st.t2), 1)}°`],
     ['<span class="i">l</span><sub>2</sub>', `${fmt(st.l2, 3)} m`],
-    ['<span class="k-r"><span class="v">r</span><sub>H/K</sub></span>', `(${fmt(st.H.x, 3)}, ${fmt(st.H.y, 3)}) m`, true],
-    ['<span class="k-r"><span class="v">r</span><sub>O/H</sub></span>', `(${fmt(OX - st.H.x, 3)}, ${fmt(OY - st.H.y, 3)}) m`, true],
+    ['<span class="k-ka"><span class="v">r</span><sub>H/K</sub></span>', `(${fmt(st.H.x, 3)}, ${fmt(st.H.y, 3)}) m`, true],
+    ['<span class="k-kb"><span class="v">r</span><sub>O/H</sub></span>', `(${fmt(OX - st.H.x, 3)}, ${fmt(OY - st.H.y, 3)}) m`, true],
     ['<span class="k-r"><span class="v">r</span><sub>O/K</sub></span> (som)', `(${fmt(OX, 3)}, ${fmt(OY, 3)}) m`, true]
   ]);
 }

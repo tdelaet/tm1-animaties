@@ -53,7 +53,7 @@
         <h2>Tonen</h2>
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_dir"> <span class="sw" style="background:var(--cr)"></span><span>rechtstreeks: <span class="k-r"><span class="v">r</span><sub>A/O</sub></span></span></label>
-          <label><input type="checkbox" id="t_OBA"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-B-A</span></label>
+          <label><input type="checkbox" id="t_OBA"> <span class="sw ketting"></span><span>ketting O-B-A</span></label>
           <label><input type="checkbox" id="t_drie"> <span class="sw" style="background:#f3d98b"></span><span>driehoek OAB</span></label>
           <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoeken</span></label>
         </div>
@@ -78,8 +78,8 @@
       <h2>Uitdrukkingen uit het handboek</h2>
       <p class="fn"><b>1. Vectoriële kettingen.</b> De positie van A ten opzichte van O, rechtstreeks en via O-B-A:</p>
       <div class="tex">\kr{\vec r_{A/O}} = l\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix},</div>
-      <div class="tex">\kr{\vec r_{A/O}} = \kr{\vec r_{B/O}} + \kr{\vec r_{A/B}}</div>
-      <div class="tex">\phantom{\kr{\vec r_{A/O}}} = \begin{Bmatrix}x_B\\ 0\end{Bmatrix} + |AB|\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}</div>
+      <div class="tex">\kr{\vec r_{A/O}} = \kka{\vec r_{B/O}} + \kkb{\vec r_{A/B}}</div>
+      <div class="tex">\phantom{\kr{\vec r_{A/O}}} = \kka{\begin{Bmatrix}x_B\\ 0\end{Bmatrix}} + \kkb{|AB|\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}}</div>
       <div class="tex">l\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix} = \begin{Bmatrix}l\frac{\sqrt2}{2}\\ 0\end{Bmatrix} + |AB|\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}</div>
       <div class="tex">\tan\theta_2 = \frac{l\sin\theta_1}{l\cos\theta_1 - l\frac{\sqrt2}{2}},</div>
       <div class="tex">\theta_2 = \operatorname{atan}\frac{2\sin\theta_1}{2\cos\theta_1 - \sqrt2}</div>
@@ -163,8 +163,8 @@ function drawScene() {
   }
   // kettingen
   if (show.OBA) {
-    if (arrow(ctx, O.x, O.y, B.x, B.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'B/O', (O.x + B.x) / 2 - 12, O.y + (st.A.y >= 0 ? 24 : -10), C.r, { size: 13 });
-    if (arrow(ctx, B.x, B.y, A.x, A.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'A/B', (A.x + B.x) / 2 + 10, (A.y + B.y) / 2 + 4, C.r, { size: 13 });
+    if (arrow(ctx, O.x, O.y, B.x, B.y, C.ka, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'B/O', (O.x + B.x) / 2 - 12, O.y + (st.A.y >= 0 ? 24 : -10), C.ka, { size: 13 });
+    if (arrow(ctx, B.x, B.y, A.x, A.y, C.kb, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'A/B', (A.x + B.x) / 2 + 10, (A.y + B.y) / 2 + 4, C.kb, { size: 13 });
   }
   if (show.dir && arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 2.6, head: 12 })) {
     const nn = { x: -Math.sin(t1), y: -Math.cos(t1) };
@@ -202,7 +202,7 @@ function drawReadout() {
     ['θ<sub>2</sub>', `${fmt(deg(st.t2), 2)}°`],
     ['|<span class="i">AB</span>|', `${fmt(st.AB, 3)} m`],
     ['<span class="k-r"><span class="v">r</span><sub>A/O</sub></span>', `(${fmt(st.A.x, 3)}, ${fmt(st.A.y, 3)}) m`, true],
-    ['<span class="k-r"><span class="v">r</span><sub>A/B</sub></span>', `(${fmt(st.A.x - XB, 3)}, ${fmt(st.A.y, 3)}) m`, true]
+    ['<span class="k-kb"><span class="v">r</span><sub>A/B</sub></span>', `(${fmt(st.A.x - XB, 3)}, ${fmt(st.A.y, 3)}) m`, true]
   ]);
 }
 

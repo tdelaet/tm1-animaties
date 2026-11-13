@@ -60,6 +60,16 @@ grafieken, denkvragen).
 - **Kleur in formules** gelijk aan de animatie, voor vectoren én de bijbehorende scalaire grootheden (bv. *a*<sub>Pt</sub> oranje),
   met de klassen uit `gedeeld/tm1.css`: `<span class="k-r"><span class="v">r</span><sub>P</sub></span>`,
   `<span class="i k-at">a<sub>Pt</sub></span>` (ook `k-v`, `k-a`, `k-an`, `k-e`, `k-F`, `k-M`).
+- **Vectoriële kettingen** (hoofdstuk 2): elke schakel krijgt een eigen kleur (`\kka` … `\kke` in TeX,
+  `k-ka` … `k-ke` in HTML, `C.ka` … `C.ke` in JavaScript), ook in de uitgeschreven termen van de formules;
+  de resulterende positievector blijft groen. In hoofdstuk 15 blijven alle positievectoren groen, want daar
+  hebben de snelheden de kleuren.
+- **Werkblad-indeling**: de figuur en de grafieken staan naast elkaar, zodat een student ze samen ziet
+  (ook op een laptopscherm). Een pagina wordt gewoon opgebouwd zoals het sjabloon (scène, zijpanelen
+  "Bediening" en "Tonen", grafieken eronder); `TM1.werkblad()` in `gedeeld/tm1.js` verhuist bij het laden
+  de toon-opties naar een strook onder de figuur, de bediening naar een balk daaronder (extra schuifregelaars
+  in "Meer instellingen"), de uitleestabel naar een dichtgeklapt onderdeel en de grafieken naar een kolom
+  rechts. Op een gsm staat alles onder elkaar.
 - **Valversnelling**: rekenen met *g* = 10 m/s², zoals in de cursus.
 - **Vectorschaal**: vast (niet afhankelijk van de schuifregelaars); elke scène toont linksonder een vaste legende, bv. 2 m/s en 5 m/s².
 - **Opgelegde beweging**: maak in de tekst duidelijk wanneer de beweging gegeven is (kinematica)
