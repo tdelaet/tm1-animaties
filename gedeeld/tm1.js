@@ -314,6 +314,14 @@
     }
     return m;
   }
+  // Een formule die breder is dan haar kader, krijgt de klasse "scrollbaar" (zichtbare schuifbalk en een
+  // vervaging rechts zolang er nog iets verborgen is); aan het einde van het schuiven verdwijnt de vervaging.
+  function markeerScroll(el) {
+    const kan = el.scrollWidth > el.clientWidth + 1;
+    el.classList.toggle('scrollbaar', kan);
+    el.classList.toggle('eind', !kan || el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
+  }
+  const scrollWacht = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(es => es.forEach(e => markeerScroll(e.target))) : null;
   function tex(root = document) {
     if (!global.katex) return;
     const macros = texMacros();
@@ -322,6 +330,10 @@
       try {
         global.katex.render(el.dataset.tex, el, { displayMode: !el.classList.contains('inline'), throwOnError: false, macros: { ...macros } });
       } catch (e) { /* laat de TeX-code staan */ }
+      if (!el.classList.contains('inline')) {
+        markeerScroll(el);
+        if (!el.dataset.scrollWacht) { el.dataset.scrollWacht = '1'; el.addEventListener('scroll', () => markeerScroll(el), { passive: true }); if (scrollWacht) scrollWacht.observe(el); }
+      }
     });
   }
   if (document.readyState === 'complete') tex(); else global.addEventListener('load', () => tex());
@@ -371,10 +383,12 @@
         bed.appendChild(g);
       }
     });
-    // de eerste schuifregelaar blijft in de balk; de overige gaan in een uitklapbaar "Meer instellingen"
-    const extra = [...bed.querySelectorAll(':scope > .slider')].slice(1);
+    // de eerste schuifregelaar blijft in de balk; de overige gaan in een uitklapbaar "Meer instellingen".
+    // Schuifregelaars met class "vast" blijven altijd in de balk (dan gaan alle andere naar "Meer instellingen").
+    const alle = [...bed.querySelectorAll(':scope > .slider')], vast = alle.filter(s => s.classList.contains('vast'));
+    const extra = vast.length ? alle.filter(s => !vast.includes(s)) : alle.slice(1);
     if (extra.length) {
-      const d = maak('details', 'meer'); d.appendChild(maak('summary', '', 'Meer instellingen'));
+      const d = maak('details', 'meer'); d.appendChild(maak('summary', '', side && side.dataset.meer || 'Meer instellingen'));
       const r = maak('div', 'rij'); extra.forEach(s => r.appendChild(s)); d.appendChild(r); bed.appendChild(d);
     }
     scene.insertBefore(bed, readout);
@@ -413,10 +427,10 @@
       const onder = bed.offsetHeight + (lagen ? lagen.offsetHeight : 0) + (waarden ? waarden.querySelector('summary').offsetHeight + 2 : 0);
       const beschikbaar = Math.max(420, global.innerHeight - boven - 14);
       blad.style.setProperty('--h', Math.max(260, Math.min(680, beschikbaar - onder)) + 'px');
-      // grafieken: de kolom vult dezelfde hoogte als de figuur met haar bediening
+      // grafieken: de kolom is even hoog als de figuur met haar bediening (niet hoger)
       if (kaarten.length) {
         const rijen = kaarten.length <= 3 ? kaarten.length : Math.ceil(kaarten.length / 2), gap = 12;
-        const totaal = Math.max(beschikbaar, scene.offsetHeight), per = (totaal - gap * (rijen - 1)) / rijen;
+        const totaal = Math.min(beschikbaar, scene.offsetHeight), per = (totaal - gap * (rijen - 1)) / rijen;
         kaarten.forEach(k => {
           const c = k.querySelector('canvas'); if (!c) return;
           const rest = k.offsetHeight - c.offsetHeight;

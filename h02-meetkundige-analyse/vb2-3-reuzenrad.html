@@ -37,18 +37,18 @@
       <div class="card panel">
         <h2>Bediening</h2>
         <div class="btnrow">
-          <button class="primary" id="play">⏸ Pauze</button>
+          <button class="primary" id="play">▶ Afspelen</button>
           <button id="boek">waarden uit het handboek</button>
         </div>
-        <div class="slider">
+        <div class="slider vast">
           <div class="lab"><span>Stand van het rad <span class="i">θ</span><sub>1</sub></span><b id="th1val"></b></div>
           <input type="range" id="th1" min="0" max="360" step="1" value="45">
         </div>
-        <div class="slider">
+        <div class="slider vast">
           <div class="lab"><span>Kanteling van de gondel <span class="i">θ</span><sub>2</sub></span><b id="th2val"></b></div>
           <input type="range" id="th2" min="-30" max="30" step="1" value="0">
         </div>
-        <div class="note">Afspelen laat het rad ronddraaien (<span class="i">θ</span><sub>1</sub> van 0° tot 360°) bij een vaste kanteling <span class="i">θ</span><sub>2</sub>. Handboek: <span class="i">x<sub>r</sub></span> = 20 m, <span class="i">h</span> = 25 m, <span class="i">l</span> = 3 m, <span class="i">d</span> = 1 m, <span class="i">θ</span><sub>2</sub> = 0°. De straal <span class="i">r</span> = 20 m is hier gekozen.</div>
+        <div class="note">Afspelen laat het rad ronddraaien (<span class="i">θ</span><sub>1</sub> van 0° tot 360°) bij een vaste kanteling <span class="i">θ</span><sub>2</sub>. Handboek: <span class="i">x<sub>r</sub></span> = 20 m, <span class="i">h</span> = 25 m, <span class="i">l</span> = 3 m, <span class="i">d</span> = 1 m, <span class="i">θ</span><sub>2</sub> = 0°. Hier is <span class="i">r</span> = 20 m gekozen, en <span class="i">d</span> = 2 m zodat P aan de rand van het bakje staat en <span class="k-ke"><span class="v">r</span><sub>P/D</sub></span> goed zichtbaar is.</div>
       </div>
 
       <div class="card panel">
@@ -56,7 +56,7 @@
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_ket"> <span class="sw ketting"></span><span>ketting O-B-A-C-D-P</span></label>
           <label><input type="checkbox" id="t_rP"> <span class="sw" style="background:var(--cr)"></span><span><span class="k-r"><span class="v">r</span><sub>P/O</sub></span></span></label>
-          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van P</span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:var(--cr)"></span><span>baan van P</span></label>
         </div>
         <div class="note">C is het scharnier van de gondel aan het rad, D ligt op de as van de gondel op afstand <span class="i">l</span> onder C, P op afstand <span class="i">d</span> naast D.</div>
       </div>
@@ -65,9 +65,8 @@
 
   <div class="graphs two">
     <div class="card graph">
-      <h3>Baan van P voor een volledige omwenteling</h3>
-      <div class="sub">Bij een vaste <span class="i">θ</span><sub>2</sub> is de baan een cirkel met straal <span class="i">r</span>, verschoven ten opzichte van het rad.</div>
-      <canvas id="g1" class="groot" style="cursor:default"></canvas>
+      <h3>Banen van C, D en P voor een volledige omwenteling</h3>
+      <div class="legend"><span><span class="sw d" style="color:var(--cr)"></span>P</span><label style="cursor:pointer;display:inline-flex;align-items:center;gap:5px"><input type="checkbox" id="t_bC"> <span class="sw" style="background:var(--ckc)"></span>baan van C</label><label style="cursor:pointer;display:inline-flex;align-items:center;gap:5px"><input type="checkbox" id="t_bD"> <span class="sw" style="background:var(--ckd)"></span>baan van D</label></div>      <canvas id="g1" class="groot" style="cursor:default"></canvas>
     </div>
     <div class="card graph">
       <h3>Coördinaten van P in functie van <span class="i">θ</span><sub>1</sub></h3>
@@ -101,10 +100,10 @@
 (() => {
 const { setup, arrow, label, frame, curve, dot, fmt, deg, rad } = TM1;
 const C = TM1.kleuren();
-const XR = 20, HA = 25, RR = 20, LL = 3, DD = 1;      // x_r, h, r (gekozen), l, d [m]
+const XR = 20, HA = 25, RR = 20, LL = 3, DD = 2;      // x_r, h, r (gekozen), l, d [m]; d = halve breedte van het bakje: P staat aan de rand
 const XMIN = -4, XMAX = 46, YMIN = -3, YMAX = 50;
-let th1 = rad(45), th2 = 0, playing = true;
-const show = { ket: true, rP: true, baan: true };
+let th1 = rad(45), th2 = 0, playing = false;   // staat stil tot de student op Afspelen klikt
+const show = { ket: true, rP: true, baan: true, bC: false, bD: false };   // bC, bD: banen van C en D in de grafiek
 
 function state(t1 = th1, t2 = th2) {
   const B = { x: XR, y: 0 }, A = { x: XR, y: HA };
@@ -149,7 +148,7 @@ function drawScene() {
 
   // baan van P (bij de huidige θ2)
   if (show.baan) {
-    ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#8c949e'; ctx.lineWidth = 1.4; ctx.beginPath();
+    ctx.save(); ctx.setLineDash([2, 4]); ctx.lineCap = 'round'; ctx.strokeStyle = C.r; ctx.lineWidth = 2; ctx.beginPath();   // groene stippellijn, zoals in de grafiek
     for (let i = 0; i <= 120; i++) { const q = Pt(state(2 * Math.PI * i / 120).P); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
     ctx.stroke(); ctx.restore();
   }
@@ -174,19 +173,27 @@ let F2;
 function drawGraphs() {
   const st = state();
   const ctx = G1.ctx, W = G1.w, H = G1.h; ctx.clearRect(0, 0, W, H);
-  const lo = -5, hi = 55, m = 40, S = Math.min((W - 2 * m) / (hi - lo), (H - 2 * m) / (hi - lo));
-  const X = x => m + (x - lo) * S, Y = y => H - m - (y - lo) * S;
+  // bereik net rond de drie cirkels (x van 0 tot 44 m, y van 0 tot 48 m), gelijke schaal op beide assen, gecentreerd
+  const xl = -3, xh = 46, yl = -3, yh = 49, m = 22, S = Math.min((W - 2 * m) / (xh - xl), (H - 2 * m) / (yh - yl));
+  const ox = (W - S * (xh - xl)) / 2, oy = (H - S * (yh - yl)) / 2;
+  const X = x => ox + (x - xl) * S, Y = y => H - oy - (y - yl) * S;
   ctx.save(); ctx.font = '11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.strokeStyle = C.grid;
-  for (let v = 0; v <= 50; v += 5) {
-    ctx.beginPath(); ctx.moveTo(X(v), Y(lo)); ctx.lineTo(X(v), Y(hi)); ctx.stroke(); ctx.beginPath(); ctx.moveTo(X(lo), Y(v)); ctx.lineTo(X(hi), Y(v)); ctx.stroke();
-    if (v % 10 === 0) { ctx.textAlign = 'center'; ctx.fillText(v, X(v), Y(0) + 13); ctx.textAlign = 'right'; ctx.fillText(v, X(0) - 4, Y(v) + 4); }
+  for (let v = 0; v <= 45; v += 5) {
+    ctx.beginPath(); ctx.moveTo(X(v), Y(yl)); ctx.lineTo(X(v), Y(yh)); ctx.stroke(); ctx.beginPath(); ctx.moveTo(X(xl), Y(v)); ctx.lineTo(X(xh), Y(v)); ctx.stroke();
+    if (v % 10 === 0) { ctx.textAlign = 'center'; ctx.fillText(v, X(v), Y(0) + 13); if (v) { ctx.textAlign = 'right'; ctx.fillText(v, X(0) - 4, Y(v) + 4); } }
   }
-  ctx.strokeStyle = '#9aa1aa'; ctx.beginPath(); ctx.moveTo(X(lo), Y(0)); ctx.lineTo(X(hi), Y(0)); ctx.moveTo(X(0), Y(lo)); ctx.lineTo(X(0), Y(hi)); ctx.stroke(); ctx.restore();
-  TM1.formule(ctx, '$x_P$ [m]', X(hi), Y(0) - 6, { align: 'right' });
-  TM1.formule(ctx, '$y_P$ [m]', X(0) + 6, Y(hi) + 12);
-  ctx.save(); ctx.strokeStyle = C.r; ctx.lineWidth = 2.2; ctx.beginPath();
-  for (let i = 0; i <= 180; i++) { const q = state(2 * Math.PI * i / 180).P; i ? ctx.lineTo(X(q.x), Y(q.y)) : ctx.moveTo(X(q.x), Y(q.y)); }
-  ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = '#9aa1aa'; ctx.beginPath(); ctx.moveTo(X(xl), Y(0)); ctx.lineTo(X(xh), Y(0)); ctx.moveTo(X(0), Y(yl)); ctx.lineTo(X(0), Y(yh)); ctx.stroke(); ctx.restore();
+  TM1.formule(ctx, '$x$ [m]', X(xh), Y(0) - 6, { align: 'right' });
+  TM1.formule(ctx, '$y$ [m]', X(0) + 6, Y(yh) + 12);
+  // banen van C en D (kleuren van de schakels die erin eindigen) en van P (groene stippellijn)
+  for (const [k, kleur, dash, w] of [['C', C.kc, [], 1.8], ['D', C.kd, [], 1.8], ['P', C.r, [2, 4], 2.4]]) {
+    if ((k === 'C' && !show.bC) || (k === 'D' && !show.bD)) continue;
+    ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.setLineDash(dash); ctx.lineCap = 'round'; ctx.beginPath();
+    for (let i = 0; i <= 180; i++) { const q = state(2 * Math.PI * i / 180)[k]; i ? ctx.lineTo(X(q.x), Y(q.y)) : ctx.moveTo(X(q.x), Y(q.y)); }
+    ctx.stroke(); ctx.restore();
+  }
+  if (show.bC) dot(ctx, X(st.C.x), Y(st.C.y), C.kc);
+  if (show.bD) dot(ctx, X(st.D.x), Y(st.D.y), C.kd);
   dot(ctx, X(st.P.x), Y(st.P.y), C.r);
 
   F2 = frame(G2, [0, 360], [-5, 50], '$\\theta_1$ [°]', '$x_P$, $y_P$ [m]');

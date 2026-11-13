@@ -66,7 +66,7 @@
       <canvas id="g1"></canvas>
     </div>
     <div class="card graph">
-      <h3>Lengte van de gordel <span class="i">l</span><sub>2</sub> in functie van <span class="i">θ</span><sub>1</sub></h3>
+      <h3>Lengte van de gordel <span class="k-kb"><span class="i">l</span><sub>2</sub></span> in functie van <span class="i">θ</span><sub>1</sub></h3>
       <canvas id="g2"></canvas>
     </div>
   </div>
@@ -75,14 +75,10 @@
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
       <div class="tex">\kr{\vec r_{O/K}} = \kka{\vec r_{H/K}} + \kkb{\vec r_{O/H}}</div>
-      <div class="tex">\kr{\vec r_{O/K}} = \begin{Bmatrix}-0.2\ \text{m}\\ 0.5\ \text{m}\end{Bmatrix},</div>
-      <div class="tex">\kka{\vec r_{H/K}} = \kka{l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}},</div>
-      <div class="tex">\kkb{\vec r_{O/H}} = \kkb{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}}</div>
-      <div class="tex">\kkb{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}} = \kr{\begin{Bmatrix}-0.2\ \text{m}\\ 0.5\ \text{m}\end{Bmatrix}}</div>
-      <div class="tex">\phantom{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}} - \kka{l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}}</div>
-      <div class="tex">\tan\theta_2 = \frac{l_2\sin\theta_2}{l_2\cos\theta_2} = \frac{0.5\ \text{m} - 0.4\ \text{m}\,\sin\theta_1}{-0.2\ \text{m} - 0.4\ \text{m}\,\cos\theta_1}</div>
-      <div class="tex">\phantom{\tan\theta_2} = \frac{4\sin\theta_1 - 5}{2 + 4\cos\theta_1}</div>
-      <div class="tex">\theta_2 = \operatorname{atan}\frac{4\sin\theta_1 - 5}{2 + 4\cos\theta_1} + 180^\circ</div>
+      <div class="tex">\kr{\begin{Bmatrix}-0.2\ \text{m}\\ 0.5\ \text{m}\end{Bmatrix}} = \kka{l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}} + \kkb{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}}</div>
+      <div class="tex">\kkb{l_2\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}} = \kr{\begin{Bmatrix}-0.2\ \text{m}\\ 0.5\ \text{m}\end{Bmatrix}} - \kka{l_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}}</div>
+      <div class="tex">\tan\theta_2 = \frac{\kkb{l_2\sin\theta_2}}{\kkb{l_2\cos\theta_2}} = \frac{\kr{0.5\ \text{m}} - \kka{0.4\ \text{m}\,\sin\theta_1}}{\kr{-0.2\ \text{m}} - \kka{0.4\ \text{m}\,\cos\theta_1}} = \frac{\kka{4\sin\theta_1} - \kr{5}}{\kr{2} + \kka{4\cos\theta_1}}</div>
+      <div class="tex">\theta_2 = \operatorname{atan}\frac{\kka{4\sin\theta_1} - \kr{5}}{\kr{2} + \kka{4\cos\theta_1}} + 180^\circ</div>
       <p class="fn">Twee vectoriële kettingen van K naar O, gelijkgesteld, geven twee scalaire vergelijkingen in drie onbekenden <span class="i">θ</span><sub>1</sub>, <span class="i">θ</span><sub>2</sub> en <span class="i">l</span><sub>2</sub>. Delen elimineert <span class="i">l</span><sub>2</sub>. Omdat het beeld van de atan-functie beperkt is tot het eerste en vierde kwadrant, wordt 180° bijgeteld: <span class="i">θ</span><sub>2</sub> is een stompe hoek, want de gordel loopt van H schuin naar links omhoog naar O.</p>
     </div>
     <details class="card" open>
@@ -106,7 +102,7 @@ const C = TM1.kleuren();
 const L1 = 0.4, OX = -0.2, OY = 0.5, HC = 0.85;        // [m]
 const XMIN = -0.6, XMAX = 1.0, YMIN = -0.6, YMAX = 1.6;
 let th1 = rad(30), playing = true, richting = 1;
-const show = { ket: true, rOK: true, hoek: true, baan: false };
+const show = { ket: true, rOK: true, hoek: true, baan: true };
 
 function state(t1 = th1) {
   const H = { x: L1 * Math.cos(t1), y: L1 * Math.sin(t1) };
@@ -200,8 +196,8 @@ function drawGraphs() {
   curve(G1.ctx, F1, 180, 0, Math.PI / 2, u => deg(u), u => deg(state(u).t2), '#4f5862', 2.2);
   TM1.cursor(G1.ctx, F1, d1); dot(G1.ctx, F1.X(d1), F1.Y(deg(st.t2)), '#4f5862');
   F2 = frame(G2, [0, 90], [0, 0.9], '$\\theta_1$ [°]', '$l_2$ [m]');
-  curve(G2.ctx, F2, 180, 0, Math.PI / 2, u => deg(u), u => state(u).l2, C.r, 2.2);
-  TM1.cursor(G2.ctx, F2, d1); dot(G2.ctx, F2.X(d1), F2.Y(st.l2), C.r);
+  curve(G2.ctx, F2, 180, 0, Math.PI / 2, u => deg(u), u => state(u).l2, C.kb, 2.2);   // l2 = lengte van r_O/H: oranje, zoals die schakel
+  TM1.cursor(G2.ctx, F2, d1); dot(G2.ctx, F2.X(d1), F2.Y(st.l2), C.kb);
 }
 
 // ---------- uitlezing ----------
@@ -211,7 +207,7 @@ function drawReadout() {
   TM1.uitlezing(ro, [
     ['θ<sub>1</sub>', `${fmt(deg(th1), 1)}°`],
     ['θ<sub>2</sub>', `${fmt(deg(st.t2), 1)}°`],
-    ['<span class="i">l</span><sub>2</sub>', `${fmt(st.l2, 3)} m`],
+    ['<span class="k-kb"><span class="i">l</span><sub>2</sub></span>', `${fmt(st.l2, 3)} m`],
     ['<span class="k-ka"><span class="v">r</span><sub>H/K</sub></span>', `(${fmt(st.H.x, 3)}, ${fmt(st.H.y, 3)}) m`, true],
     ['<span class="k-kb"><span class="v">r</span><sub>O/H</sub></span>', `(${fmt(OX - st.H.x, 3)}, ${fmt(OY - st.H.y, 3)}) m`, true],
     ['<span class="k-r"><span class="v">r</span><sub>O/K</sub></span> (som)', `(${fmt(OX, 3)}, ${fmt(OY, 3)}) m`, true]
