@@ -58,7 +58,8 @@
           <input type="range" id="b" min="0.1" max="0.5" step="0.05" value="0.3">
           <input type="range" id="l" min="0.2" max="0.6" step="0.05" value="0.4">
         </div>
-        <div class="btnrow" style="margin:0">
+        <div class="btnrow modus" style="margin:0">
+          <button id="alg">algemene beweging</button>
           <button id="lim1">limietgeval ω = 0</button>
           <button id="lim2">limietgeval <span class="i">v<sub>r</sub></span> = 0</button>
         </div>
@@ -289,6 +290,9 @@ function syncLabels() {
   $('tval').textContent = `${t.toFixed(2)} s`;
   $('v').value = v; $('w').value = w;
   tsl.value = Math.round(t / tLus() * 2000);
+  // de knop van de modus waarin de student zit, is donker
+  const modus = w === 0 ? 'lim1' : v === 0 ? 'lim2' : 'alg';
+  for (const id of ['alg', 'lim1', 'lim2']) $(id).classList.toggle('actief', id === modus);
 }
 function render() {
   const st = state(t);
@@ -309,6 +313,7 @@ $('v').oninput = e => nieuw(() => { v = +e.target.value; });
 $('w').oninput = e => nieuw(() => { w = +e.target.value; });
 $('b').oninput = e => nieuw(() => { b = +e.target.value; });
 $('l').oninput = e => nieuw(() => { l = +e.target.value; });
+$('alg').onclick = () => nieuw(() => { v = 0.5; w = 0.3; });   // terug naar de algemene beweging (beginwaarden)
 $('lim1').onclick = () => nieuw(() => { w = 0; if (v === 0) v = 0.5; });
 $('lim2').onclick = () => nieuw(() => { v = 0; if (w === 0) w = 0.3; });
 for (const k of Object.keys(show)) {

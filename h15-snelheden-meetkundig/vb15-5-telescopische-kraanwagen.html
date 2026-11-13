@@ -218,11 +218,13 @@ function drawDriehoek() {
   // x naar links: spiegel de x-component
   const sp = v => ({ x: -v.x, y: v.y });
   const p0 = { x: 0, y: 0 }, p1 = sp(st.vE1), p2 = { x: p1.x + sp(st.vE2).x, y: p1.y + sp(st.vE2).y }, p3 = sp(st.vBA);
-  const pts = [p0, p1, p2, p3];
-  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x)), ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
-  const m = 50, k = Math.min((W - 2 * m - 40) / Math.max(xmax - xmin, 1e-9), (H - 2 * m) / Math.max(ymax - ymin, 1e-9));
-  const cx = (W - (xmax - xmin) * k) / 2 - xmin * k, cy = (H + (ymax - ymin) * k) / 2 + ymin * k;
-  const Pp = p => ({ x: cx + p.x * k, y: cy - p.y * k });
+  // VASTE schaal: vak over alle standen α van 0° tot 45°, zodat de driehoek tijdens de beweging niet herschaalt
+  const vak = TM1.vastVak(Array.from({ length: 91 }, (_, i) => {
+    const s = state(0.001 + (ALMAX - 0.001) * i / 90), a = sp(s.vE1);
+    return [p0, a, { x: a.x + sp(s.vE2).x, y: a.y + sp(s.vE2).y }, sp(s.vBA)];
+  }));
+  const { k, Pp } = TM1.vasteSchaal(G1, vak, 50, 40);
+  TM1.driehoekLegende(G1, k, KBA);
   const q0 = Pp(p0), q1 = Pp(p1), q2 = Pp(p2), q3 = Pp(p3);
   if (arrow(ctx, q0.x, q0.y, q1.x, q1.y, KE1, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, q0.x, q0.y, q1.x, q1.y, 'v', 'B/E1', KE1);
   if (arrow(ctx, q1.x, q1.y, q2.x, q2.y, KE2, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, q1.x, q1.y, q2.x, q2.y, 'v', 'B/E2', KE2);

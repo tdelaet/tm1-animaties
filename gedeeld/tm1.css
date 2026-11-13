@@ -102,6 +102,8 @@ button:hover{border-color:#c9c5ba;background:#fbfaf7}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff;min-width:96px}
 button.primary:hover{background:#174b7b}
 button:disabled{opacity:.45;cursor:not-allowed}
+/* keuze tussen modi (bv. algemene beweging / limietgevallen): de actieve modus is donker */
+.modus button.actief{background:#2f3a48;border-color:#2f3a48;color:#fff}
 .slider{margin:8px 0 12px}
 .slider .lab{display:flex;justify-content:space-between;font-size:13.5px}
 .slider .lab b{font:500 13px "JetBrains Mono",monospace}

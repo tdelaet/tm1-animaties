@@ -458,6 +458,7 @@
     return b;
   }
   function vasteSchaal(G, vak, m = 46, extra = 30) {
+    m = Math.min(m, 0.14 * Math.min(G.w, G.h));            // in een lage grafiek: kleinere marge
     const bw = Math.max(vak.xmax - vak.xmin, 1e-9), bh = Math.max(vak.ymax - vak.ymin, 1e-9);
     const k = Math.min((G.w - 2 * m - extra) / bw, (G.h - 2 * m) / bh);
     const cx = (G.w - bw * k) / 2 - vak.xmin * k, cy = (G.h + bh * k) / 2 + vak.ymin * k;
