@@ -223,11 +223,13 @@ function drawVeelhoek() {
     ctx.save(); ctx.font = '13px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center';
     ctx.fillText('ω = 0: alle deelsnelheden zijn nul', W / 2, H / 2); ctx.restore(); return;
   }
-  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x));
-  const ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
-  const m = 46, k = Math.min((W - 2 * m - 40) / Math.max(xmax - xmin, 0.01), (H - 2 * m) / Math.max(ymax - ymin, 0.01));
-  const cx = (W - (xmax - xmin) * k) / 2 - xmin * k, cy = (H + (ymax - ymin) * k) / 2 + ymin * k;
-  const Pp = p => ({ x: cx + p.x * k, y: cy - p.y * k });
+  // VASTE schaal: vak over alle standen θ van 0 tot THMAX, zodat de veelhoek tijdens de beweging niet herschaalt
+  const vak = TM1.vastVak(Array.from({ length: 61 }, (_, i) => {
+    const s = state(THMAX * i / 60), a = s.vAO, b_ = { x: a.x + s.vBA.x, y: a.y + s.vBA.y };
+    return [{ x: 0, y: 0 }, a, b_, s.vMO];
+  }));
+  const { k, Pp } = TM1.vasteSchaal(G1, vak, 46, 40);
+  TM1.driehoekLegende(G1, k, C.v);
   const q0 = Pp(p0), q1 = Pp(p1), q2 = Pp(p2), q3 = Pp(p3);
   // assen
   arrow(ctx, 14, H - 14, 46, H - 14, '#6b737d', { w: 1.2, head: 7 });

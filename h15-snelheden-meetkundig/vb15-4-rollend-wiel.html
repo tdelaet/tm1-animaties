@@ -203,16 +203,14 @@ function drawScene() {
 
 // ---------- snelheidsdriehoek ----------
 const G1 = setup(document.getElementById('g1'));
-function veelhoek(G, delen, totaal) {
+function veelhoek(G, delen, totaal, vak) {   // vak: TM1.vastVak over de hele beweging
   const ctx = G.ctx, W = G.w, H = G.h; ctx.clearRect(0, 0, W, H);
   const pts = [{ x: 0, y: 0 }];
   delen.forEach(([u]) => { const p = pts[pts.length - 1]; pts.push({ x: p.x + u.x, y: p.y + u.y }); });
   const L = Math.max(...pts.map(p => Math.hypot(p.x, p.y)), ...delen.map(([u]) => Math.hypot(u.x, u.y)));
   if (L < 1e-9) { ctx.save(); ctx.font = '13px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.fillText('alle snelheden zijn nul', W / 2, H / 2); ctx.restore(); return; }
-  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x)), ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
-  const m = 48, k = Math.min((W - 2 * m - 30) / Math.max(xmax - xmin, 1e-9), (H - 2 * m) / Math.max(ymax - ymin, 1e-9), (Math.min(W, H) - 2 * m) / L);
-  const cx = (W - (xmax - xmin) * k) / 2 - xmin * k, cy = (H + (ymax - ymin) * k) / 2 + ymin * k;
-  const Pp = p => ({ x: cx + p.x * k, y: cy - p.y * k });
+  const { k, Pp } = TM1.vasteSchaal(G, vak, 48, 30);   // VASTE schaal: verandert niet tijdens de beweging
+  TM1.driehoekLegende(G, k, C.v);
   arrow(ctx, 14, H - 14, 46, H - 14, '#6b737d', { w: 1.2, head: 7 });
   arrow(ctx, 14, H - 14, 14, H - 46, '#6b737d', { w: 1.2, head: 7 });
   label(ctx, 'x', '', 49, H - 9, '#6b737d', { vec: false, size: 13 });
@@ -269,7 +267,11 @@ function syncLabels() {
 function render() {
   const st = state();
   drawScene();
-  veelhoek(G1, [[st.vMO, KMO, 'M/O'], [st.vAM, KAM, 'A/M']], [st.vAO, C.v, 'A/O']);
+  // vast vak: alle standen van de driehoek over één omwenteling
+  const vak = TM1.vastVak(Array.from({ length: 73 }, (_, i) => {
+    const s = state(2 * Math.PI * i / 72); return [{ x: 0, y: 0 }, s.vMO, { x: s.vMO.x + s.vAM.x, y: s.vMO.y + s.vAM.y }];
+  }));
+  veelhoek(G1, [[st.vMO, KMO, 'M/O'], [st.vAM, KAM, 'A/M']], [st.vAO, C.v, 'A/O'], vak);
   drawGrafiek(); drawReadout(); syncLabels();
 }
 const naar = d => { setPlaying(false); th = rad(d); render(); };

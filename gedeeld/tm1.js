@@ -447,8 +447,30 @@
   }
   werkblad();
 
+  /** Vaste schaal voor een snelheidsdriehoek/-veelhoek. reeksen = lijst van puntenlijsten (één per bemonsterd
+      tijdstip, telkens met de oorsprong en de hoekpunten); het vak omvat ze allemaal, zodat de schaal tijdens de
+      beweging niet verandert. Geeft { k (px per m/s), Pp(p) → schermpunt }. */
+  function vastVak(reeksen) {
+    const b = { xmin: 0, xmax: 0, ymin: 0, ymax: 0 };
+    for (const pts of reeksen) for (const p of pts) {
+      b.xmin = Math.min(b.xmin, p.x); b.xmax = Math.max(b.xmax, p.x); b.ymin = Math.min(b.ymin, p.y); b.ymax = Math.max(b.ymax, p.y);
+    }
+    return b;
+  }
+  function vasteSchaal(G, vak, m = 46, extra = 30) {
+    const bw = Math.max(vak.xmax - vak.xmin, 1e-9), bh = Math.max(vak.ymax - vak.ymin, 1e-9);
+    const k = Math.min((G.w - 2 * m - extra) / bw, (G.h - 2 * m) / bh);
+    const cx = (G.w - bw * k) / 2 - vak.xmin * k, cy = (G.h + bh * k) / 2 + vak.ymin * k;
+    return { k, Pp: p => ({ x: cx + p.x * k, y: cy - p.y * k }) };
+  }
+  /** Vectorschaal rechtsboven in een driehoek-grafiek: een rond getal (1, 2, 5 × 10ⁿ m/s) van ongeveer 70 px. */
+  function driehoekLegende(G, k, kleur) {
+    const waarde = niceNum(70 / k), tekst = `${+waarde.toPrecision(3)} m/s`;
+    schaalLegende(G.ctx, G.h, [[waarde * k, kleur, tekst]], { rechtsboven: { w: G.w, y: 6 } });
+  }
+
   global.TM1 = Object.assign(global.TM1 || {}, {
-    tex, werkblad,
+    tex, werkblad, vastVak, vasteSchaal, driehoekLegende,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
     frame, curve, dot, cursor, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });

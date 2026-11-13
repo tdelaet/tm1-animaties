@@ -289,11 +289,11 @@ const G1 = setup(document.getElementById('g1'));
 function drawTriangle() {
   const ctx = G1.ctx, wpx = G1.w, h = G1.h; ctx.clearRect(0, 0, wpx, h);
   const sp = S();
-  const pts = [{ x: 0, y: 0 }, sp.va, sp.vg];
-  const xmin = Math.min(...pts.map(p => p.x)), xmax = Math.max(...pts.map(p => p.x));
-  const ymin = Math.min(...pts.map(p => p.y)), ymax = Math.max(...pts.map(p => p.y));
-  const m = { l: 60, r: 150, t: 40, b: 42 };
-  const k = Math.min((wpx - m.l - m.r) / Math.max(xmax - xmin, 1), (h - m.t - m.b) / Math.max(ymax - ymin, 1));
+  // VASTE schaal (zelfde op beide assen): groot genoeg voor alle instellingen van de schuifregelaars
+  // (V ≤ 100 m/s, w ≤ 30 m/s), zodat de lengte van een pijl altijd met de grootte van de snelheid overeenkomt
+  const xmin = -5, xmax = 135, ymin = -35, ymax = 35;
+  const m = { l: 40, r: 150, t: 30, b: 34 };
+  const k = Math.min((wpx - m.l - m.r) / (xmax - xmin), (h - m.t - m.b) / (ymax - ymin));
   const cy = (m.t + h - m.b) / 2 + (ymax + ymin) / 2 * k;
   const X = x => m.l + (x - xmin) * k, Y = y => cy - y * k;
   const O = { x: X(0), y: Y(0) }, A = { x: X(sp.va.x), y: Y(sp.va.y) }, B = { x: X(sp.vg.x), y: Y(sp.vg.y) };
@@ -344,6 +344,7 @@ function drawTriangle() {
     labVal('vliegtuig/lucht', `${Math.hypot(sp.va.x, sp.va.y).toFixed(2)} m/s`, A.x - 16, Aonder ? yOnder(A) : yBoven(A), CVL, true);
   if (arrow(ctx, A.x, A.y, B.x, B.y, CW, { w: 2.4, head: 10 }))
     labVal('lucht/baan', `${w.toFixed(1)} m/s`, Math.max(A.x, B.x) + 10, (A.y + B.y) / 2 + 5, CW);
+  schaalLegende(ctx, h, [[20 * k, C.v, '20 m/s']], { rechtsboven: { w: wpx, y: 8 } });
   document.getElementById('g1sub').textContent = correct
     ? 'De snelheid t.o.v. de baan ligt langs de baan; de neus wijst langs de snelheid t.o.v. de lucht.'
     : 'Zonder correctie wijst de neus langs de baan, maar de snelheid t.o.v. de baan niet.';
