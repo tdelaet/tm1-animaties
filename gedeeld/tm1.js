@@ -430,11 +430,14 @@
       // grafieken: de kolom is even hoog als de figuur met haar bediening (niet hoger)
       if (kaarten.length) {
         const rijen = kaarten.length <= 3 ? kaarten.length : Math.ceil(kaarten.length / 2), gap = 12;
-        const totaal = Math.min(beschikbaar, scene.offsetHeight), per = (totaal - gap * (rijen - 1)) / rijen;
+        const totaal = Math.min(beschikbaar, scene.offsetHeight), netto = totaal - gap * (rijen - 1);
+        // in één kolom kan een grafiek meer hoogte krijgen met data-gewicht="2" (standaard 1)
+        const gew = k => (rijen === kaarten.length ? +(k.dataset.gewicht || 1) : 1);
+        const som = rijen === kaarten.length ? kaarten.reduce((s, k) => s + gew(k), 0) : rijen;
         kaarten.forEach(k => {
           const c = k.querySelector('canvas'); if (!c) return;
           const rest = k.offsetHeight - c.offsetHeight;
-          c.style.height = Math.max(110, Math.floor(per - rest)) + 'px';
+          c.style.height = Math.max(90, Math.floor(netto * gew(k) / som - rest)) + 'px';
         });
       }
     };

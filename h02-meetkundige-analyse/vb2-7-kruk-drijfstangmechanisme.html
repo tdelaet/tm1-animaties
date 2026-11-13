@@ -76,7 +76,7 @@
       <h3><span class="i">x<sub>B</sub></span> in functie van <span class="i">θ</span><sub>1</sub></h3>
       <canvas id="g2"></canvas>
     </div>
-    <div class="card graph">
+    <div class="card graph" data-gewicht="2">
       <h3>Baan van het midden C van de drijfstang</h3>
       <canvas id="g3" style="cursor:default"></canvas>
     </div>
@@ -86,14 +86,14 @@
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
       <div class="tex">\kr{\vec r_{B/O}} = \kka{\vec r_{A/O}} + \kkb{\vec r_{B/A}}</div>
-      <div class="tex">\phantom{\kr{\vec r_{B/O}}} = \kka{L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}} + \kkb{L_2\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}}</div>
-      <div class="tex">\kr{\vec r_{B/O}} = \begin{Bmatrix}x_B\\ 0\end{Bmatrix}</div>
-      <div class="tex">\begin{aligned} L_1\cos\theta_1 + L_2\cos\theta_2 &amp;= x_B\\ L_1\sin\theta_1 - L_2\sin\theta_2 &amp;= 0 \end{aligned}</div>
+      <div class="tex">\kr{\begin{Bmatrix}x_B\\ 0\end{Bmatrix}} = \kka{L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}} + \kkb{L_2\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}}</div>
+      <div class="tex">\begin{aligned} \kka{L_1\cos\theta_1} + \kkb{L_2\cos\theta_2} &amp;= \kr{x_B}\\ \kka{L_1\sin\theta_1} - \kkb{L_2\sin\theta_2} &amp;= \kr{0} \end{aligned}</div>
       <div class="tex">\theta_2 = \arcsin\left(\frac{L_1}{L_2}\sin\theta_1\right)</div>
-      <div class="tex">x_B = L_1\cos\theta_1 + \sqrt{L_2^2 - L_1^2\sin^2\theta_1}</div>
+      <div class="tex">\kr{x_B} = \kka{L_1\cos\theta_1} + \kkb{\sqrt{L_2^2 - L_1^2\sin^2\theta_1}}</div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
       <div class="tex">\kr{\vec r_{C/O}} = \kka{\vec r_{A/O}} + \kkc{\vec r_{C/A}}</div>
       <div class="tex">\phantom{\kr{\vec r_{C/O}}} = \kka{L_1\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}} + \kkc{\frac{L_2}{2}\begin{Bmatrix}\cos\theta_2\\ -\sin\theta_2\end{Bmatrix}}</div>
-      <div class="tex">\phantom{\kr{\vec r_{C/O}}} = \begin{Bmatrix}L_1\cos\theta_1 + \frac{L_2}{2}\cos\theta_2\\ \frac{L_1}{2}\sin\theta_1\end{Bmatrix}</div>
+      <div class="tex">\phantom{\kr{\vec r_{C/O}}} = \kr{\begin{Bmatrix}\kka{L_1\cos\theta_1} + \kkc{\frac{L_2}{2}\cos\theta_2}\\ \kka{L_1\sin\theta_1} - \kkc{\frac{L_2}{2}\sin\theta_2}\end{Bmatrix}} = \begin{Bmatrix}L_1\cos\theta_1 + \frac{L_2}{2}\cos\theta_2\\ \frac{L_1}{2}\sin\theta_1\end{Bmatrix}</div>
       <p class="fn">en na invullen van <span class="i">θ</span><sub>2</sub>:</p>
       <div class="tex">\kr{\vec r_{C/O}} = \begin{Bmatrix}L_1\cos\theta_1 + \frac{L_2}{2}\cos\left(\arcsin\left(\frac{L_1}{L_2}\sin\theta_1\right)\right)\\ \frac{L_1}{2}\sin\theta_1\end{Bmatrix}</div>
       <p class="fn">Het mechanisme heeft één kinematische vrijheidsgraad: <span class="i">θ</span><sub>1</sub> legt de hele stand vast. Controle: C ligt steeds in het midden van A en B, dus <span class="k-r"><span class="v">r</span><sub>C/O</sub></span> = (<span class="k-ka"><span class="v">r</span><sub>A/O</sub></span> + <span class="k-r"><span class="v">r</span><sub>B/O</sub></span>)/2.</p>
