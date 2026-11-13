@@ -77,17 +77,13 @@
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
       <p class="fn"><b>1. Vectoriële kettingen.</b> De positie van A ten opzichte van O, rechtstreeks en via O-B-A:</p>
-      <div class="tex">\kr{\vec r_{A/O}} = l\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix},</div>
       <div class="tex">\kr{\vec r_{A/O}} = \kka{\vec r_{B/O}} + \kkb{\vec r_{A/B}}</div>
-      <div class="tex">\phantom{\kr{\vec r_{A/O}}} = \kka{\begin{Bmatrix}x_B\\ 0\end{Bmatrix}} + \kkb{|AB|\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}}</div>
-      <div class="tex">l\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix} = \begin{Bmatrix}l\frac{\sqrt2}{2}\\ 0\end{Bmatrix} + |AB|\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}</div>
-      <div class="tex">\tan\theta_2 = \frac{l\sin\theta_1}{l\cos\theta_1 - l\frac{\sqrt2}{2}},</div>
-      <div class="tex">\theta_2 = \operatorname{atan}\frac{2\sin\theta_1}{2\cos\theta_1 - \sqrt2}</div>
-      <p class="fn"><b>2. Driehoeksmeetkunde.</b> De sinusregel in driehoek OAB, met |<span class="i">OB</span>| = <span class="i">l</span>√2/2:</p>
-      <div class="tex">\frac{\sin(180^\circ - \theta_2)}{l}</div>
-      <div class="tex">\phantom{\frac{\sin(180^\circ - \theta_2)}{l}} = \frac{\sin\big(180^\circ - \theta_1 - (180^\circ - \theta_2)\big)}{|OB|}</div>
-      <div class="tex">\sqrt2\,\sin\theta_2 = 2\sin(\theta_2 - \theta_1)</div>
-      <div class="tex">\phantom{\sqrt2\,\sin\theta_2} = 2(\sin\theta_2\cos\theta_1 - \sin\theta_1\cos\theta_2)</div>
+      <div class="tex">\kr{l\begin{Bmatrix}\cos\theta_1\\ \sin\theta_1\end{Bmatrix}} = \kka{\begin{Bmatrix}l\frac{\sqrt2}{2}\\ 0\end{Bmatrix}} + \kkb{|AB|\begin{Bmatrix}\cos\theta_2\\ \sin\theta_2\end{Bmatrix}}</div>
+      <div class="tex">\tan\theta_2 = \frac{\kkb{|AB|\sin\theta_2}}{\kkb{|AB|\cos\theta_2}} = \frac{\kr{l\sin\theta_1}}{\kr{l\cos\theta_1} - \kka{l\frac{\sqrt2}{2}}} = \frac{\kr{2\sin\theta_1}}{\kr{2\cos\theta_1} - \kka{\sqrt2}}</div>
+      <div class="tex">\theta_2 = \operatorname{atan}\frac{\kr{2\sin\theta_1}}{\kr{2\cos\theta_1} - \kka{\sqrt2}}</div>
+      <p class="fn"><b>2. Driehoeksmeetkunde.</b> De sinusregel in driehoek OAB, met |<span class="k-ka"><span class="i">OB</span></span>| = <span class="i">l</span>√2/2:</p>
+      <div class="tex">\frac{\sin(180^\circ - \theta_2)}{\kr{l}} = \frac{\sin\big(180^\circ - \theta_1 - (180^\circ - \theta_2)\big)}{\kka{|OB|}}</div>
+      <div class="tex">\sqrt2\,\sin\theta_2 = 2\sin(\theta_2 - \theta_1) = 2(\sin\theta_2\cos\theta_1 - \sin\theta_1\cos\theta_2)</div>
       <div class="tex">\tan\theta_2 = \frac{2\sin\theta_1}{2\cos\theta_1 - \sqrt2}</div>
       <p class="fn"><b>Controle.</b> De uitdrukking is dimensieloos. <span class="i">θ</span><sub>1</sub> = 0 geeft <span class="i">θ</span><sub>2</sub> = 0, <span class="i">θ</span><sub>1</sub> = 180° geeft <span class="i">θ</span><sub>2</sub> = 180°, en <span class="i">θ</span><sub>1</sub> = 45° geeft tan <span class="i">θ</span><sub>2</sub> = √2/(√2 − √2) = ∞, dus <span class="i">θ</span><sub>2</sub> = 90°. De atan-functie geeft enkel hoeken tussen −90° en 90°; de juiste <span class="i">θ</span><sub>2</sub> tussen 0° en 360° (zoals in de grafiek) volgt uit het teken van teller en noemer.</p>
     </div>
