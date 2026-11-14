@@ -79,8 +79,7 @@
       <h2>Uitdrukkingen uit het handboek</h2>
       <p class="fn"><b>1. Afleiden van de vectoriële ketting</b> uit Voorbeeld 2.11:</p>
       <div class="tex">|AH(t)|\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix} = \begin{Bmatrix}x_E(t)\\ 0\end{Bmatrix} + \begin{Bmatrix}0\\ b\end{Bmatrix}</div>
-      <div class="tex">\ubvm{\frac{\mathrm{d}|AH(t)|}{\mathrm{d}t}\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}}{} + \ubw{|AH(t)|\,\omega\begin{Bmatrix}-\sin\theta(t)\\ \cos\theta(t)\end{Bmatrix}}{}</div>
-      <div class="tex">\qquad = \ubvl{\begin{Bmatrix}\dot x_E(t)\\ 0\end{Bmatrix}}{\kvl{\vec v_H}}</div>
+      <div class="tex">\ubvm{\frac{\mathrm{d}|AH(t)|}{\mathrm{d}t}\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}}{} + \ubw{|AH(t)|\,\omega\begin{Bmatrix}-\sin\theta(t)\\ \cos\theta(t)\end{Bmatrix}}{} = \ubvl{\begin{Bmatrix}\dot x_E(t)\\ 0\end{Bmatrix}}{\kvl{\vec v_H}}</div>
       <div class="tex">\omega = -\frac{\sin\theta(t)}{|AH|}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t},</div>
       <div class="tex">\sin\theta = \frac{b}{|AH|}, \quad |AH|^2 = b^2 + x_E^2(t)</div>
       <div class="tex">\omega(t) = -\frac{b}{b^2 + x_E^2(t)}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t}, \qquad \frac{\mathrm{d}x_E}{\mathrm{d}t} = -\|\vec v\|</div>
@@ -158,16 +157,31 @@ function drawScene() {
     if (arrow(ctx, E.x, E.y, H.x, H.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'H/E', E.x + 8, (E.y + H.y) / 2 + 4, C.r, { size: 13 });
     if (arrow(ctx, A.x, A.y, H.x, H.y, C.r, { w: 2.2, head: 10 })) label(ctx, 'r', 'H/A', A.x + 0.55 * (H.x - A.x) - 14, A.y + 0.55 * (H.y - A.y) - 16, C.r, { size: 13 });
   }
+  // een echte breuk (teller boven, noemer onder een breukstreep) op het canvas; x = rechterrand, y = hoogte van de streep
+  const breuk = (ctx, teller, noemer, x, y, kleur, size) => {
+    ctx.save(); ctx.font = `italic 500 ${size}px "Source Serif 4", Georgia, serif`; ctx.fillStyle = kleur; ctx.textAlign = 'center';
+    const w = Math.max(ctx.measureText(teller).width, ctx.measureText(noemer).width) + 4, cx = x - w / 2;
+    ctx.strokeStyle = kleur; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - w, y); ctx.lineTo(x, y); ctx.stroke();
+    const tekst = (s, yy) => { ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.strokeText(s, cx, yy); ctx.fillText(s, cx, yy); };
+    ctx.textBaseline = 'alphabetic'; tekst(teller, y - 3); ctx.textBaseline = 'top'; tekst(noemer, y + 2);
+    ctx.restore();
+  };
   // snelheden in H
   const tipv = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
+  // labels buiten de snelheidsdriehoek (H, t1, t2), naast het midden van elke pijl, zodat ze niet overlappen
+  const t1 = tipv(H, st.v1), t2 = tipv(t1, st.v2), zw = { x: (H.x + t1.x + t2.x) / 3, y: (H.y + t1.y + t2.y) / 3 };
+  const naast = (a, b, afst) => {
+    const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; let dx = m.x - zw.x, dy = m.y - zw.y;
+    const l = Math.hypot(dx, dy); if (l < 1e-6) { dx = 0; dy = -1; } else { dx /= l; dy /= l; }
+    return { x: m.x + dx * afst, y: m.y + dy * afst };
+  };
   if (show.comp) {
-    const t1 = tipv(H, st.v1), t2 = tipv(t1, st.v2);
-    if (arrow(ctx, H.x, H.y, t1.x, t1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) TM1.formule(ctx, '$\\frac{d|AH|}{dt}$', t1.x - 8, t1.y + 16, { align: 'right', color: K1, size: 12 });
-    if (arrow(ctx, t1.x, t1.y, t2.x, t2.y, K2, { w: 2.4, dash: [7, 4], head: 10 })) TM1.formule(ctx, '$|AH|\\omega$', (t1.x + t2.x) / 2 - 10, (t1.y + t2.y) / 2 - 2, { align: 'right', color: K2, size: 12 });
+    if (arrow(ctx, H.x, H.y, t1.x, t1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) { const q = naast(H, t1, 22); breuk(ctx, 'd|AH|', 'dt', q.x + 17, q.y, K1, 13); }
+    if (arrow(ctx, t1.x, t1.y, t2.x, t2.y, K2, { w: 2.4, dash: [7, 4], head: 10 })) { const q = naast(t1, t2, 20); TM1.formule(ctx, '$|AH|\\omega$', q.x, q.y + 4, { align: 'center', color: K2, size: 12 }); }
   }
   if (show.vH) {
     const t3 = tipv(H, { x: -V, y: 0 });
-    if (arrow(ctx, H.x, H.y, t3.x, t3.y, KH, { w: 3, head: 12 })) label(ctx, 'v', 'H', t3.x - 4, t3.y + 20, KH, { size: 14 });
+    if (arrow(ctx, H.x, H.y, t3.x, t3.y, KH, { w: 3, head: 12 })) { const q = show.comp ? naast(H, t3, 18) : { x: t3.x - 4, y: t3.y - 14 }; label(ctx, 'v', 'H', q.x - 6, q.y + 5, KH, { size: 14 }); }
   }
   // snelheid van de kubus (rechts)
   arrow(ctx, G.x + 0.9 * S, (G.y + F.y) / 2, G.x + 0.15 * S, (G.y + F.y) / 2, KH, { w: 2.4, head: 10 });

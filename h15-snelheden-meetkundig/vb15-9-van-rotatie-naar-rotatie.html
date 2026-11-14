@@ -55,7 +55,7 @@
       <div class="card panel">
         <h2>Tonen</h2>
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
-          <label><input type="checkbox" id="t_vA"> <span class="sw" style="background:var(--cvl)"></span><span><span class="k-vl"><span class="v">v</span><sub>A</sub></span> = <span class="i">lω</span><sub>1</sub></span></label>
+          <label><input type="checkbox" id="t_vA"> <span class="sw" style="background:var(--cvl)"></span><span><span class="k-vl"><span class="v">v</span><sub>A</sub></span></span></label>
           <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:var(--cvm)"></span><span>componenten volgens en loodrecht op AB</span></label>
           <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>kettingen O-A en O-B-A</span></label>
           <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoeken</span></label>
@@ -175,19 +175,26 @@ function drawScene() {
     ctx.save(); ctx.font = `italic 500 ${size}px "Source Serif 4", Georgia, serif`; ctx.fillStyle = kleur; ctx.strokeStyle = kleur; ctx.textAlign = 'center';
     const w = Math.max(ctx.measureText(teller).width, ctx.measureText(noemer).width) + 4, cx = x + w / 2;
     ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.stroke();
-    ctx.textBaseline = 'alphabetic'; ctx.fillText(teller, cx, y - 3); ctx.textBaseline = 'top'; ctx.fillText(noemer, cx, y + 2);
+    const tekst = (s, yy) => { ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.strokeText(s, cx, yy); ctx.fillText(s, cx, yy); };
+    ctx.textBaseline = 'alphabetic'; tekst(teller, y - 3); ctx.textBaseline = 'top'; tekst(noemer, y + 2);
     ctx.restore();
   };
-  // snelheden in A
+  // snelheden in A: de labels staan buiten de snelheidsdriehoek (A, p1, p2), naast het midden van elke pijl,
+  // zodat ze niet over elkaar en niet over de staaf vallen
   const tipv = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
+  const p1 = tipv(A, st.v1), p2 = tipv(p1, st.v2), zw = { x: (A.x + p1.x + p2.x) / 3, y: (A.y + p1.y + p2.y) / 3 };
+  const naast = (a, b, afst) => {                      // punt naast het midden van a–b, weg van het midden van de driehoek
+    const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; let dx = m.x - zw.x, dy = m.y - zw.y;
+    const l = Math.hypot(dx, dy); if (l < 1e-6) { dx = 0; dy = -1; } else { dx /= l; dy /= l; }
+    return { x: m.x + dx * afst, y: m.y + dy * afst };
+  };
   if (show.comp) {
-    const p1 = tipv(A, st.v1), p2 = tipv(p1, st.v2);
-    if (arrow(ctx, A.x, A.y, p1.x, p1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) breuk(ctx, 'd|AB|', 'dt', p1.x + 8, p1.y + 4, K1, 13);
-    if (arrow(ctx, p1.x, p1.y, p2.x, p2.y, K2, { w: 2.4, dash: [7, 4], head: 10 })) TM1.formule(ctx, '$|AB|\\omega_2$', (p1.x + p2.x) / 2 + 8, (p1.y + p2.y) / 2 + 4, { color: K2, size: 12 });
+    if (arrow(ctx, A.x, A.y, p1.x, p1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) { const q = naast(A, p1, 22); breuk(ctx, 'd|AB|', 'dt', q.x - 17, q.y, K1, 13); }
+    if (arrow(ctx, p1.x, p1.y, p2.x, p2.y, K2, { w: 2.4, dash: [7, 4], head: 10 })) { const q = naast(p1, p2, 20); TM1.formule(ctx, '$|AB|\\omega_2$', q.x, q.y + 4, { color: K2, size: 12, align: 'center' }); }
   }
   if (show.vA) {
     const p3 = tipv(A, st.vA);
-    if (arrow(ctx, A.x, A.y, p3.x, p3.y, KA, { w: 3, head: 12 })) label(ctx, 'v', 'A', p3.x + 6, p3.y - 6, KA, { size: 14 });
+    if (arrow(ctx, A.x, A.y, p3.x, p3.y, KA, { w: 3, head: 12 })) { const q = show.comp ? naast(A, p3, 18) : { x: p3.x + 6, y: p3.y - 6 }; label(ctx, 'v', 'A', q.x - 6, q.y + 5, KA, { size: 14 }); }
   }
   for (const [q, n, dx, dy] of [[O, 'O', -18, 6], [B, 'B', 10, 18], [A, 'A', -16, -8], [Cc, 'C', 8, -6]]) {
     ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
