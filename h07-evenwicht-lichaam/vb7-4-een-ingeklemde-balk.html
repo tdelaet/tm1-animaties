@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 7.4 – Een ingeklemde balk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/100;max-height:700px;cursor:pointer}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 60px)}
+  #loep{max-height:340px}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 26px;align-items:center;padding:2px 14px 6px;font-size:16px;min-height:52px}
+  .stap{font-size:13.5px}
+  .stap p{margin:4px 0 8px}
+  .stap h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px}
+  .stap .vgl{font-size:16px;margin:4px 0 4px 10px}
+  .stap .noot{font-size:12.5px;color:var(--muted)}
+  .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
+  .stap .slider{margin:6px 0}
+  .stap hr{border:0;border-top:1px solid var(--line);margin:12px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 7.4 — Een ingeklemde balk</h1>
+    <span class="kicker">Evenwicht van een lichaam · een gewichtloze balk, ingeklemd in de muur in A, met een externe kracht F in C; gevraagd: de reactiekrachten en het reactiemoment van de muur op de balk</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Doorloop de stappen van het plan van aanpak (het opstellen en oplossen van de evenwichtsvergelijkingen is hier gecombineerd). In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen de inklemming in A verhindert; elke verhinderde beweging geeft een reactiekracht of reactiemoment, dat oplicht in het vrijlichaamsdiagram van de balk.</p>
+    <div class="stappen modus" id="stappen"></div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="De ingeklemde balk met de kracht F, en eronder het vrijlichaamsdiagram"></canvas>
+      <div class="vldformules" id="vldf"></div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="200">
+      <h3 id="rtitel"></h3>
+      <canvas id="loep"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="stap" id="stap"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+const KF = '#2b6cb0', KR = C.F, KM = C.M;            // externe kracht F (blauw), reactiekracht R, reactiemoment M
+const GLOED = 'rgba(255,196,0,';
+let stap = 2, anim = null, licht = null, proeven = {}, Fw = 500, l = 4;
+const DIK = 0.3;
+
+// ---------- tekenhulp (2D, zoals in Vb. 7.1) ----------
+function grond(ctx, x0, y0, x1, y1) {
+  const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, nx = uy, ny = -ux;
+  ctx.save(); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#8f969e';
+  for (let s = 6; s < L; s += 8) { const px = x0 + ux * s, py = y0 + uy * s; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + nx * 7 - ux * 6, py + ny * 7 - uy * 6); ctx.stroke(); }
+  ctx.restore();
+}
+function muur(ctx, P, S) {                           // muur links van x = 0
+  const top = P({ x: 0, y: 1.1 }), bot = P({ x: 0, y: -1.1 });
+  ctx.save(); ctx.fillStyle = '#e4e7eb'; ctx.fillRect(top.x - 0.35 * S, top.y, 0.35 * S, bot.y - top.y); ctx.restore();
+  grond(ctx, top.x, bot.y, top.x, top.y);
+}
+function balk(ctx, P, x0, x1, opt = {}) {            // balk langs de x-as (rotatie rond A met opt.rot, verschuiving opt.d)
+  const T = q => { const c = Math.cos(opt.rot || 0), s = Math.sin(opt.rot || 0), d = opt.d || { x: 0, y: 0 }; return P({ x: q.x * c - q.y * s + d.x, y: q.x * s + q.y * c + d.y }); };
+  const h = [{ x: x0, y: DIK / 2 }, { x: x1, y: DIK / 2 }, { x: x1, y: -DIK / 2 }, { x: x0, y: -DIK / 2 }].map(T);
+  ctx.save(); ctx.fillStyle = '#cdd8e4'; ctx.beginPath(); h.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+  h.forEach((p, i) => { const n = h[(i + 1) % 4]; ctx.setLineDash(opt.snede && i === 1 ? [4, 4] : []); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(n.x, n.y); ctx.stroke(); });
+  ctx.restore();
+}
+function momentPijl(ctx, x, y, r, kleur, dikte = 2.4, zin = 1, a0 = 0.15 * Math.PI, a1 = 0.95 * Math.PI) {
+  // gebogen pijl tegen de wijzers in (zin 1) van hoek a0 tot a1 (wiskundige hoeken)
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = dikte;
+  const [b0, b1] = zin > 0 ? [a0, a1] : [a1, a0];
+  ctx.beginPath(); ctx.arc(x, y, r, -b0, -b1, zin > 0); ctx.stroke();
+  const ex = x + r * Math.cos(-b1), ey = y + r * Math.sin(-b1), tx = Math.sin(-b1) * zin, ty = -Math.cos(-b1) * zin, w = dikte;
+  ctx.fillStyle = kleur; ctx.beginPath(); ctx.moveTo(ex + tx * (w + 7), ey + ty * (w + 7)); ctx.lineTo(ex - ty * (w / 2 + 4), ey + tx * (w / 2 + 4)); ctx.lineTo(ex + ty * (w / 2 + 4), ey - tx * (w / 2 + 4)); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function punt(ctx, q, n, dx = 6, dy = -8) { ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore(); label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 }); }
+function assen(ctx, x, y) {
+  arrow(ctx, x, y, x + 32, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + 35, y + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, x, y, x, y - 32, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 12, y - 26, '#6b737d', { vec: false, size: 13 });
+}
+
+// ---------- proefbewegingen van de balk in de inklemming A ----------
+const BEW = [
+  { id: 'tx', tekst: 'translatie ∥ <i>x</i>', d: { x: 1, y: 0 }, verh: true, kr: ['R', 'x'], k: KR },
+  { id: 'ty', tekst: 'translatie ∥ <i>y</i>', d: { x: 0, y: 1 }, verh: true, kr: ['R', 'y'], k: KR },
+  { id: 'rz', tekst: 'rotatie rond <i>z</i>', rot: true, verh: true, kr: ['M', ''], k: KM }
+];
+
+// ---------- figuur: situatie (boven) en vrijlichaamsdiagram (onder) ----------
+const sc = setup(document.getElementById('scene'));
+let raak = null;
+function loepCirkel(ctx, q, r) {
+  const aan = stap === 2;
+  ctx.save();
+  if (aan) { ctx.fillStyle = 'rgba(29,92,150,0.16)'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2; ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.font = '600 15px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('A', q.x + (r + 11) * Math.cos(rad(130)), q.y - (r + 11) * Math.sin(rad(130))); ctx.restore();
+  raak = { x: q.x, y: q.y, r };
+}
+const LMAX = 6;
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
+  const H = Hall * 0.47;
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  const S = Math.min(W / (LMAX + 2.2), (H - 30) / 3.0), Lf = 1.3 * Fw / 500;
+  // ----- boven: situatie -----
+  titel('Situatie', 18);
+  const P = q => ({ x: W / 2 + (q.x - LMAX / 2 + 0.3) * S, y: 30 + (H - 30) * 0.45 - q.y * S });
+  muur(ctx, P, S); balk(ctx, P, 0, l);
+  const a = P({ x: 0, y: 0 }), c = P({ x: l, y: 0 });
+  arrow(ctx, c.x, c.y, c.x, c.y + Lf * S * 0.8, KF, { w: 2.6, head: 11 }); label(ctx, 'F', '', c.x + 7, c.y + Lf * S * 0.8, KF, { vec: true, size: 15 });
+  punt(ctx, c, 'C');
+  if (stap <= 2) loepCirkel(ctx, a, 0.75 * S); else { raak = null; punt(ctx, a, 'A', -18, -8); }
+  assen(ctx, 24, H - 18);
+  // ----- onder: vrijlichaamsdiagram -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst het vrij te maken lichaam', H + 18); assen(ctx, 24, Hall - 18); return; }
+  titel('Vrijgemaakte balk: inklemming weggesneden in A', H + 18);
+  const H2 = Hall - H, P2 = q => ({ x: W / 2 + (q.x - LMAX / 2 + 0.3) * S, y: H + 26 + (H2 - 26) * 0.5 - q.y * S });
+  balk(ctx, P2, 0, l);
+  const a2 = P2({ x: 0, y: 0 }), c2 = P2({ x: l, y: 0 });
+  ctx.save(); ctx.strokeStyle = C.accent; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(a2.x, a2.y, 0.75 * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  arrow(ctx, c2.x, c2.y, c2.x, c2.y + Lf * S * 0.8, KF, { w: 2.6, head: 11 }); label(ctx, 'F', '', c2.x + 7, c2.y + Lf * S * 0.8, KF, { vec: true, size: 15 });
+  punt(ctx, c2, 'C');
+  // reacties in A: R als één vector met stippellijnen naar de assen (de projectie van de geprobeerde translatie licht op),
+  // en het reactiemoment M (licht op bij de rotatie); in stap 3 en 4 de gevonden oplossing (R verticaal omhoog)
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1;
+  const gl = id => (stap === 2 && licht && licht.b === id ? puls : 0), gloed = g => GLOED + (0.35 + 0.5 * g) + ')';
+  const opl = stap >= 3, hoek = opl ? rad(90) : rad(55), L = (opl ? Lf * 0.8 : 0.95) * S;
+  const t = { x: a2.x - Math.cos(hoek) * L, y: a2.y + Math.sin(hoek) * L };
+  if (!opl) {
+    const px = { x: t.x, y: a2.y }, py = { x: a2.x, y: t.y };
+    const lijn = (p, q, g) => { ctx.save(); ctx.lineCap = 'round'; if (g) { ctx.strokeStyle = gloed(g); ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+      ctx.setLineDash([3, 4]); ctx.strokeStyle = g ? KR : '#9aa1aa'; ctx.lineWidth = g ? 2.6 : 1.3; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); };
+    lijn(t, px, 0); lijn(t, py, 0); lijn(px, a2, gl('tx')); lijn(py, a2, gl('ty'));
+  }
+  // R onder de balk naar A (zoals in het handboek: R grijpt aan in A); hier vanuit linksonder naar A
+  const tR = opl ? { x: a2.x, y: a2.y + L } : t;
+  arrow(ctx, tR.x, tR.y, a2.x, a2.y, KR, { w: 2.8, head: 12 });
+  label(ctx, 'R', '', tR.x + (opl ? 7 : -22), tR.y + (opl ? 2 : 14), KR, { vec: true, size: 15 });
+  const g = gl('rz'), rm = 0.55 * S * (opl ? Math.max(0.6, Math.min(1.6, l * Fw / 2000)) : 1);
+  if (g) momentPijl(ctx, a2.x, a2.y, rm, gloed(g), 11);
+  momentPijl(ctx, a2.x, a2.y, rm, KM, g ? 3.4 : 2.4);
+  label(ctx, 'M', '', a2.x - rm - 22, a2.y - rm * 0.55, KM, { vec: true, size: g ? 17 : 15 });
+  punt(ctx, a2, 'A', 8, -10);
+  // de lengte l
+  const m1 = P2({ x: 0, y: -0.75 }), m2 = P2({ x: l, y: -0.75 });
+  ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1; arrow(ctx, (m1.x + m2.x) / 2, m1.y, m1.x, m1.y, '#7a828c', { w: 1, head: 7 }); arrow(ctx, (m1.x + m2.x) / 2, m1.y, m2.x, m2.y, '#7a828c', { w: 1, head: 7 }); ctx.restore();
+  label(ctx, 'l', '', (m1.x + m2.x) / 2 - 3, m1.y + 16, '#4f5862', { vec: false, size: 14 });
+  if (stap === 2 && licht) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#4f5862'; ctx.textAlign = 'center'; ctx.restore(); }
+  assen(ctx, 24, Hall - 18);
+}
+
+// ---------- loep op de inklemming A (stap 2) ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2) return;
+  const S = Math.min(W / 3.6, H / 2.4), P = q => ({ x: W * 0.4 + q.x * S, y: H / 2 + 8 - q.y * S });
+  let rot = 0, d = { x: 0, y: 0 }, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = Math.sin(2 * Math.PI * u); zin = s < 0 ? -1 : 1;
+    const schud = Math.sin(anim.t * 40) * 0.05 * Math.abs(s) + 0.035 * s;
+    if (b.rot) rot = schud; else d = { x: b.d.x * schud, y: b.d.y * schud };
+  }
+  muur(ctx, P, S);
+  balk(ctx, P, 0, 1.6, { rot, d, snede: true });
+  const a = P({ x: 0, y: 0 });
+  assen(ctx, 22, H - 18);
+  if (anim) {
+    const b = anim.b, kl = '#c0392b';
+    if (b.rot) { ctx.save(); ctx.setLineDash([5, 3]); momentPijl(ctx, a.x, a.y, 0.75 * S, kl, 2.2, zin, 0.1 * Math.PI, 0.6 * Math.PI); ctx.restore(); }
+    else { const u = { x: b.d.x * zin, y: b.d.y * zin }; arrow(ctx, a.x + u.x * 0.3 * S + 0.8 * S * (b.d.y ? 1 : 0), a.y - u.y * 0.3 * S, a.x + u.x * 1.0 * S + 0.8 * S * (b.d.y ? 1 : 0), a.y - u.y * 1.0 * S, kl, { w: 2.2, dash: [5, 3], head: 10 }); }
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText('✕ verhinderd (in beide zinnen)', W / 2, 18); ctx.restore();
+  }
+}
+
+// ---------- formules onder het vrijlichaamsdiagram ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function vldFormules() {
+  const el = document.getElementById('vldf'); if (!window.katex) return;
+  if (stap === 1) { el.innerHTML = ''; return; }
+  const mk = (id, s) => (stap === 2 && licht && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [`${kl(KF, '\\vec F')} = ${kl(KF, '\\begin{Bmatrix}0\\\\ -F\\end{Bmatrix}')}`,
+    `${kl(KR, '\\vec R')} = ${kl(KR, `\\begin{Bmatrix}${mk('tx', kl(KR, 'R_x'))}\\\\ ${mk('ty', kl(KR, 'R_y'))}\\end{Bmatrix}`)}`,
+    `${kl(KM, '\\vec M')} = ${mk('rz', kl(KM, 'M'))}${kl(KM, '\\,\\vec e_z')}`];
+  el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
+}
+
+// ---------- rechterkaart: inhoud per stap ----------
+const $ = id => document.getElementById(id);
+const STAPPEN = ['Vrij te maken lichaam', 'Vrijmaken', 'Opstellen en oplossen', 'Interpretatie'];
+const ISO = `<div class="kader"><b>Statisch bepaald (isostatisch).</b> De inklemming verhindert translatie ∥ <i>x</i>, translatie ∥ <i>y</i> en rotatie rond <i>z</i>: drie onafhankelijke beperkingen voor de drie vrijheidsgraden van de balk in 2D.</div>`;
+function proefTabel() {
+  if (stap !== 2) { $('proef').innerHTML = ''; return; }
+  $('proef').innerHTML = BEW.map(b => {
+    const uit = !proeven[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : `<span class="uit verh">✕ verhinderd</span> → <span style="color:${b.k}"><span class="i">${b.kr[0]}</span>${b.kr[1] ? `<sub>${b.kr[1]}</sub>` : ''}</span>`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = BEW.find(x => x.id === k.dataset.b); proeven[b.id] = true;
+    anim = { b, t: 0, T: 2.6 }; licht = { b: b.id }; render();
+  });
+}
+function stapInhoud() {
+  const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
+  $('rtitel').textContent = stap === 2 ? 'Verbinding A: de inklemming in de muur' : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
+  const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
+  const t = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const F_ = kl(KF, '\\vec F'), R_ = kl(KR, '\\vec R'), M_ = kl(KM, '\\vec M');
+  let h = '';
+  if (stap === 1) h = `<p>Gevraagd zijn de reactiekrachten en het reactiemoment van de muur op de balk. Door de verbinding tussen de muur en de balk door te snijden, grijpen ze extern aan op de balk. Het vrij te maken lichaam is daarom de <b>balk</b>.</p>
+      <p class="noot">Het probleem is tweedimensionaal: de <i>x</i>-as horizontaal naar rechts, de <i>y</i>-as verticaal omhoog. Ga daarna naar stap 2 om de balk vrij te maken.</p>`;
+  else if (stap === 2) h = `<p class="noot">In de loep zie je enkel de verbinding in A: de muur en het stukje balk erin (de rest van de balk is weggelaten). Op de balk werkt de externe kracht ${t(`${F_} = ${kl(KF, '\\begin{Bmatrix}0\\\\ -F\\end{Bmatrix}')}`)}.</p>${ISO}`;
+  else if (stap === 3) h = `<h4>Krachtenevenwicht</h4>${v(`${F_} + ${R_} = \\vec 0`)}
+      <h4>Momentenevenwicht rond A</h4>${v(`${M_} + (\\vec r_C - \\vec r_A)\\times ${F_} + (\\vec r_A - \\vec r_A)\\times ${R_} = \\vec 0`)}
+      <p class="noot">Door de keuze van het punt A valt de reactiekracht ${t(R_)} weg uit de vergelijking: ${t('\\vec r_A - \\vec r_A = \\vec 0')}.</p>
+      <hr>
+      <h4>Krachtenevenwicht in componenten</h4>
+      ${v(`${kl(KF, '\\begin{Bmatrix}0\\\\ -F\\end{Bmatrix}')} + ${kl(KR, '\\begin{Bmatrix}R_x\\\\ R_y\\end{Bmatrix}')} = \\begin{Bmatrix}0\\\\ 0\\end{Bmatrix} \\;\\Rightarrow\\; ${R_} = ${kl(KR, '\\begin{Bmatrix}R_x\\\\ R_y\\end{Bmatrix}')} = -${F_} = ${kl(KR, '\\begin{Bmatrix}0\\\\ F\\end{Bmatrix}')}`)}
+      <h4>Momentenevenwicht rond A, uitgewerkt met een determinant</h4>
+      ${v(`${kl(KM, 'M\\,\\vec e_z')} + \\begin{vmatrix}\\vec e_x & \\vec e_y & \\vec e_z\\\\ l & 0 & 0\\\\ ${kl(KF, '0')} & ${kl(KF, '-F')} & ${kl(KF, '0')}\\end{vmatrix} = \\vec 0`)}
+      ${v(`\\Leftrightarrow\\; ${kl(KM, 'M\\,\\vec e_z')} - l\\,F\\,\\vec e_z = \\vec 0 \\;\\Rightarrow\\; ${M_} = l\\cdot F\\,\\vec e_z`)}
+      <p class="noot">met <i>l</i> de lengte van de balk: ${t('l = \\lVert \\vec r_C - \\vec r_A \\rVert')}.</p>`;
+  else h = `<div class="slider"><div class="lab"><span>Externe kracht <span class="i">F</span></span><b>${Fw} N</b></div><input type="range" id="fF" min="100" max="1000" step="50" value="${Fw}"></div>
+      <div class="slider"><div class="lab"><span>Lengte <span class="i">l</span> van de balk</span><b>${l.toFixed(1)} m</b></div><input type="range" id="lL" min="1" max="6" step="0.5" value="${l}"></div>
+      ${v(`${R_} = ${kl(KR, '\\begin{Bmatrix}0\\\\ F\\end{Bmatrix}')} = ${kl(KR, `\\begin{Bmatrix}0\\\\ ${Fw}\\ \\text{N}\\end{Bmatrix}`)}, \\qquad ${M_} = l\\cdot F\\,\\vec e_z = ${kl(KM, `${(l * Fw).toFixed(0)}\\ \\text{N\\,m}\\;\\vec e_z`)}`)}
+      <p>De reactiekracht ${t(R_)} is verticaal gericht en even groot als de externe kracht ${t(F_)}. Dat komt overeen met de intuïtie: de muur voorkomt dat de balk naar beneden beweegt, en de reactiekracht is groter als de externe kracht groter is.</p>
+      <p>Het reactiemoment ${t(M_)} is gericht volgens de positieve <i>z</i>-as en evenredig met de lengte <i>l</i> van de balk en de grootte van ${t(F_)}. Dat komt overeen met de intuïtie: de muur voorkomt dat de balk in wijzerzin draait, en het reactiemoment is groter als de balk langer is (grotere hefboomsarm van de externe kracht) en de externe kracht groter is.</p>`;
+  el.innerHTML = h;
+  if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  const ff = $('fF'); if (ff) ff.oninput = e => { Fw = +e.target.value; render(); };
+  const ll = $('lL'); if (ll) ll.oninput = e => { l = +e.target.value; render(); };
+}
+function stapKnoppen() {
+  $('stappen').innerHTML = STAPPEN.map((t, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${t}</button>`).join('');
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 4) { Fw = 500; l = 4; } render(); });
+}
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
+sc.c.addEventListener('click', e => {
+  const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  if (raak && Math.hypot(raak.x - x, raak.y - y) < raak.r * 1.3 && stap !== 2) { stap = 2; anim = null; licht = null; render(); }
+});
+
+TM1.bijGrootte([sc, LP], render);
+TM1.lus(dt => { if (!anim) return; anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); drawScene(); }, () => !!anim);
+})();
+</script>
+</body>
+</html>

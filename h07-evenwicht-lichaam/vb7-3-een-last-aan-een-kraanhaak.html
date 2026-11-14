@@ -45,7 +45,7 @@
   </header>
 
   <div class="instructie card">
-    <p>Doorloop de vijf stappen van het plan van aanpak. Het belangrijkste is <b>stap 2, het vrijmaken</b>: probeer rechts in de loep welke bewegingen de kabel in A verhindert; elke verhinderde beweging geeft een reactiekracht, die oplicht in het vrijlichaamsdiagram van het blok. Sleep in de figuur om het aanzicht te draaien.</p>
+    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen de kabel in A verhindert; elke verhinderde beweging geeft een reactiekracht, die oplicht in het vrijlichaamsdiagram van het blok. Sleep in de figuur om het aanzicht te draaien.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -158,7 +158,10 @@ function kabel(ctx, P, a, b, L, w = 2) {
 // ---------- geometrie ----------
 const ZB = 3.0, ZA = 1.2, ZPL = 3.25, HALF = 0.5, LK = ZB - ZA - 0.12;   // hoogtes; LK: lengte van de kabel tot het oogje
 const B = V(0, 0, ZB);
-const Apunt = () => V(0, d, ZA), Cpunt = () => V(0, d, ZA - HALF);       // d: zijdelingse verschuiving (stap 5)
+// d: uitwijking van de kabel (in graden; stap 5): kabel en blok samen gedraaid rond B (as ∥ x), zodat de kabel schuin
+// hangt en C op het verlengde van de kabel ligt
+const kant = p => rotAx(p, B, EX, rad(d));
+const Apunt = () => kant(V(0, 0, ZA)), Cpunt = () => kant(V(0, 0, ZA - HALF));
 
 // ---------- verbinding A (de kabel aan het blok) en de proefbewegingen van het blok ----------
 const BEW = [
@@ -197,13 +200,12 @@ function drawScene() {
   plafond(ctx, P, V(0, 0, ZPL), 0.6);
   lijn3(ctx, P, V(0, 0, ZPL), V(0, 0, ZB + 0.12), '#3d454f', 2.4); ring(ctx, P, V(0, 0, ZB + 0.02), 0.1);
   lijn3(ctx, P, B, add(Ap, V(0, 0, 0.12)), '#3d454f', 2);
-  blok(ctx, P, [-HALF, HALF], [d - HALF, d + HALF], [ZA - 2 * HALF, ZA]); ring(ctx, P, add(Ap, V(0, 0, 0.08)), 0.09);
+  blok(ctx, P, [-HALF, HALF], [-HALF, HALF], [ZA - 2 * HALF, ZA], { T: kant }); ring(ctx, P, add(Ap, V(0, 0, 0.08)), 0.09);
   punt(ctx, P, B, 'B', 10, 4); punt(ctx, P, Cp, 'C', 8, -4); gewicht(ctx, P, Cp, S);
   if (stap <= 2) loepCirkel(ctx, P(Ap), 0.42 * S); else { raak = null; punt(ctx, P, Ap, 'A', -18, -4); }
-  if (stap === 5 && Math.abs(d) > 0.02) {
-    const bq = P(B), vq = P(V(0, 0, ZA - HALF));
-    ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(bq.x, bq.y); ctx.lineTo(vq.x, vq.y); ctx.stroke(); ctx.restore();
-    ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('A niet onder B: geen evenwicht', W - 10, 18); ctx.restore();
+  if (stap === 5 && Math.abs(d) > 0.5) {               // schuine kabel: C ligt niet op de verticale door A
+    lijn3(ctx, P, Ap, sub(Ap, V(0, 0, 1.3)), '#7a828c', 1.2, [4, 4]);
+    ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('kabel schuin: geen evenwicht', W - 10, 18); ctx.restore();
   }
   assen(ctx, 28, H - 22);
   // ----- onder: vrijlichaamsdiagram van het blok -----
@@ -211,9 +213,12 @@ function drawScene() {
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst het vrij te maken lichaam', H + 18); assen(ctx, 28, Hall - 22); return; }
   titel('Vrijgemaakt blok: kabel doorgesneden in A', H + 18);
   const S2 = Math.min(W / 3.8, (Hall - H - 40) / 3.3), Pb = maakP(W / 2, H + 34 + (Hall - H - 40) * 0.55, S2, Cp);
-  // in stap 5 (blok opzij) trekt de kabel schuin naar B; anders verticaal
-  const kdir = stap === 5 && Math.abs(d) > 0.02 ? unit(sub(B, Ap)) : EZ;
-  blok(ctx, Pb, [-HALF, HALF], [d - HALF, d + HALF], [ZA - 2 * HALF, ZA]); punt(ctx, Pb, Cp, 'C', 8, -4); punt(ctx, Pb, Ap, 'A', -18, 4);
+  const kdir = unit(sub(B, Ap));                       // de kabel trekt volgens de kabel, naar B (verticaal als d = 0)
+  blok(ctx, Pb, [-HALF, HALF], [-HALF, HALF], [ZA - 2 * HALF, ZA], { T: kant }); punt(ctx, Pb, Cp, 'C', 8, -4); punt(ctx, Pb, Ap, 'A', -18, 4);
+  if (stap === 5 && Math.abs(d) > 0.5) {               // hefboomsarm van G t.o.v. A: verticale door A en de vector r_C − r_A
+    lijn3(ctx, Pb, add(Ap, V(0, 0, 0.3)), sub(Ap, V(0, 0, 1.3)), '#7a828c', 1.2, [4, 4]);
+    pijl3(ctx, Pb, Ap, Cp, C.M, { w: 1.8, head: 9, dash: [4, 3] });
+  }
   const qa = Pb(Ap); ctx.save(); ctx.strokeStyle = C.accent; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(qa.x, qa.y, 0.3 * S2, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
   gewicht(ctx, Pb, Cp, S2);
   const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1, g = stap === 2 && licht && licht.b === 'zneer' ? puls : 0;
@@ -248,8 +253,6 @@ function drawLoep() {
   const oog = T(add(p0, V(0, 0, 0.12))), naarB = unit(sub(B, oog));
   const slap = Math.max(0, LK - Math.hypot(B.x - oog.x, B.y - oog.y, B.z - oog.z));
   const top = add(oog, mul(naarB, 0.95));
-  kabel(ctx, P, oog, top, 0.95 + slap, 2.4);
-  lijn3(ctx, P, top, add(top, mul(naarB, 0.35)), '#3d454f', 1.4, [3, 4]);   // de kabel loopt verder naar B
   if (boog) {                                         // de cirkelboog rond B die A kan volgen
     const pts = [];
     for (let i = -12; i <= 12; i++) pts.push(P(rotAx(add(p0, V(0, 0, 0.12)), B, boog, i / 12 * 0.5)));
@@ -257,6 +260,10 @@ function drawLoep() {
   }
   blok(ctx, P, [-HALF, HALF], [-HALF, HALF], [ZA - 0.6, ZA], { snede: ['z0'], T });
   ring(ctx, P, add(p0, V(0, 0, 0.08)), 0.09, EY, T);
+  // de kabel na het blok tekenen: bij een rotatie (bv. rond y, van z naar x) kantelt het blok naar voren en zou het de
+  // kabel anders verbergen
+  kabel(ctx, P, oog, top, 0.95 + slap, 2.4);
+  lijn3(ctx, P, top, add(top, mul(naarB, 0.35)), '#3d454f', 1.4, [3, 4]);   // de kabel loopt verder naar B
   assen(ctx, 26, H - 22);
   if (anim) {
     const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a';
@@ -281,7 +288,7 @@ function vldFormules() {
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
 const STAPPEN = ['Vrij te maken lichaam', 'Vrijmaken', 'Evenwichtsvergelijkingen', 'Oplossen', 'Interpretatie'];
-const ISO = `<div class="kader"><b>Isostatisch.</b> Geen enkele verbinding verhindert translatie volgens <i>x</i> of <i>y</i>, noch rotatie rond <i>x</i>, <i>y</i> of <i>z</i>. Alle krachten liggen op één verticale werklijn: het probleem is eendimensionaal. Voor die ene vrijheidsgraad (translatie volgens <i>z</i>) is er precies één beperking, de kabel: het blok is isostatisch.</div>`;
+const ISO = `<div class="kader"><b>Statisch onbepaald (hypostatisch).</b> Geen enkele verbinding verhindert translatie volgens <i>x</i> of <i>y</i>, noch rotatie rond <i>x</i>, <i>y</i> of <i>z</i>: er is maar één beperking (de kabel) voor zes vrijheidsgraden. Het blok kan dus nog bewegen (slingeren, draaien). Toch is er evenwicht, omdat alle krachten op één verticale werklijn liggen.</div>`;
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -300,23 +307,38 @@ function stapInhoud() {
   $('rtitel').textContent = stap === 2 ? 'Verbinding A: de kabel aan het blok' : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
   const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
   const G_ = kl(KG, '\\vec G'), FA = kl(KA, '\\vec F_A');
+  // momentenevenwicht rond A (rel: '=' in evenwicht, '\\neq' als de kabel schuin hangt)
+  const MRES = rel => `(\\vec r_A - \\vec r_A)\\times ${FA} + (\\vec r_C - \\vec r_A)\\times ${G_} = (\\vec r_C - \\vec r_A)\\times ${G_} ${rel} \\vec 0`;
+  // vectoren in de lopende tekst: inline met KaTeX (dan staan de pijlen correct)
+  const t = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const RCA = t('\\vec r_C - \\vec r_A'), GV = t(G_), FAV = t(FA);
   let h = '';
   if (stap === 1) h = `<p>We maken enkel het <b>blok</b> vrij: snijd de kabel door in <b>A</b>. Zo wordt de kracht van de kabel op het blok een externe kracht.</p>
       <p>De kabel is gewichtloos: hij brengt de kracht onveranderd over naar de kraanhaak, zodat de gevraagde reactiekracht in B gelijk is aan die in A.</p>
       <p class="noot">Ga daarna naar stap 2 om het blok vrij te maken.</p>`;
   else if (stap === 2) h = `<p class="noot">In de loep zie je enkel de verbinding in A: het blok met zijn oogje en het onderste stukje kabel (de rest van de kabel, naar B, is weggelaten). Enkel de translatie volgens negatieve <i>z</i> is verhinderd.</p>${ISO}
-      <p class="noot">Het eigengewicht van de kabel is verwaarloosbaar t.o.v. dat van de last; het blok heeft een gewicht G = −G e<sub>z</sub> in het zwaartepunt C.</p>`;
-  else if (stap === 3) h = `<h4>Krachtenevenwicht (blok)</h4>${v(`${G_} + ${FA} = \\vec 0`)}<h4>Momentenevenwicht rond A</h4>${v(`\\vec M_A = (\\vec r_A - \\vec r_A)\\times ${FA} + (\\vec r_C - \\vec r_A)\\times ${G_} = \\vec 0`)}`;
-  else if (stap === 4) h = `<div class="slider"><div class="lab"><span>Gewicht <span class="i">G</span></span><b>${G} N</b></div><input type="range" id="gG" min="100" max="1000" step="50" value="${G}"></div>
-      ${v(`${FA} = -${G_} = G\\,\\vec e_z \\;\\Rightarrow\\; ${kl(KA, 'F_A')} = G = ${G}\\ \\text{N}`)}
-      <p>De gewichtloze kabel brengt die kracht over naar de kraanhaak: de reactiekracht in B is <i>F</i><sub>B</sub> = <i>F</i><sub>A</sub> = <i>G</i> = ${G} N, naar boven.</p>
-      <h4>Momentenevenwicht rond A</h4>${v(`\\vec M_A = (\\vec r_C - \\vec r_A)\\times ${G_} = \\vec 0`)}
-      <p class="noot">De werklijn van G is evenwijdig met de hefboomsvector r<sub>C</sub> − r<sub>A</sub>: het vectorproduct is de nulvector.</p>`;
-  else h = `<p>Er is geen enkele momentenvergelijking rond punten op de verticale door B die niet gelijk is aan de nulvergelijking. Verschuif het blok zodat A <b>niet</b> op de verticale onder B ligt:</p>
-      <div class="slider"><div class="lab"><span>Zijdelingse verschuiving van het blok</span><b>${d.toFixed(2)} m</b></div><input type="range" id="dd" min="-1" max="1" step="0.05" value="${d}"></div>
-      ${Math.abs(d) > 0.02 ? v(`\\vec M_B = (\\vec r_C - \\vec r_B)\\times ${G_} \\neq \\vec 0`) + '<p>De kabel trekt dan schuin naar B, terwijl G verticaal blijft: de twee krachten liggen niet op één werklijn en G geeft een moment rond B: <b>geen evenwicht</b>. De kabel hangt onder invloed van de zwaartekracht dus steeds verticaal.</p>'
-        : '<p class="noot">Nu ligt A recht onder B: G en F<sub>A</sub> liggen op één werklijn en er is evenwicht.</p>'}
-      <p class="noot">Er grijpen maar twee krachten aan op het blok (G en F<sub>A</sub>): onderdeel 5.3.1 is van toepassing.</p>`;
+      <p class="noot">Het eigengewicht van de kabel is verwaarloosbaar t.o.v. dat van de last; het blok heeft een gewicht ${t(`${G_} = ${kl(KG, '-G\\,\\vec e_z')}`)} in het zwaartepunt C.</p>`;
+  else if (stap === 3) h = `<h4>Krachtenevenwicht (blok)</h4>${v(`${G_} + ${FA} = \\vec 0`)}<h4>Momentenevenwicht rond A</h4>${v(MRES('='))}
+      <p class="noot">Er kan enkel evenwicht zijn als het vectorproduct van de hefboomsvector ${RCA} en het gewicht ${GV} gelijk is aan de nulvector. Dat is enkel het geval als de hefboomsvector evenwijdig is met het gewicht.</p>
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
+      <h4>Krachtenevenwicht in componenten</h4>
+      ${v(`${kl(KG, '\\begin{Bmatrix}0\\\\ 0\\\\ -G\\end{Bmatrix}')} + ${kl(KA, '\\begin{Bmatrix}0\\\\ 0\\\\ F_A\\end{Bmatrix}')} = \\begin{Bmatrix}0\\\\ 0\\\\ 0\\end{Bmatrix}`)}
+      <h4>Momentenevenwicht rond A, uitgewerkt met een determinant</h4>
+      ${v(`\\begin{vmatrix}\\vec e_x & \\vec e_y & \\vec e_z\\\\ x_C-x_A & y_C-y_A & z_C-z_A\\\\ ${kl(KG, '0')} & ${kl(KG, '0')} & ${kl(KG, '-G')}\\end{vmatrix} = \\vec 0`)}
+      ${v(`\\Leftrightarrow\\; \\begin{Bmatrix}-G\\,(y_C-y_A)\\\\ G\\,(x_C-x_A)\\\\ 0\\end{Bmatrix} = \\begin{Bmatrix}0\\\\ 0\\\\ 0\\end{Bmatrix} \\;\\Rightarrow\\; x_C = x_A,\\ \\ y_C = y_A`)}
+      <p class="noot">Het zwaartepunt C moet dus op de verticale door A liggen. Dit wil zeggen dat de kabel verticaal moet hangen.</p>`;
+  else if (stap === 4) h = `${v(`${FA} = -${G_} = G\\,\\vec e_z \\;\\Rightarrow\\; ${kl(KA, 'F_A')} = G`)}
+      <p>De gewichtloze kabel brengt die kracht over naar de kraanhaak: de reactiekracht in B is ${t(`\\vec F_B = ${FA} = -${G_}`)}, naar boven, met grootte ${t(`F_B = ${kl(KA, 'F_A')} = G`)}.</p>
+      <h4>Momentenevenwicht rond A</h4>${v(MRES('='))}
+      <p class="noot">De kabel hangt verticaal, dus C ligt recht onder A: de hefboomsvector ${RCA} is evenwijdig met het gewicht ${GV} en het vectorproduct is de nulvector.</p>`;
+  else h = `<p>Laat de kabel schuin hangen (kabel en blok samen uitgeweken rond B) en kijk naar het momentenevenwicht rond A:</p>
+      <div class="slider"><div class="lab"><span>Uitwijking van de kabel</span><b>${d.toFixed(0)}°</b></div><input type="range" id="dd" min="-30" max="30" step="1" value="${d}"></div>
+      ${Math.abs(d) > 0.5 ? v(MRES('\\neq'))
+          + `<p>Er kan enkel evenwicht zijn als het vectorproduct van de hefboomsvector ${RCA} en het gewicht ${GV} gelijk is aan de nulvector. Dat is enkel het geval als de hefboomsvector evenwijdig is met het gewicht.</p>
+             <p>Hangt de kabel schuin, dan ligt C op het verlengde van de kabel maar niet op de verticale door A: de hefboomsvector ${RCA} is niet evenwijdig met ${GV}. Het momentenevenwicht geldt dus niet als de kabel niet verticaal hangt: <b>het systeem kan niet in evenwicht zijn als de kabel schuin hangt</b>.</p>`
+        : v(MRES('=')) + `<p class="noot">Nu hangt de kabel verticaal: C ligt recht onder A, de hefboomsvector ${RCA} is evenwijdig met het gewicht ${GV} en er is evenwicht.</p>`}
+      <p>In evenwicht hangt de kabel dus verticaal, met A recht onder B: ${GV} en ${FAV} liggen op één verticale werklijn.</p>
+      <p class="noot">Er grijpen maar twee krachten aan op het blok (${GV} en ${FAV}): onderdeel 5.3.1 is van toepassing.</p>`;
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
   const gg = $('gG'); if (gg) gg.oninput = e => { G = +e.target.value; render(); };
