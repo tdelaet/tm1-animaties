@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 7.5 – Een luifel met sneeuwlast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer;touch-action:pan-y}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:340px;touch-action:pan-y}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:center;padding:2px 14px 6px;font-size:15px;min-height:52px}
+  .stap{font-size:13.5px}
+  .stap p{margin:4px 0 8px}
+  .stap h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px}
+  .stap .vgl{font-size:15px;margin:4px 0 4px 6px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+  .stap .noot{font-size:12.5px;color:var(--muted)}
+  .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
+  .stap .slider{margin:6px 0}
+  .stap hr{border:0;border-top:1px solid var(--line);margin:12px 0 4px}
+  .stap table.waarden{border-collapse:collapse;font-size:13px;margin:4px 0}
+  .stap table.waarden td{padding:2px 8px;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 7.5 — Een luifel met sneeuwlast</h1>
+    <span class="kicker">Evenwicht van een lichaam · een luifel hangt met een vast scharnier (12), een glijdend scharnier (13) en een kabel (14–24) aan de gevel; gevraagd: de krachten in de scharnieren en in de kabel</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Doorloop de stappen van het plan van aanpak (het opstellen en oplossen van de evenwichtsvergelijkingen is hier gecombineerd). In <b>stap 2, het vrijmaken</b>, klik je op een loep in de figuur (12, 13 of 14) en probeer je rechts welke bewegingen die verbinding verhindert; elke verhinderde beweging geeft een reactiekracht, die oplicht in het vrijlichaamsdiagram van de luifel. Sleep in de figuur om het aanzicht te draaien.</p>
+    <div class="stappen modus" id="stappen"></div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="De luifel aan de gevel met de verbindingen 12, 13 en 14, en eronder het vrijlichaamsdiagram"></canvas>
+      <div class="vldformules" id="vldf"></div>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button id="aanzicht">standaardaanzicht</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="200">
+      <h3 id="rtitel"></h3>
+      <canvas id="loep"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="stap" id="stap"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+const KG = '#2f8f46', KW = '#2b6cb0', K12 = C.F, K13 = '#c2378a', K14 = '#d9822b';
+const GLOED = 'rgba(255,196,0,';
+let stap = 2, gekozen = '12', anim = null, licht = null, proeven = {};
+let Bb = 4, L = 2.5, alfa = rad(85), beta = rad(45), G = 3000, Ww = 2000;
+
+// ---------- vectoren (assen zoals in het handboek: oorsprong in 12, x ⊥ gevel, y horizontaal in de gevel, z verticaal) ----------
+const V = (x, y, z) => ({ x, y, z });
+const add = (a, b) => V(a.x + b.x, a.y + b.y, a.z + b.z), sub = (a, b) => V(a.x - b.x, a.y - b.y, a.z - b.z);
+const mul = (a, s) => V(a.x * s, a.y * s, a.z * s), dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+const cross = (a, b) => V(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+const len = a => Math.hypot(a.x, a.y, a.z), unit = a => mul(a, 1 / len(a));
+const EX = V(1, 0, 0), EY = V(0, 1, 0), EZ = V(0, 0, 1), O = V(0, 0, 0), AS = { x: EX, y: EY, z: EZ };
+function rotAx(p, c, a, ang) { const r = sub(p, c), cs = Math.cos(ang), sn = Math.sin(ang); return add(c, add(add(mul(r, cs), mul(cross(a, r), sn)), mul(a, dot(a, r) * (1 - cs)))); }
+function loodrecht(a) { const e1 = unit(cross(a, Math.abs(a.z) < 0.9 ? EZ : EX)); return [e1, cross(a, e1)]; }
+
+// ---------- geometrie ----------
+const U = () => V(Math.sin(alfa), 0, Math.cos(alfa));          // richting van de luifel, loodrecht weg van de gevel (schuin)
+const R12 = () => O, R13 = () => mul(EY, Bb), R14 = () => mul(U(), L), R15 = () => add(R14(), R13());
+const R24 = () => V(0, 0, L * Math.cos(alfa) + L * Math.sin(alfa) / Math.tan(beta));
+const R1 = () => add(mul(U(), L / 3), mul(EY, Bb / 2)), RW = () => add(mul(U(), L / 2), mul(EY, Bb / 2));
+const KAB = () => V(-Math.sin(beta), 0, Math.cos(beta));        // richting van de kabel, van 14 naar 24
+
+// ---------- aanzicht ----------
+const STANDAARD = { yaw: rad(32), pitch: rad(32) }, view = { ...STANDAARD };   // 30° rond z gedraaid (van y naar x) t.o.v. de figuur in het handboek
+function cam(p) {
+  const q = V(p.y, p.z, p.x), cy = Math.cos(view.yaw), sy = Math.sin(view.yaw), cp = Math.cos(view.pitch), sp = Math.sin(view.pitch);
+  const x1 = q.x * cy + q.z * sy, z1 = -q.x * sy + q.z * cy; return V(x1, q.y * cp - z1 * sp, q.y * sp + z1 * cp);
+}
+const maakP = (cx, cy, S, o = O) => { const P = p => { const q = cam(sub(p, o)); return { x: cx + q.x * S, y: cy - q.y * S }; }; P.S = S; return P; };
+
+// ---------- tekenhulp ----------
+function poly(ctx, pts, fill, stroke, opt = {}) {
+  ctx.save(); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
+  if (fill) { ctx.globalAlpha = opt.alpha ?? 1; ctx.fillStyle = fill; ctx.fill(); ctx.globalAlpha = 1; }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = opt.w || 1.4; ctx.lineJoin = 'round'; if (opt.dash) ctx.setLineDash(opt.dash); ctx.stroke(); }
+  ctx.restore();
+}
+function lijn3(ctx, P, a, b, kleur, w = 1.4, dash = null) { const p = P(a), q = P(b); ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
+function pijl3(ctx, P, a, b, kleur, opt = {}) { const p = P(a), q = P(b); return arrow(ctx, p.x, p.y, q.x, q.y, kleur, opt); }
+function boog3(ctx, P, c, a, r, kleur, zin = 1) {
+  const [e1, e2] = loodrecht(a), n = 40, pts = [];
+  for (let i = 0; i <= n; i++) { const t = zin * (0.15 + 1.45 * Math.PI * i / n); pts.push(P(add(c, add(mul(e1, r * Math.cos(t)), mul(e2, r * Math.sin(t)))))); }
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = 2.2; ctx.setLineDash([5, 3]); ctx.beginPath(); pts.slice(0, -2).forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.restore();
+  const p = pts[n - 3], q = pts[n]; arrow(ctx, p.x, p.y, q.x, q.y, kleur, { w: 2.2, head: 11 });
+  lijn3(ctx, P, sub(c, mul(a, r * 1.3)), add(c, mul(a, r * 1.3)), kleur, 1, [2, 3]);
+}
+function assen(ctx, x, y, Lx = 24) {
+  [[EX, 'x'], [EY, 'y'], [EZ, 'z']].forEach(([e, n]) => { const q = cam(e); arrow(ctx, x, y, x + q.x * Lx, y - q.y * Lx, '#6b737d', { w: 1.3, head: 7 }); label(ctx, n, '', x + q.x * (Lx + 9) - 4, y - q.y * (Lx + 9) + 4, '#6b737d', { vec: false, size: 13 }); });
+}
+function punt(ctx, q, n, dx = 7, dy = -7) { ctx.save(); ctx.fillStyle = '#3d454f'; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); if (n) label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 13 }); }
+function gevel(ctx, P, y0, y1, z0, z1) {             // de gevel (vlak x = 0), licht gearceerd
+  const h = [V(0, y0, z0), V(0, y1, z0), V(0, y1, z1), V(0, y0, z1)].map(P);
+  poly(ctx, h, '#e6e9ed', '#8f969e', { w: 1.2 });
+  ctx.save(); ctx.strokeStyle = '#cfd4da'; ctx.lineWidth = 1;
+  for (let t = 0.06; t < 1; t += 0.06) { const a = { x: h[0].x + (h[1].x - h[0].x) * t, y: h[0].y + (h[1].y - h[0].y) * t }, b = { x: h[3].x + (h[2].x - h[3].x) * t, y: h[3].y + (h[2].y - h[3].y) * t }; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  ctx.restore();
+}
+function plaat(ctx, P, a, b, c, d, opt = {}) {        // een stuk luifel (vierhoek a-b-c-d); snede: lijst van gestippelde zijden
+  const T = opt.T || (p => p), q = [a, b, c, d].map(p => P(T(p)));
+  poly(ctx, q, opt.kleur || '#b9c4d0', null);
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+  q.forEach((p, i) => { const n = q[(i + 1) % 4]; ctx.setLineDash((opt.snede || []).includes(i) ? [4, 4] : []); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(n.x, n.y); ctx.stroke(); });
+  ctx.restore();
+}
+function scharnier12(ctx, P, p, s) { const q = P(p); ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#3d454f'; ctx.beginPath(); ctx.arc(q.x, q.y, s * 0.35, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+function rail13(ctx, P, p, r) {                      // geleiding volgens y in de gevel (glijdend scharnier)
+  [-0.12, 0.12].forEach(dz => lijn3(ctx, P, add(p, V(0, -r, dz)), add(p, V(0, r, dz)), '#3d454f', 1.6));
+}
+
+// ---------- verbindingen en proefbewegingen ----------
+const VERB = {
+  '12': { naam: 'Verbinding 12: vast scharnier', p: R12, k: K12 },
+  '13': { naam: 'Verbinding 13: glijdend scharnier', p: R13, k: K13 },
+  '14': { naam: 'Verbinding 14: kabel naar 24', p: R14, k: K14 }
+};
+const ROT = ['x', 'y', 'z'].map(a => ({ id: 'r' + a, as: a, rot: true, twee: true, tekst: `rotatie rond <i>${a}</i>`, verh: false, uit: 'mogelijk → geen moment' }));
+function bewegingen(id) {
+  if (id === '12') return ['x', 'y', 'z'].map(a => ({ id: 't' + a, as: a, twee: true, tekst: `translatie ∥ <i>${a}</i>`, verh: true, kr: `F_{12${a}}` })).concat(ROT);
+  if (id === '13') return [{ id: 'tx', as: 'x', twee: true, tekst: 'translatie ∥ <i>x</i>', verh: true, kr: 'F_{13x}' },
+    { id: 'ty', as: 'y', twee: true, tekst: 'translatie ∥ <i>y</i> (langs de geleiding)', verh: false, uit: 'mogelijk: het scharnier glijdt langs de geleiding → <i>F</i><sub>13y</sub> = 0' },
+    { id: 'tz', as: 'z', twee: true, tekst: 'translatie ∥ <i>z</i>', verh: true, kr: 'F_{13z}' }].concat(ROT);
+  const k = KAB(), n = V(Math.cos(beta), 0, Math.sin(beta));
+  return [{ id: 'weg', d: mul(k, -1), tekst: 'weg van 24 (de kabel verlengt)', verh: true, kr: 'F_{14}' },
+    { id: 'naar', d: k, tekst: 'naar 24 toe (de kabel wordt slap)', verh: false, uit: 'mogelijk → <i>F</i><sub>14</sub> ≥ 0 (een kabel kan enkel trekken)' },
+    { id: 'ln', d: n, twee: true, boog: true, tekst: 'loodrecht op de kabel, in het <i>xz</i>-vlak', verh: false, uit: 'mogelijk: cirkelboog rond 24 → geen kracht ⊥ kabel' },
+    { id: 'ly', d: EY, twee: true, boog: true, tekst: 'loodrecht op de kabel, volgens <i>y</i>', verh: false, uit: 'mogelijk: cirkelboog rond 24 → geen kracht ⊥ kabel' }].concat(ROT);
+}
+
+// ---------- figuur ----------
+const sc = setup(document.getElementById('scene'));
+let raak = [];
+function loepCirkel(ctx, id, q, r) {
+  const aan = id === gekozen && stap === 2;
+  ctx.save();
+  if (aan) { ctx.fillStyle = 'rgba(29,92,150,0.16)'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2; ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(id, q.x - (r + 12) * Math.cos(rad(40)), q.y - (r + 12) * Math.sin(rad(40))); ctx.restore();
+  raak.push({ id, x: q.x, y: q.y, r });
+}
+function last(ctx, P, p, kleur, naam, waarde, S) {  // verticale last (G of W) naar beneden in p
+  const q = P(p), l = 0.45 * S * waarde / 2500 + 0.25 * S; arrow(ctx, q.x, q.y - l, q.x, q.y, kleur, { w: 2.6, head: 11 });
+  label(ctx, naam, '', q.x + 6, q.y - l + 6, kleur, { vec: true, size: 15 }); punt(ctx, q, '');
+}
+function luifelVol(ctx, P) { plaat(ctx, P, R12(), R13(), R15(), R14()); }
+function centrum() { return mul(add(add(R12(), R15()), V(0, 0, R24().z * 0.35)), 0.5); }
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall); raak = [];
+  const H = Hall * 0.5;
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  // ----- boven: situatie -----
+  titel('Situatie', 18);
+  const S = Math.min(W / 6.2, (H - 34) / 5.0), P = maakP(W / 2, 34 + (H - 30) / 2, S, centrum());
+  gevel(ctx, P, -0.6, Bb + 0.6, -0.6, R24().z + 0.6);
+  luifelVol(ctx, P);
+  scharnier12(ctx, P, R12(), 5); rail13(ctx, P, R13(), 0.35); scharnier12(ctx, P, R13(), 5);
+  lijn3(ctx, P, R14(), R24(), '#3d454f', 2); punt(ctx, P(R24()), '24', 6, -6); punt(ctx, P(R14()), '', 0, 0);
+  last(ctx, P, R1(), KG, 'G', G, S); last(ctx, P, RW(), KW, 'W', Ww, S);
+  if (stap <= 2) ['12', '13', '14'].forEach(id => loepCirkel(ctx, id, P(VERB[id].p()), 0.42 * S));
+  else { ['12', '13', '14'].forEach(id => punt(ctx, P(VERB[id].p()), id, -20, -6)); }
+  assen(ctx, 28, H - 22);
+  // ----- onder: vrijlichaamsdiagram -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst het vrij te maken lichaam', H + 18); assen(ctx, 28, Hall - 22); return; }
+  titel('Vrijgemaakte luifel: scharnieren en kabel doorgesneden', H + 18);
+  const S2 = Math.min(W / 6.4, (Hall - H - 40) / 3.6), P2 = maakP(W / 2, H + 32 + (Hall - H - 40) * 0.55, S2, mul(add(R12(), R15()), 0.5));
+  luifelVol(ctx, P2);
+  ['12', '13', '14'].forEach(id => { const q = P2(VERB[id].p()); ctx.save(); ctx.strokeStyle = C.accent; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(q.x, q.y, 0.3 * S2, 0, 2 * Math.PI); ctx.stroke(); ctx.restore(); punt(ctx, q, id, -20, -6); });
+  last(ctx, P2, R1(), KG, 'G', G, S2); last(ctx, P2, RW(), KW, 'W', Ww, S2);
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1;
+  const gl = (v, b) => (stap === 2 && licht && licht.v === v && licht.b === b ? puls : 0), gloed = g => GLOED + (0.35 + 0.5 * g) + ')';
+  // een reactie als vector met de punt in het aangrijpingspunt; componenten als trapje (grijs), de component van de
+  // geprobeerde translatie licht op
+  const vector = (v, p, comp, ids, kleur, naam) => {
+    const Lr = 0.9, f = V(...comp.map(c => c * Lr)), t = sub(p, f);
+    let q = t; [EX, EY, EZ].forEach((e, i) => { if (!comp[i]) return; const r = add(q, mul(e, comp[i] * Lr)), g = gl(v, ids[i]); if (g) lijn3(ctx, P2, q, r, gloed(g), 10); lijn3(ctx, P2, q, r, g ? kleur : '#9aa1aa', g ? 2.6 : 1.2, [3, 4]); q = r; });
+    pijl3(ctx, P2, t, p, kleur, { w: 2.8, head: 12 }); const tl = P2(t); label(ctx, 'F', naam, tl.x - 26, tl.y + 4, kleur, { vec: true, size: 14 });
+  };
+  vector('12', R12(), [-0.6, -0.5, 0.8], ['tx', 'ty', 'tz'], K12, '12');
+  vector('13', R13(), [-0.6, 0, 0.8], ['tx', '', 'tz'], K13, '13');
+  const g = gl('14', 'weg'), e = add(R14(), mul(KAB(), 1.0));
+  if (g) pijl3(ctx, P2, R14(), e, gloed(g), { w: 12, head: 22 });
+  pijl3(ctx, P2, R14(), e, K14, { w: g ? 3.6 : 2.8, head: g ? 14 : 12 }); const te = P2(e); label(ctx, 'F', '14', te.x + 6, te.y + 2, K14, { vec: true, size: 14 });
+  assen(ctx, 28, Hall - 22);
+}
+
+// ---------- loep ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2) return;
+  const p0 = VERB[gekozen].p(), S = Math.min(W / 3.2, H / 2.4), P = maakP(W / 2, H / 2 + 8, S, p0);
+  let T = p => p, zin = 1, boogAs = null;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = b.twee ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u); zin = s < 0 ? -1 : 1;
+    const schud = Math.sin(anim.t * 40) * 0.05 * Math.abs(s) + 0.035 * s;
+    if (b.rot) T = p => rotAx(p, p0, AS[b.as], 0.4 * s);
+    else if (b.boog) { const R = len(sub(R24(), p0)); boogAs = unit(cross(KAB(), b.d)); T = p => rotAx(p, R24(), boogAs, -0.4 * s / R); }
+    else { const d = b.d || AS[b.as], a = b.verh ? schud : 0.4 * s; T = p => add(p, mul(d, a)); }
+  }
+  const u = U(), r = 0.9;
+  gevel(ctx, P, p0.y - 1.0, p0.y + 1.0, p0.z - 0.9, p0.z + 1.0);
+  if (gekozen === '12') { plaat(ctx, P, O, mul(EY, r), add(mul(EY, r), mul(u, r)), mul(u, r), { T, snede: [1, 2] }); scharnier12(ctx, P, T(O), 5); }
+  else if (gekozen === '13') { rail13(ctx, P, R13(), 0.6); const a = add(R13(), mul(EY, -r)); plaat(ctx, P, a, R13(), add(R13(), mul(u, r)), add(a, mul(u, r)), { T, snede: [2, 3] }); scharnier12(ctx, P, T(R13()), 5); }
+  else {
+    const a = sub(R14(), mul(u, r)), bpt = add(a, mul(EY, r));
+    plaat(ctx, P, a, R14(), add(R14(), mul(EY, r)), bpt, { T, snede: [3, 0] });
+    // kabel van het (bewogen) punt 14 naar 24 (afgeknipt in de loep), slap als 14 dichter bij 24 komt
+    const p = T(R14()), naar = unit(sub(R24(), p)), Lk = len(sub(R24(), R14())), slap = Math.max(0, Lk - len(sub(R24(), p)));
+    const top = add(p, mul(naar, 1.0)), q1 = P(p), q2 = P(top);
+    ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(q1.x, q1.y); ctx.quadraticCurveTo((q1.x + q2.x) / 2 + slap * S * 1.2, (q1.y + q2.y) / 2 + slap * S * 1.2, q2.x, q2.y); ctx.stroke(); ctx.restore();
+    lijn3(ctx, P, top, add(top, mul(naar, 0.35)), '#3d454f', 1.4, [3, 4]);
+    punt(ctx, q1, '');
+    if (boogAs) { const pts = []; for (let i = -12; i <= 12; i++) pts.push(P(rotAx(R14(), R24(), boogAs, i / 12 * 0.3))); ctx.save(); ctx.strokeStyle = '#2f7d3a'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]); ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); ctx.restore(); }
+  }
+  assen(ctx, 26, H - 22);
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a';
+    if (b.rot) boog3(ctx, P, p0, AS[b.as], 0.5, kl, zin);
+    else { const d = mul(b.d || AS[b.as], zin); pijl3(ctx, P, add(p0, mul(d, 0.2)), add(p0, mul(d, 0.8)), kl, { w: 2.2, dash: [5, 3], head: 10 }); }
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W / 2, 18); ctx.restore();
+  }
+}
+
+// ---------- formules onder het vrijlichaamsdiagram ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function vldFormules() {
+  const el = document.getElementById('vldf'); if (!window.katex) return;
+  if (stap === 1) { el.innerHTML = ''; return; }
+  const mk = (v, id, s) => (stap === 2 && licht && licht.v === v && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [`${kl(KG, '\\vec G')} = ${kl(KG, '-G\\,\\vec e_z')}`, `${kl(KW, '\\vec W')} = ${kl(KW, '-W\\,\\vec e_z')}`,
+    `${kl(K12, '\\vec F_{12}')} = ${kl(K12, `\\begin{Bmatrix}${mk('12', 'tx', kl(K12, 'F_{12x}'))}\\\\ ${mk('12', 'ty', kl(K12, 'F_{12y}'))}\\\\ ${mk('12', 'tz', kl(K12, 'F_{12z}'))}\\end{Bmatrix}`)}`,
+    `${kl(K13, '\\vec F_{13}')} = ${kl(K13, `\\begin{Bmatrix}${mk('13', 'tx', kl(K13, 'F_{13x}'))}\\\\ ${mk('13', 'ty', kl(K13, '0'))}\\\\ ${mk('13', 'tz', kl(K13, 'F_{13z}'))}\\end{Bmatrix}`)}`,
+    `${kl(K14, '\\vec F_{14}')} = ${mk('14', 'weg', kl(K14, 'F_{14}'))}${kl(K14, '\\begin{Bmatrix}-\\sin\\beta\\\\ 0\\\\ \\cos\\beta\\end{Bmatrix}')}`,
+    mk('14', 'naar', `${kl(K14, 'F_{14}')} \\ge 0`)];
+  el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
+}
+
+// ---------- rechterkaart: inhoud per stap ----------
+const $ = id => document.getElementById(id);
+const STAPPEN = ['Vrij te maken lichaam', 'Vrijmaken', 'Opstellen en oplossen', 'Interpretatie'];
+const ISO = `<div class="kader"><b>Statisch bepaald (isostatisch).</b> Het vaste scharnier 12 verhindert translatie ∥ <i>x</i>, <i>y</i> en <i>z</i> (3 beperkingen), het glijdend scharnier 13 translatie ∥ <i>x</i> en <i>z</i> (2 beperkingen) en de kabel translatie volgens de kabel (1 beperking): zes onafhankelijke beperkingen voor de zes vrijheidsgraden van de luifel in 3D.</div>`;
+function proefTabel() {
+  if (stap !== 2) { $('proef').innerHTML = ''; return; }
+  const pr = proeven[gekozen] || {};
+  $('proef').innerHTML = bewegingen(gekozen).map(b => {
+    const uit = !pr[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.verh ? `<span class="uit verh">✕ verhinderd</span> → <span data-tex="${kl(VERB[gekozen].k, b.kr)}"></span>`
+      : `<span class="uit vrij">✓</span> ${b.uit}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  if (window.katex) $('proef').querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = bewegingen(gekozen).find(x => x.id === k.dataset.b);
+    (proeven[gekozen] = proeven[gekozen] || {})[b.id] = true;
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { v: gekozen, b: b.id }; render();
+  });
+}
+// numerieke oplossing (met het aangrijpingspunt van G op L/3)
+function oplossing() {
+  const sa = Math.sin(alfa), sb = Math.sin(beta), cb = Math.cos(beta), sab = Math.sin(alfa + beta);
+  const F14 = sa / sab * (G / 3 + Ww / 2), F13z = 0.5 * (Ww + G);
+  return { F14, F13z, F12x: F14 * sb, F12z: F13z - F14 * cb };
+}
+function stapInhoud() {
+  const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
+  $('rtitel').textContent = stap === 2 ? VERB[gekozen].naam : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
+  const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
+  const t = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const G_ = kl(KG, '\\vec G'), W_ = kl(KW, '\\vec W'), F12 = kl(K12, '\\vec F_{12}'), F13 = kl(K13, '\\vec F_{13}'), F14 = kl(K14, '\\vec F_{14}');
+  let h = '';
+  if (stap === 1) h = `<p>Gevraagd zijn de krachten in de scharnieren tussen de luifel en de gevel en in de kabel. Die worden pas contactkrachten (extern) op het vrijgemaakte lichaam als we de verbindingen doorsnijden. Het vrij te maken lichaam is de <b>luifel zonder gevel en kabel</b>: de scharnieren 12 en 13 en de kabel in 14 worden doorgesneden.</p>
+      <p class="noot">Assen: oorsprong in scharnier 12, <i>x</i> loodrecht op de gevel, <i>y</i> horizontaal in het vlak van de gevel, <i>z</i> verticaal. ${t('\\vec r_{12} = \\vec 0,\\ \\vec r_{13} = B\\,\\vec e_y,\\ \\vec r_{14} = L\\sin\\alpha\\,\\vec e_x + L\\cos\\alpha\\,\\vec e_z')}.</p>`;
+  else if (stap === 2) h = `<p class="noot">In de loep zie je enkel de gekozen verbinding en een stukje van de luifel (de rest is weggelaten). Klik op een andere loep in de figuur om een andere verbinding te bekijken. Op de luifel werken ook het eigengewicht ${t(`${G_} = ${kl(KG, '-G\\,\\vec e_z')}`)} in het punt 1 (op ${t('L/3')}) en de sneeuwlast ${t(`${W_} = ${kl(KW, '-W\\,\\vec e_z')}`)} in het midden.</p>${ISO}`;
+  else if (stap === 3) {
+    const det = (r, f, kc) => `\\begin{vmatrix}\\vec e_x & \\vec e_y & \\vec e_z\\\\ ${r}\\\\ ${f.map(x => kl(kc, x)).join(' & ')}\\end{vmatrix}`;
+    h = `<h4>Momentenevenwicht rond 12</h4>
+      <p class="noot">Door de keuze van het punt 12 valt de onbekende ${t(F12)} weg: zo volgen meteen ${t(F13)} en ${t(F14)} (drie scalaire onbekenden).</p>
+      ${v(`(\\vec r_{13} - \\vec r_{12})\\times ${F13} + (\\vec r_{14} - \\vec r_{12})\\times ${F14} + (\\vec r_1 - \\vec r_{12})\\times ${G_} + (\\vec r_W - \\vec r_{12})\\times ${W_} = \\vec 0`)}
+      <h4>Krachtenevenwicht</h4>${v(`${G_} + ${W_} + ${F12} + ${F13} + ${F14} = \\vec 0`)}
+      <hr>
+      <h4>Momentenevenwicht rond 12, uitgewerkt met determinanten</h4>
+      ${v(`${det('0 & B & 0', ['F_{13x}', '0', 'F_{13z}'], K13)} + ${det('L\\sin\\alpha & 0 & L\\cos\\alpha', ['-F_{14}\\sin\\beta', '0', 'F_{14}\\cos\\beta'], K14)}`)}
+      ${v(`+ ${det('0.33L\\sin\\alpha & 0.5B & 0.33L\\cos\\alpha', ['0', '0', '-G'], KG)} + ${det('0.5L\\sin\\alpha & 0.5B & 0.5L\\cos\\alpha', ['0', '0', '-W'], KW)} = \\vec 0`)}
+      ${v(`\\Leftrightarrow\\; \\begin{Bmatrix}B\\,F_{13z}\\\\ 0\\\\ -B\\,F_{13x}\\end{Bmatrix} - \\begin{Bmatrix}0\\\\ F_{14}\\,L\\sin(\\alpha+\\beta)\\\\ 0\\end{Bmatrix} + \\begin{Bmatrix}-0.5BG\\\\ 0.33GL\\sin\\alpha\\\\ 0\\end{Bmatrix} + \\begin{Bmatrix}-0.5BW\\\\ 0.5WL\\sin\\alpha\\\\ 0\\end{Bmatrix} = \\begin{Bmatrix}0\\\\ 0\\\\ 0\\end{Bmatrix}`)}
+      ${v(`\\Rightarrow\\; ${kl(K13, 'F_{13x}')} = 0,\\quad ${kl(K13, 'F_{13z}')} = 0.5\\,(W+G),\\quad ${kl(K14, 'F_{14}')} = \\frac{\\sin\\alpha}{\\sin(\\alpha+\\beta)}\\,(0.33G + 0.5W)`)}
+      <h4>Krachtenevenwicht in componenten</h4>
+      ${v(`${F12} = -${G_} - ${W_} - ${F13} - ${F14} = ${kl(KG, '\\begin{Bmatrix}0\\\\ 0\\\\ G\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}0\\\\ 0\\\\ W\\end{Bmatrix}')} - ${kl(K13, '\\begin{Bmatrix}0\\\\ 0\\\\ 0.5(W+G)\\end{Bmatrix}')} - ${kl(K14, 'F_{14}\\begin{Bmatrix}-\\sin\\beta\\\\ 0\\\\ \\cos\\beta\\end{Bmatrix}')}`)}
+      ${v(`\\Rightarrow\\; ${F12} = \\begin{Bmatrix}\\frac{\\sin\\alpha\\sin\\beta}{\\sin(\\alpha+\\beta)}(0.33G+0.5W)\\\\ 0\\\\ 0.5\\frac{\\sin\\beta\\cos\\alpha}{\\sin(\\alpha+\\beta)}W + \\left[0.5 - 0.33\\frac{\\sin\\alpha\\cos\\beta}{\\sin(\\alpha+\\beta)}\\right]G\\end{Bmatrix}`)}
+      <h4>Numeriek</h4>
+      <p class="noot">Met de gegevens uit de opgave: <i>B</i> = 4 m, <i>L</i> = 2.5 m, <i>α</i> = 85°, <i>β</i> = 45°, <i>G</i> = 3000 N, <i>W</i> = 2000 N.</p>
+      ${(() => { const o = oplossing(), n = x => Math.round(x).toString();
+        return v(`${kl(K13, 'F_{13x}')} = 0,\\quad ${kl(K13, 'F_{13z}')} = ${n(o.F13z)}\\ \\text{N},\\quad ${kl(K14, 'F_{14}')} = ${n(o.F14)}\\ \\text{N}`)
+          + v(`${F12} = ${kl(K12, `\\begin{Bmatrix}${n(o.F12x)}\\\\ 0\\\\ ${n(o.F12z)}\\end{Bmatrix}\\ \\text{N}`)},\\quad ${F13} = ${kl(K13, `\\begin{Bmatrix}0\\\\ 0\\\\ ${n(o.F13z)}\\end{Bmatrix}\\ \\text{N}`)},\\quad ${F14} = ${kl(K14, `\\begin{Bmatrix}${n(-o.F14 * Math.sin(beta))}\\\\ 0\\\\ ${n(o.F14 * Math.cos(beta))}\\end{Bmatrix}\\ \\text{N}`)}`); })()}`;
+  } else {
+    const o = oplossing(), n = x => Math.round(x).toString();
+    h = `<p>Met de cijferwaarden (<i>B</i> = 4 m, <i>L</i> = 2.5 m, <i>α</i> = 85°, <i>G</i> = 3000 N):</p>
+      <div class="slider"><div class="lab"><span>Sneeuwlast <span class="i">W</span></span><b>${Ww} N</b></div><input type="range" id="wW" min="0" max="5000" step="100" value="${Ww}"></div>
+      <div class="slider"><div class="lab"><span>Hoek <span class="i">β</span> tussen kabel en gevel</span><b>${Math.round(beta * 180 / Math.PI)}°</b></div><input type="range" id="bB" min="20" max="70" step="1" value="${Math.round(beta * 180 / Math.PI)}"></div>
+      ${v(`${F12} = ${kl(K12, `\\begin{Bmatrix}${n(o.F12x)}\\\\ 0\\\\ ${n(o.F12z)}\\end{Bmatrix}\\ \\text{N}`)},\\quad ${F13} = ${kl(K13, `\\begin{Bmatrix}0\\\\ 0\\\\ ${n(o.F13z)}\\end{Bmatrix}\\ \\text{N}`)},\\quad ${kl(K14, 'F_{14}')} = ${kl(K14, `${n(o.F14)}\\ \\text{N}`)}`)}
+      <p>De gevonden kabelkracht ${t(kl(K14, 'F_{14}'))} is <b>positief</b>: de kabelkracht ligt effectief volgens de gekozen zin. Dat bevestigt dat de kabel aan de luifel trekt (en niet duwt, wat fysisch onmogelijk zou zijn).</p>
+      <p class="noot">Meer sneeuw geeft een grotere kabelkracht en grotere scharnierkrachten; een kleinere hoek β (steilere kabel) vergroot de kabelkracht.</p>`;
+  }
+  el.innerHTML = h;
+  if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  const ww = $('wW'); if (ww) ww.oninput = e => { Ww = +e.target.value; render(); };
+  const bb = $('bB'); if (bb) bb.oninput = e => { beta = rad(+e.target.value); render(); };
+}
+function stapKnoppen() {
+  $('stappen').innerHTML = STAPPEN.map((tt, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${tt}</button>`).join('');
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 4) { Ww = 2000; beta = rad(45); } render(); });
+}
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+window.addEventListener('load', () => { vldFormules(); stapInhoud(); proefTabel(); });
+$('aanzicht').onclick = () => { Object.assign(view, STANDAARD); drawScene(); drawLoep(); };
+
+function sleepbaar(cv, bijKlik) {
+  let neer = null;
+  cv.addEventListener('pointerdown', e => { neer = { x: e.clientX, y: e.clientY, sleep: false, yaw: view.yaw, pitch: view.pitch }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+  cv.addEventListener('pointermove', e => { if (!neer) return; const dx = e.clientX - neer.x, dy = e.clientY - neer.y;
+    if (!neer.sleep && Math.hypot(dx, dy) > 5) neer.sleep = true;
+    if (neer.sleep) { view.yaw = neer.yaw + dx * 0.008; view.pitch = Math.max(rad(-10), Math.min(rad(70), neer.pitch + dy * 0.008)); drawScene(); drawLoep(); } });
+  cv.addEventListener('pointerup', e => { if (neer && !neer.sleep && bijKlik) bijKlik(e); neer = null; });
+  cv.addEventListener('pointercancel', () => { neer = null; });
+}
+sleepbaar(sc.c, e => {
+  const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, d = 1e9; raak.forEach(k => { const dd = Math.hypot(k.x - x, k.y - y) / k.r; if (dd < d) { d = dd; best = k.id; } });
+  if (best && d < 1.3) { gekozen = best; stap = 2; anim = null; licht = null; render(); }
+});
+sleepbaar(LP.c, null);
+
+TM1.bijGrootte([sc, LP], render);
+TM1.lus(dt => { if (!anim) return; anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); drawScene(); }, () => !!anim);
+})();
+</script>
+</body>
+</html>
