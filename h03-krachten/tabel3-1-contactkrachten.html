@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tabel 3.1 – Contactkrachten en de beweging die ze verhinderen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* boven: de verbinding in de loep; onder: het vrijgemaakte stukje lichaam */
+  .scene canvas{height:auto;aspect-ratio:98/104;max-height:680px}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 20px)}
+  /* op een breed scherm: de tabel links, de loep rechts */
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr)} .werkblad .grafiekkolom{order:-1} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 6px;font-size:14px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 24px;align-items:center;padding:2px 10px 4px;font-size:16px;min-height:50px}
+  /* de interactieve tabel 3.1 */
+  .t31{width:100%;border-collapse:collapse;font-size:13px}
+  .t31 th{font:600 12px Inter,sans-serif;text-align:left;color:var(--muted);border-bottom:1.5px solid var(--ink);padding:4px 6px}
+  .t31 td{border-bottom:1px solid var(--line);padding:6px 6px;vertical-align:middle}
+  .t31 td.groep{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11.5px;color:var(--muted);text-align:center;padding:4px 2px;border-right:1px solid var(--line);width:18px}
+  .t31 tr.rij{cursor:pointer}
+  .t31 tr.rij:hover td:not(.groep){background:rgba(29,92,150,0.05)}
+  .t31 tr.rij.aan td:not(.groep){background:rgba(29,92,150,0.12)}
+  .t31 tr.rij.aan td.naam{box-shadow:inset 3px 0 0 #1d5c96}
+  .t31 .naam b{display:block;font-weight:600}
+  .t31 .naam .n{color:var(--muted);font-size:11.5px}
+  .t31 .verh div{margin:1px 0}
+  .t31 .vraag{color:var(--muted);font-style:italic}
+  .t31 .reac{font-size:14px}
+  .t31 .reac .katex{font-size:1em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Tabel 3.1 — Contactkrachten: welke beweging verhindert de verbinding?</h1>
+    <span class="kicker">Krachten · analyseer elke verbinding lokaal: welke beweging verhindert ze op de plaats van het contact, en welke reactiekracht hoort daarbij bij het vrijmaken?</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Kies een verbinding in de tabel. In de figuur zie je enkel die verbinding en een stukje van het lichaam; probeer welke bewegingen dat stukje daar kan maken. Elke <b>verhinderde</b> beweging geeft bij het vrijmaken een reactiekracht volgens die richting; die licht op in het vrijgemaakte lichaam. De tabel vult zich aan met wat je ontdekt.</p>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="loep" aria-label="De gekozen verbinding met een stukje lichaam, met eronder het vrijgemaakte stukje lichaam"></canvas>
+      <div class="vldformules" id="formule"></div>
+      <table class="proef" id="proef"></table>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="slider" id="hoekslider">
+          <div class="lab"><span id="hoeklab">Hoek <span class="i">θ</span></span><b id="hoekval"></b></div>
+          <input type="range" id="hoek" min="0" max="60" step="1" value="25">
+        </div>
+        <div class="btnrow" style="margin:0"><button id="wis">proeven wissen</button> <button id="alles">volledige tabel tonen</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3>Tabel 3.1 · klik op een verbinding</h3>
+      <table class="t31" id="tabel"></table>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad, deg } = TM1;
+const C = TM1.kleuren();
+// kleuren zoals in tabel 3.1 van het handboek
+const GROEN = '#2f8f46', BLAUW = '#2b6cb0', MAGENTA = '#c2378a';
+const GLOED = 'rgba(255,196,0,';
+let gekozen = 'normaal', theta = rad(25), anim = null, licht = null, alles = false;
+let proeven = {};                                     // proeven[verbinding][beweging] = true (geprobeerd)
+
+// ---------- de rijen van tabel 3.1 ----------
+// lok: geometrie van de loep; bewegingen: proefbewegingen van het stukje lichaam (d = richting, rot = rotatie)
+const T = () => ({ x: Math.cos(theta), y: Math.sin(theta) }), Nn = () => ({ x: -Math.sin(theta), y: Math.cos(theta) });
+const E = () => ({ x: -Math.cos(theta), y: -Math.sin(theta) });      // van het lichaam naar het vaste punt (stang/kabel/veer)
+const neg = v => ({ x: -v.x, y: -v.y }), lood = v => ({ x: -v.y, y: v.x });
+const RIJEN = [
+  { id: 'normaal', groep: 'Krachtgesloten', naam: 'normaalkracht', sub: 'μ = 0', hoek: 'θ', soort: 'helling',
+    bew: () => [
+      { id: 'in', tekst: 'loodrecht op de helling, de helling in', d: neg(Nn()), verh: true, kr: 'N', kl: GROEN, boek: 'Translatie ⊥ en „in” helling' },
+      { id: 'uit', tekst: 'loodrecht op de helling, van de helling weg', d: Nn(), verh: false, uit: 'mogelijk: het blok komt los → <i>N</i> ≥ 0 (enkel duwen)' },
+      { id: 'langs', tekst: 'evenwijdig met de helling', d: T(), twee: true, verh: false, uit: 'mogelijk: zonder wrijving glijdt het blok → geen kracht ∥ helling' }],
+    formule: [['in', k => `${k(GROEN, '\\vec N = N\\begin{Bmatrix}-\\sin\\theta\\\\ \\cos\\theta\\end{Bmatrix}')}`], ['uit', k => k(GROEN, 'N \\ge 0')]] },
+  { id: 'wrijving', groep: 'Krachtgesloten', naam: 'normaal- en wrijvingskracht', sub: 'μ ≠ 0', hoek: 'θ', soort: 'helling',
+    bew: () => [
+      { id: 'in', tekst: 'loodrecht op de helling, de helling in', d: neg(Nn()), verh: true, kr: 'N', kl: GROEN, boek: 'Translatie ⊥ en „in” helling' },
+      { id: 'uit', tekst: 'loodrecht op de helling, van de helling weg', d: Nn(), verh: false, uit: 'mogelijk: het blok komt los → <i>N</i> ≥ 0 (enkel duwen)' },
+      { id: 'langs', tekst: 'evenwijdig met de helling', d: T(), f: T(), twee: true, verh: true, kr: 'W', kl: BLAUW, boek: 'Translatie ∥ helling', noot: 'zolang het blok niet slipt: |<i>W</i>| ≤ μ<i>N</i>' }],
+    formule: [['in', k => k(GROEN, '\\vec N = N\\begin{Bmatrix}-\\sin\\theta\\\\ \\cos\\theta\\end{Bmatrix}')], ['uit', k => k(GROEN, 'N \\ge 0')],
+              ['langs', k => k(BLAUW, '\\vec W = W\\begin{Bmatrix}\\cos\\theta\\\\ \\sin\\theta\\end{Bmatrix}')], ['langs', k => k(BLAUW, '|W| \\le \\mu N')]] },
+  { id: 'vast', groep: 'Vormgesloten', naam: 'vast punt', sub: 'scharnier', soort: 'vast',
+    bew: () => [
+      { id: 'x', tekst: 'translatie volgens <i>x</i>', d: { x: 1, y: 0 }, twee: true, verh: true, kr: 'R', sub: 'x', kl: GROEN, boek: 'Translatie volgens <i>x</i>' },
+      { id: 'y', tekst: 'translatie volgens <i>y</i>', d: { x: 0, y: 1 }, twee: true, verh: true, kr: 'R', sub: 'y', kl: GROEN, boek: 'Translatie volgens <i>y</i>' }],
+    formule: [['x|y', k => `${k(GROEN, '\\vec R = ')}${k(GROEN, `\\begin{Bmatrix}${mk('x', k(GROEN, 'R_x'))}\\\\ ${mk('y', k(GROEN, 'R_y'))}\\end{Bmatrix}`)}`]] },
+  { id: 'glij', groep: 'Vormgesloten', naam: 'glijverbinding', sub: 'rol op een vlak', soort: 'glij',
+    bew: () => [
+      { id: 'neer', tekst: 'translatie volgens (negatieve) <i>y</i>, naar de ondergrond', d: { x: 0, y: -1 }, verh: true, kr: 'R', kl: GROEN, boek: 'Translatie volgens (negatieve) <i>y</i> <span class="n">(afhankelijk van beschrijving)</span>' },
+      { id: 'op', tekst: 'translatie volgens (positieve) <i>y</i>, van de ondergrond weg', d: { x: 0, y: 1 }, verh: false, uit: 'mogelijk bij een losse rol → <i>R</i> ≥ 0 (bij een geleide rol verhinderd: afhankelijk van de beschrijving)' },
+      { id: 'x', tekst: 'translatie volgens <i>x</i>', d: { x: 1, y: 0 }, twee: true, verh: false, uit: 'mogelijk: de rol rolt → geen kracht ∥ <i>x</i>' }],
+    formule: [['neer', k => k(GROEN, '\\vec R = \\begin{Bmatrix}0\\\\ R\\end{Bmatrix}')], ['op', k => k(GROEN, '(R \\ge 0,\\ \\text{afh. beschr.})')]] },
+  { id: 'stang', groep: 'Vormgesloten', naam: 'wederzijds scharnierende gewichtsloze stang', hoek: 'θ', soort: 'staaf',
+    bew: () => [
+      { id: 'langs', tekst: 'translatie volgens de stang (heen en terug)', d: neg(E()), twee: true, verh: true, kr: 'F', sub: 's', kl: MAGENTA, boek: 'Translatie volgens de stang (trek of druk)' },
+      { id: 'lood', tekst: 'translatie loodrecht op de stang', d: lood(E()), twee: true, verh: false, uit: 'mogelijk: het punt beweegt over een cirkelboog rond het vaste scharnier (lokaal ⊥ stang) → geen kracht ⊥ stang' }],
+    formule: [['langs', k => k(MAGENTA, '\\vec F_s = F_s\\begin{Bmatrix}-\\cos\\theta\\\\ -\\sin\\theta\\end{Bmatrix}')]] },
+  { id: 'kabel', groep: 'Vormgesloten', naam: 'gespannen en gewichtsloos touw/kabel', hoek: 'θ', soort: 'staaf',
+    bew: () => [
+      { id: 'weg', tekst: 'weg van het ophangpunt (kabel verlengt)', d: neg(E()), verh: true, kr: 'F', sub: 'k', kl: MAGENTA, boek: 'Translatie die touw/kabel verlengt (enkel trek)' },
+      { id: 'naar', tekst: 'naar het ophangpunt toe (kabel wordt slap)', d: E(), verh: false, uit: 'mogelijk: de kabel wordt slap → <i>F<sub>k</sub></i> ≥ 0 (enkel trek)' },
+      { id: 'lood', tekst: 'translatie loodrecht op de kabel', d: lood(E()), twee: true, verh: false, uit: 'mogelijk: het punt beweegt over een cirkelboog rond het ophangpunt (lokaal ⊥ kabel) → geen kracht ⊥ kabel' }],
+    formule: [['weg', k => k(MAGENTA, '\\vec F_k = F_k\\begin{Bmatrix}-\\cos\\theta\\\\ -\\sin\\theta\\end{Bmatrix}')], ['naar', k => k(MAGENTA, 'F_k \\ge 0')]] },
+  { id: 'veer', groep: 'Elastisch', naam: 'lineaire veer', hoek: 'θ', soort: 'staaf',
+    bew: () => [
+      { id: 'langs', tekst: 'translatie volgens de veer (heen en terug)', d: neg(E()), twee: true, verh: true, veer: true, kr: 'F', sub: 'v', kl: MAGENTA, boek: 'Translatie die veer verkort/verlengt (trek of druk)' },
+      { id: 'lood', tekst: 'translatie loodrecht op de veer', d: lood(E()), twee: true, verh: false, uit: 'mogelijk: de veer draait mee → geen kracht ⊥ veer' }],
+    formule: [['langs', k => k(MAGENTA, '\\vec F_v = F_v\\begin{Bmatrix}-\\cos\\theta\\\\ -\\sin\\theta\\end{Bmatrix}')], ['langs', k => k(MAGENTA, 'F_v = k\\,\\Delta l')]] }
+];
+const rijVan = id => RIJEN.find(r => r.id === id);
+let mk = (id, s) => s;                                // markering van een deel van de formule (wordt per weergave gezet)
+
+// ---------- tekenhulp ----------
+function grond(ctx, x0, y0, x1, y1) {                 // gearceerde vaste omgeving rechts van de richting (x0,y0)→(x1,y1)
+  const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, nx = uy, ny = -ux;
+  ctx.save(); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#8f969e';
+  for (let s = 6; s < L; s += 8) { const px = x0 + ux * s, py = y0 + uy * s; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + nx * 7 - ux * 6, py + ny * 7 - uy * 6); ctx.stroke(); }
+  ctx.restore();
+}
+function pen(ctx, q) { ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore(); }
+function veerLijn(ctx, a, b, n = 6, w = 6) {
+  const L = Math.hypot(b.x - a.x, b.y - a.y), ux = (b.x - a.x) / L, uy = (b.y - a.y) / L, nx = -uy, ny = ux;
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(a.x, a.y);
+  const s0 = 0.18 * L, s1 = 0.82 * L; ctx.lineTo(a.x + ux * s0, a.y + uy * s0);
+  for (let i = 1; i <= 2 * n; i++) { const s = s0 + (s1 - s0) * (i - 0.5) / (2 * n), z = i % 2 ? w : -w; ctx.lineTo(a.x + ux * s + nx * z, a.y + uy * s + ny * z); }
+  ctx.lineTo(a.x + ux * s1, a.y + uy * s1); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore();
+}
+function boogPijl(ctx, x, y, r, kleur, zin = 1) {
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = 2.2; ctx.setLineDash([5, 3]);
+  const a0 = 0.3 * Math.PI, a1 = a0 + zin * 1.3 * Math.PI;
+  ctx.beginPath(); ctx.arc(x, y, r, -a0, -a1, zin > 0); ctx.stroke(); ctx.setLineDash([]);
+  const ex = x + r * Math.cos(-a1), ey = y + r * Math.sin(-a1), tx = Math.sin(-a1) * zin, ty = -Math.cos(-a1) * zin;
+  ctx.fillStyle = kleur; ctx.beginPath(); ctx.moveTo(ex + tx * 9, ey + ty * 9); ctx.lineTo(ex - ty * 5, ey + tx * 5); ctx.lineTo(ex + ty * 5, ey - tx * 5); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+// ---------- geometrie van het stukje lichaam bij elke soort verbinding ----------
+// het blok is een vierkant met zijde 1; c = verbindingspunt (contactpunt, pen of aanhechtingspunt)
+const LST = 1.4;                                     // lengte van stang/kabel/veer
+function geometrie(r) {
+  if (r.soort === 'helling') {
+    const t = T(), n = Nn(), c = { x: 0, y: -0.35 };
+    const blok = [[-0.5, 0], [0.5, 0], [0.5, 1], [-0.5, 1]].map(([a, b]) => ({ x: c.x + a * t.x + b * n.x, y: c.y + a * t.y + b * n.y }));
+    return { c, blok };
+  }
+  if (r.soort === 'staaf') {
+    const c = { x: 0.15, y: 0.15 }, e = E();
+    return { c, blok: [[0, -0.5], [1, -0.5], [1, 0.5], [0, 0.5]].map(([a, b]) => ({ x: c.x + a, y: c.y + b })), anker: { x: c.x + e.x * LST, y: c.y + e.y * LST } };
+  }
+  const c = { x: 0, y: -0.25 };                       // vast punt / glijverbinding: pen op de onderrand van het blok
+  return { c, blok: [[-0.5, 0], [0.5, 0], [0.5, 1], [-0.5, 1]].map(([a, b]) => ({ x: c.x + a, y: c.y + b })) };
+}
+
+const lp = setup(document.getElementById('loep'));
+function tekenOmgeving(ctx, r, g, P, S, cBew) {       // de vaste omgeving van de verbinding (cBew: bewogen verbindingspunt)
+  if (r.soort === 'helling') {
+    const t = T(), a = P({ x: g.c.x - 1.9 * t.x, y: g.c.y - 1.9 * t.y }), b = P({ x: g.c.x + 1.9 * t.x, y: g.c.y + 1.9 * t.y });
+    ctx.save(); ctx.fillStyle = '#eceef1'; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(b.x, P({ x: 0, y: -2.3 }).y); ctx.lineTo(a.x, P({ x: 0, y: -2.3 }).y); ctx.closePath(); ctx.fill(); ctx.restore();
+    grond(ctx, b.x, b.y, a.x, a.y);
+    // hoek θ aan de linkerkant
+    if (theta > 0.03) { const o = P({ x: g.c.x - 1.6 * t.x, y: g.c.y - 1.6 * t.y }), R = 0.7 * S;
+      ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(o.x + 1.0 * S, o.y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(o.x, o.y, R, -theta, 0); ctx.stroke(); ctx.restore();
+      label(ctx, 'θ', '', o.x + (R + 8) * Math.cos(theta / 2), o.y - (R + 8) * Math.sin(theta / 2) + 5, '#4f5862', { vec: false, size: 14 }); }
+    if (r.id === 'wrijving') { const m = P({ x: g.c.x + 1.3 * t.x, y: g.c.y + 1.3 * t.y - 0.3 }); ctx.save(); ctx.font = 'italic 600 15px "Source Serif 4", serif'; ctx.fillStyle = '#4f5862'; ctx.fillText('μ ≠ 0', m.x, m.y); ctx.restore(); }
+  } else if (r.soort === 'vast' || r.soort === 'glij') {
+    const q = P(g.c), s = 0.36 * S;
+    ctx.save(); ctx.fillStyle = '#eef1f4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - 0.7 * s, q.y + 1.1 * s); ctx.lineTo(q.x + 0.7 * s, q.y + 1.1 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    let yb = q.y + 1.1 * s;
+    if (r.soort === 'glij') { for (const dx of [-0.42, 0, 0.42]) { ctx.beginPath(); ctx.arc(q.x + dx * s, yb + 0.16 * s, 0.15 * s, 0, 2 * Math.PI); ctx.stroke(); } yb += 0.32 * s; }
+    ctx.restore();
+    grond(ctx, q.x + 1.6 * s, yb, q.x - 1.6 * s, yb);
+  } else {
+    const a = P(g.anker), q = P(cBew), e = E(), nx = -e.y, ny = e.x;
+    if (r.id === 'veer') veerLijn(ctx, q, a);
+    else if (r.id === 'kabel') {
+      // slappe kabel als het aanhechtingspunt dichter bij het ophangpunt komt
+      const L = Math.hypot(a.x - q.x, a.y - q.y), slap = Math.max(0, LST * S - L), m = { x: (a.x + q.x) / 2, y: (a.y + q.y) / 2 + slap * 1.4 };
+      ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.quadraticCurveTo(m.x, m.y, a.x, a.y); ctx.stroke(); ctx.restore();
+    } else { ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(a.x, a.y); ctx.stroke(); ctx.restore(); }
+    grond(ctx, a.x - nx * 0.45 * S, a.y + ny * 0.45 * S, a.x + nx * 0.45 * S, a.y - ny * 0.45 * S);
+    if (r.id === 'stang') pen(ctx, a);
+    // hoek θ bij het vaste punt
+    const R = 0.55 * S;
+    ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + 0.85 * S, a.y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(a.x, a.y, R, -theta, 0); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '', a.x + (R + 8) * Math.cos(theta / 2), a.y - (R + 8) * Math.sin(theta / 2) + 5, '#4f5862', { vec: false, size: 14 });
+  }
+}
+function tekenBlok(ctx, pts, P, snede) {              // stukje lichaam; de snede (de rest is weggelaten) gestippeld
+  const q = pts.map(P);
+  ctx.save(); ctx.fillStyle = '#cdd8e4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.fill();
+  q.forEach((p, i) => { const n = q[(i + 1) % 4]; ctx.setLineDash(i === snede ? [4, 4] : []); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(n.x, n.y); ctx.stroke(); });
+  ctx.restore();
+}
+// zijde van het blok waar de rest van het lichaam weggelaten is (index van de zijde)
+const snedeZijde = r => (r.soort === 'staaf' ? 1 : 2);
+// proef loodrecht op een stang of kabel: eigenlijk een beweging over de cirkelboog rond het vaste punt
+const opBoog = (r, b) => (r.id === 'stang' || r.id === 'kabel') && b.id === 'lood';
+
+function draw() {
+  const ctx = lp.ctx, W = lp.w, Hall = lp.h; ctx.clearRect(0, 0, W, Hall);
+  const r = rijVan(gekozen), g = geometrie(r), bew = r.bew(), H = Hall * 0.56;
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  // ----- boven: de verbinding in de loep -----
+  titel(r.naam, 18);
+  const S = Math.min(W / 4.6, (H - 30) / 3.4), cx = W / 2 - 0.1 * S, cy = 30 + (H - 30) * 0.52;
+  const P = q => ({ x: cx + q.x * S, y: cy - q.y * S });
+  // geen loepcirkel: de figuur toont al enkel de lokale verbinding; wel binnen het bovenste deel blijven
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 24, W, H - 24); ctx.clip();
+  // proefbeweging
+  let dx = 0, dy = 0, rot = 0, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = b.twee ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u);
+    zin = s < 0 ? -1 : 1;
+    const schud = Math.sin(anim.t * 40) * 0.05 * Math.abs(s) + 0.04 * s;
+    if (b.rot) rot = b.verh ? schud : 0.35 * s;
+    else if (opBoog(r, b)) {                          // stang/kabel: het punt beweegt over de cirkelboog rond het vaste punt
+      const ph = -0.45 * s / LST, v = { x: g.c.x - g.anker.x, y: g.c.y - g.anker.y }, c = Math.cos(ph), sn = Math.sin(ph);
+      dx = g.anker.x + v.x * c - v.y * sn - g.c.x; dy = g.anker.y + v.x * sn + v.y * c - g.c.y;
+    }
+    else { const a = b.verh && !b.veer ? schud : (b.veer ? 0.3 : 0.45) * s; dx = b.d.x * a; dy = b.d.y * a; }
+  }
+  const beweeg = p => { const x = p.x - g.c.x, y = p.y - g.c.y, c = Math.cos(rot), sn = Math.sin(rot); return { x: g.c.x + dx + x * c - y * sn, y: g.c.y + dy + x * sn + y * c }; };
+  const cB = beweeg(g.c);
+  tekenOmgeving(ctx, r, g, P, S, cB);
+  tekenBlok(ctx, g.blok.map(beweeg), P, snedeZijde(r));
+  if (r.soort !== 'helling') pen(ctx, P(cB));
+  ctx.restore();
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a', q = P(g.c);
+    if (opBoog(r, b)) {
+      // de beweging die echt mogelijk is: een cirkelboog rond het vaste punt; lokaal benaderd door de translatie
+      // loodrecht op de verbinding (de pijl, raaklijn aan de boog)
+      const a = P(g.anker), R = LST * S, a0 = Math.atan2(-(q.y - a.y), q.x - a.x);
+      ctx.save(); ctx.strokeStyle = kl; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]);
+      ctx.beginPath(); ctx.arc(a.x, a.y, R, -(a0 + 0.6), -(a0 - 0.6), false); ctx.stroke(); ctx.restore();
+    }
+    if (b.rot) boogPijl(ctx, q.x, q.y, 0.75 * S, kl, zin);
+    else { const u = { x: b.d.x * zin, y: b.d.y * zin }; arrow(ctx, q.x + u.x * 0.25 * S, q.y - u.y * 0.25 * S, q.x + u.x * 1.0 * S, q.y - u.y * 1.0 * S, kl, { w: 2.2, dash: [5, 3], head: 10 }); }
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'right';
+    ctx.fillText((b.veer ? '✕ tegengewerkt door de veer' : b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W - 12, 18); ctx.restore();
+  }
+  // assen
+  const assen = (x, y) => {                           // xy-assenstelsel linksonder (figuur en vrijgemaakt lichaam)
+    arrow(ctx, x, y, x + 30, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + 33, y + 5, '#6b737d', { vec: false, size: 13 });
+    arrow(ctx, x, y, x, y - 30, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 12, y - 24, '#6b737d', { vec: false, size: 13 });
+  };
+  assen(22, H - 16);
+  assen(22, Hall - 30);
+
+  // ----- onder: vrijgemaakt -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  titel('Vrijgemaakt: verbinding weggesneden', H + 18);
+  const H2 = Hall - H, S2 = Math.min(W / 4.4, (H2 - 40) / 2.6), cx2 = W / 2, cy2 = H + 26 + (H2 - 26) * 0.5;
+  const P2 = q => ({ x: cx2 + q.x * S2, y: cy2 - q.y * S2 });
+  const q2 = P2(g.c);
+  tekenBlok(ctx, g.blok, P2, snedeZijde(r));
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1;
+  const gl = id => (licht && licht.r === r.id && licht.b === id ? puls : 0);
+  const L = 1.15 * S2;
+  const pijl = (x0, y0, x1, y1, kl, g) => { if (g) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * g) + ')', { w: 12, head: 22 }); arrow(ctx, x0, y0, x1, y1, kl, { w: g ? 3.4 : 2.6, head: g ? 14 : 12 }); };
+  if (r.soort === 'vast') {
+    // één vector R met stippellijnen naar de assen; de projectie van de geprobeerde beweging licht op
+    {                                                 // altijd getekend (zoals in Vb. 7.1); licht op bij de proef
+      const rr = { x: Math.cos(rad(60)), y: Math.sin(rad(60)) }, tip = { x: q2.x + rr.x * L, y: q2.y - rr.y * L };
+      const lijn = (a, b, g, kl) => { ctx.save(); if (g) { ctx.strokeStyle = GLOED + (0.35 + 0.5 * g) + ')'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+        ctx.setLineDash([3, 4]); ctx.strokeStyle = g ? kl : '#9aa1aa'; ctx.lineWidth = g ? 2.6 : 1.3; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore(); };
+      const px = { x: tip.x, y: q2.y }, py = { x: q2.x, y: tip.y };
+      lijn(tip, px, 0); lijn(tip, py, 0); lijn(q2, px, gl('x'), GROEN); lijn(q2, py, gl('y'), GROEN);
+      arrow(ctx, q2.x, q2.y, tip.x, tip.y, GROEN, { w: 2.8, head: 12 });
+      label(ctx, 'R', '', tip.x + 6, tip.y + 4, GROEN, { vec: true, size: 15 });
+    }
+  } else {
+    bew.filter(b => b.verh).forEach(b => {             // alle reacties altijd getekend; die van de proef licht op
+      let x0, y0, x1, y1;
+      if (r.soort === 'staaf') { const e = E(); x0 = q2.x; y0 = q2.y; x1 = q2.x + e.x * L; y1 = q2.y - e.y * L; }   // naar het vaste punt
+      else { const d = b.f || neg(b.d); x0 = q2.x; y0 = q2.y; x1 = q2.x + d.x * L; y1 = q2.y - d.y * L; }              // van het contact het lichaam in
+      pijl(x0, y0, x1, y1, b.kl, gl(b.id));
+      label(ctx, b.kr, b.sub || '', x1 + (x1 < x0 ? -22 : 6), y1 + (y1 > y0 ? 14 : -2), b.kl, { vec: true, size: 15 });
+    });
+  }
+  // geprobeerde beweging die mogelijk is: korte uitleg onder het vrijgemaakte lichaam
+  if (licht && licht.r === r.id) {
+    const b = bew.find(x => x.id === licht.b);
+    const t = b && (b.verh ? (b.noot ? b.noot.replace(/<[^>]+>/g, '') : '') : b.uit.replace(/<[^>]+>/g, ''));
+    if (t) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = b.verh ? '#4f5862' : '#2f7d3a'; ctx.textAlign = 'center';
+      // over meerdere regels als de tekst breder is dan de figuur
+      const regels = []; let r0 = '';
+      t.split(' ').forEach(wd => { const p = r0 ? r0 + ' ' + wd : wd; if (ctx.measureText(p).width > W - 150 && r0) { regels.push(r0); r0 = wd; } else r0 = p; });
+      regels.push(r0);
+      regels.forEach((l, i) => ctx.fillText(l, W / 2, Hall - 12 - (regels.length - 1 - i) * 16)); ctx.restore(); }
+  }
+}
+
+// ---------- formules (KaTeX) ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function tex(delen, markeer) {
+  return delen.map(([ids, f]) => {
+    mk = (id, s) => (markeer && markeer(id) ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+    const s = f(kl), hele = ids.split('|').some(id => markeer && markeer(id)) && !ids.includes('|');
+    return hele ? `\\colorbox{#ffe08a}{$${s}$}` : s;
+  });
+}
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function formule() {
+  const el = document.getElementById('formule'); if (!window.katex) return;
+  const r = rijVan(gekozen), pr = proeven[r.id] || {};
+  // zoals in Vb. 7.1: de reacties staan er altijd; het deel van de geprobeerde beweging licht op
+  const s = tex(r.formule, id => licht && licht.r === r.id && licht.b === id);
+  el.innerHTML = s.map(() => '<span></span>').join(''); [...el.children].forEach((c, i) => render1(c, s[i]));
+}
+
+// ---------- proeven ----------
+const $ = id => document.getElementById(id);
+function proefTabel() {
+  const r = rijVan(gekozen), pr = proeven[r.id] || {};
+  $('proef').innerHTML = r.bew().map(b => {
+    const uit = !pr[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.verh ? `<span class="uit verh">✕ ${b.veer ? 'tegengewerkt' : 'verhinderd'}</span> → <span style="color:${b.kl}"><span class="i">${b.kr}</span>${b.sub ? `<sub>${b.sub}</sub>` : ''}</span>${b.veer ? ' (gekend: <i>F<sub>v</sub></i> = <i>k</i> Δ<i>l</i>)' : ''}`
+      : `<span class="uit vrij">✓</span> ${b.uit}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = r.bew().find(x => x.id === k.dataset.b);
+    (proeven[r.id] = proeven[r.id] || {})[b.id] = true;
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { r: r.id, b: b.id };
+    render();
+  });
+}
+
+// ---------- de interactieve tabel 3.1 ----------
+function tabel() {
+  const groepen = {}; RIJEN.forEach(r => { groepen[r.groep] = (groepen[r.groep] || 0) + 1; });
+  let vorige = null;
+  const rijen = RIJEN.map(r => {
+    const pr = proeven[r.id] || {}, bew = r.bew(), klaar = bew.every(b => pr[b.id]), n = bew.filter(b => pr[b.id]).length;
+    const verh = bew.filter(b => b.verh && (alles || pr[b.id])).map(b => `<div>${b.boek}</div>`).join('');
+    const groep = r.groep !== vorige ? `<td class="groep" rowspan="${groepen[r.groep]}">${r.groep}</td>` : ''; vorige = r.groep;
+    return `<tr class="rij${r.id === gekozen ? ' aan' : ''}" data-r="${r.id}">${groep}
+      <td class="naam"><b>${r.naam}</b><span class="n">${r.sub || ''}${alles || klaar ? '' : ` · ${n}/${bew.length} geprobeerd`}</span></td>
+      <td class="verh">${verh || '<span class="vraag">?</span>'}</td>
+      <td class="reac" data-reac="${r.id}">${alles || klaar ? '' : '<span class="vraag">' + (n ? 'probeer alle bewegingen' : '?') + '</span>'}</td></tr>`;
+  }).join('');
+  $('tabel').innerHTML = `<tr><th></th><th>Verbinding</th><th>Verhinderde beweging</th><th>Reacties</th></tr>${rijen}`;
+  if (window.katex) $('tabel').querySelectorAll('td.reac').forEach(td => {
+    const r = rijVan(td.dataset.reac), pr = proeven[r.id] || {};
+    if (!(alles || r.bew().every(b => pr[b.id]))) return;
+    const s = tex(r.formule, null); td.innerHTML = s.map(() => '<span style="margin-right:10px;display:inline-block"></span>').join(''); [...td.children].forEach((c, i) => render1(c, s[i]));
+  });
+  $('tabel').querySelectorAll('tr.rij').forEach(tr => tr.onclick = () => kies(tr.dataset.r));
+}
+
+function bediening() {
+  const r = rijVan(gekozen);
+  $('hoekslider').style.display = r.hoek ? '' : 'none';
+  $('hoeklab').innerHTML = r.soort === 'helling' ? 'Helling <span class="i">θ</span>' : 'Hoek <span class="i">θ</span> met de horizontale';
+  $('hoekval').textContent = `${Math.round(deg(theta))}°`;
+  $('alles').textContent = alles ? 'tabel weer verbergen' : 'volledige tabel tonen';
+}
+function kies(id) { gekozen = id; anim = null; licht = null; render(); }
+function render() { bediening(); proefTabel(); draw(); formule(); tabel(); }
+$('hoek').oninput = e => { theta = rad(+e.target.value); render(); };
+$('wis').onclick = () => { proeven = {}; anim = null; licht = null; render(); };
+$('alles').onclick = () => { alles = !alles; render(); };
+window.addEventListener('load', () => { formule(); tabel(); });
+
+TM1.bijGrootte([lp], render);
+TM1.lus(dt => { if (!anim) return; anim.t += dt; if (anim.t >= anim.T) anim = null; draw(); }, () => !!anim);
+})();
+</script>
+</body>
+</html>

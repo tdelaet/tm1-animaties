@@ -5,7 +5,7 @@
      - het bestand staat in de map van het hoofdstuk, met de naam die TM1.pad() geeft
        (bv. h13-kinematica-puntmassa/vb13-1-kind-op-een-schommel.html),
        tenzij je bij het voorbeeld zelf een 'pad' opgeeft.
-   soort: 'vb' = voorbeeld, 'op' = geïntegreerde opgave. */
+   soort: 'vb' = voorbeeld, 'op' = geïntegreerde opgave, 'tabel' = interactieve tabel (met eigen 'pad'). */
 window.TM1 = window.TM1 || {};
 
 TM1.catalogus = [
@@ -33,7 +33,9 @@ TM1.catalogus = [
       { id: '2.12', titel: 'Van rotatie naar rotatie', status: 'klaar' }]}
   ]},
   { deel: 'II', titel: 'Statica van enkelvoudige lichamen', hoofdstukken: [
-    { nr: 3, titel: 'Krachten', map: 'h03-krachten', items: [] },
+    { nr: 3, titel: 'Krachten', map: 'h03-krachten', items: [
+      { id: '3.1', soort: 'tabel', titel: 'Contactkrachten: verbinding, verhinderde beweging en reacties', status: 'klaar',
+        pad: 'h03-krachten/tabel3-1-contactkrachten.html', opmerking: 'interactieve versie van tabel 3.1' }] },
     { nr: 4, titel: 'Vrijmaken – vrijlichaamdiagram', map: 'h04-vrijlichaamdiagram', items: [
       { id: '4.1', titel: 'Lichaam in contact met vier andere lichamen' }]},
     { nr: 5, titel: 'Krachtenevenwicht', map: 'h05-krachtenevenwicht', items: [
@@ -42,7 +44,9 @@ TM1.catalogus = [
       { id: '5.3', titel: 'Last op een hellend vlak' }]},
     { nr: 6, titel: 'Momenten', map: 'h06-momenten', items: [
       { id: '6.1', titel: 'Equivalente koppels van krachten' },
-      { id: '6.2', titel: 'Zwaartepunt dunne driehoekige homogene plaat' }]},
+      { id: '6.2', titel: 'Zwaartepunt dunne driehoekige homogene plaat' },
+      { id: 'bij 6.5', soort: 'tabel', titel: 'Contactmomenten: verbinding, verhinderde rotatie en contactmoment (3D)', status: 'klaar',
+        pad: 'h06-momenten/tabel-contactmomenten.html', opmerking: 'aanvulling op tabel 3.1 (nog niet in de cursus)' }]},
     { nr: 7, titel: 'Evenwicht van een lichaam', map: 'h07-evenwicht-lichaam', items: [
       { id: '7.1', titel: 'Drie onafhankelijke voorwaarden in 2D', status: 'klaar' },
       { id: '7.2', titel: 'Zes onafhankelijke voorwaarden in 3D', status: 'klaar' },

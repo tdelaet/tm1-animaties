@@ -86,7 +86,7 @@
         const nKlaar = h.items.filter(i => i.status === 'klaar').length;
         const lis = items.map(it => {
           const st = it.status || 'gepland';
-          const pre = (it.soort === 'op' ? 'Op. ' : 'Vb. ') + it.id;
+          const pre = (it.soort === 'op' ? 'Op. ' : it.soort === 'tabel' ? 'Tabel ' : 'Vb. ') + it.id;
           const titel = st === 'klaar'
             ? `<a href="${esc(TM1.pad(h, it))}">${esc(it.titel)}</a>` : esc(it.titel);
           const op = it.opmerking ? `<span class="op">${esc(it.opmerking)}</span>` : '';

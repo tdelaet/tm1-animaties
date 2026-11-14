@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contactmomenten – welke rotatie verhindert de verbinding?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/104;max-height:680px;touch-action:pan-y;cursor:grab}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 20px)}
+  /* op een breed scherm: de tabel links, de figuur rechts */
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr)} .werkblad .grafiekkolom{order:-1} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 6px;font-size:14px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 24px;align-items:center;padding:2px 10px 4px;font-size:16px;min-height:50px}
+  .t31{width:100%;border-collapse:collapse;font-size:13px}
+  .t31 th{font:600 12px Inter,sans-serif;text-align:left;color:var(--muted);border-bottom:1.5px solid var(--ink);padding:4px 6px}
+  .t31 td{border-bottom:1px solid var(--line);padding:6px 6px;vertical-align:middle}
+  .t31 td.groep{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11.5px;color:var(--muted);text-align:center;padding:4px 2px;border-right:1px solid var(--line);width:18px}
+  .t31 tr.rij{cursor:pointer}
+  .t31 tr.rij:hover td:not(.groep){background:rgba(29,92,150,0.05)}
+  .t31 tr.rij.aan td:not(.groep){background:rgba(29,92,150,0.12)}
+  .t31 tr.rij.aan td.naam{box-shadow:inset 3px 0 0 #1d5c96}
+  .t31 .naam b{display:block;font-weight:600}
+  .t31 .naam .n{color:var(--muted);font-size:11.5px}
+  .t31 .verh div{margin:1px 0}
+  .t31 .vraag{color:var(--muted);font-style:italic}
+  .t31 .reac{font-size:14px}
+  .voetnoot{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Contactmomenten — welke rotatie verhindert de verbinding?</h1>
+    <span class="kicker">Momenten · aanvulling op tabel 3.1, in 3D op basis van onderdeel 6.5: een verbinding geeft een contactmoment volgens elke relatieve rotatie die ze verhindert</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Kies een verbinding in de tabel. In de figuur zie je enkel die verbinding en een stukje van het lichaam; probeer rond welke assen dat stukje daar kan <b>draaien</b>. Elke <b>verhinderde</b> rotatie geeft bij het vrijmaken een component van het contactmoment volgens die as; die licht op in het vrijgemaakte lichaam. <b>Sleep</b> in de figuur om het aanzicht te draaien. De tabel vult zich aan met wat je ontdekt.</p>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="fig" aria-label="De gekozen verbinding met een stukje lichaam in 3D, met eronder het vrijgemaakte stukje lichaam"></canvas>
+      <div class="vldformules" id="formule"></div>
+      <table class="proef" id="proef"></table>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button id="aanzicht">standaardaanzicht</button> <button id="wis">proeven wissen</button> <button id="alles">volledige tabel tonen</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3>Contactmomenten · klik op een verbinding</h3>
+      <table class="t31" id="tabel"></table>
+      <p class="voetnoot">Deze verbindingen verhinderen ook translaties en geven dus ook contactkrachten (zie tabel 3.1). Hier kijken we enkel naar de rotaties en de contactmomenten.</p>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+const GLOED = 'rgba(255,196,0,';
+let gekozen = 'as', anim = null, licht = null, alles = false, proeven = {};
+
+// ---------- vectoren (assen zoals in figuur 6.9: z omhoog, het lichaam volgens y, x naar de kijker) ----------
+const V = (x, y, z) => ({ x, y, z });
+const add = (a, b) => V(a.x + b.x, a.y + b.y, a.z + b.z), sub = (a, b) => V(a.x - b.x, a.y - b.y, a.z - b.z);
+const mul = (a, s) => V(a.x * s, a.y * s, a.z * s), dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+const cross = (a, b) => V(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+const unit = a => mul(a, 1 / Math.hypot(a.x, a.y, a.z));
+const EX = V(1, 0, 0), EY = V(0, 1, 0), EZ = V(0, 0, 1), O = V(0, 0, 0);
+const AS = { x: EX, y: EY, z: EZ };
+function rotAx(p, c, a, ang) {
+  const r = sub(p, c), cs = Math.cos(ang), sn = Math.sin(ang);
+  return add(c, add(add(mul(r, cs), mul(cross(a, r), sn)), mul(a, dot(a, r) * (1 - cs))));
+}
+function loodrecht(a) { const e1 = unit(cross(a, Math.abs(a.z) < 0.9 ? EZ : EX)); return [e1, cross(a, e1)]; }
+
+// ---------- aanzicht ----------
+const STANDAARD = { yaw: rad(-35), pitch: rad(20) };
+const view = { ...STANDAARD };
+// camera: scherm-x = y, scherm-omhoog = z, naar de kijker (schuin linksonder) = x
+function cam(p) {
+  const q = V(p.y, p.z, p.x), cy = Math.cos(view.yaw), sy = Math.sin(view.yaw), cp = Math.cos(view.pitch), sp = Math.sin(view.pitch);
+  const x1 = q.x * cy + q.z * sy, z1 = -q.x * sy + q.z * cy;
+  return V(x1, q.y * cp - z1 * sp, q.y * sp + z1 * cp);
+}
+
+// ---------- tekenhulp in 3D ----------
+const kleurMix = (hex, f) => { const n = parseInt(hex.slice(1), 16); const k = v => Math.max(0, Math.min(255, Math.round(v * f))); return `rgb(${k(n >> 16)},${k((n >> 8) & 255)},${k(n & 255)})`; };
+const LICHT = unit(V(-0.35, 0.75, 0.6));
+function poly(ctx, pts, fill, stroke, opt = {}) {
+  ctx.save(); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = opt.w || 1.4; ctx.lineJoin = 'round'; if (opt.dash) ctx.setLineDash(opt.dash); ctx.stroke(); }
+  ctx.restore();
+}
+function lichaam(ctx, P, vlakken, opt = {}) {          // convex lichaam: enkel de zichtbare vlakken gevuld
+  const basis = opt.kleur || '#cdd8e4';
+  let mid = O, n = 0; vlakken.forEach(f => f.p.forEach(p => { mid = add(mid, p); n++; })); mid = mul(mid, 1 / n);
+  const info = vlakken.map(f => {
+    let nrm = unit(cross(sub(f.p[1], f.p[0]), sub(f.p[2], f.p[0])));
+    let fm = O; f.p.forEach(p => { fm = add(fm, p); }); fm = mul(fm, 1 / f.p.length);
+    if (dot(nrm, sub(fm, mid)) < 0) nrm = mul(nrm, -1);
+    const nc = cam(nrm); return { f, nc, zicht: nc.z > 1e-6 };
+  });
+  if (opt.verborgen) info.filter(i => !i.zicht).forEach(i => poly(ctx, i.f.p.map(P), null, '#a3a9b0', { w: 1, dash: [3, 3] }));
+  info.filter(i => i.zicht).forEach(i => {
+    const f = 0.8 + 0.22 * Math.max(0, dot(i.nc, LICHT));
+    if (i.f.snede) poly(ctx, i.f.p.map(P), '#f3f6f9', '#3d454f', { w: 1.3, dash: [4, 3] });
+    else poly(ctx, i.f.p.map(P), kleurMix(basis, f), opt.rand === false ? null : '#3d454f', { w: 1.3 });
+  });
+}
+const VLAKKEN = { x0: [0, 2, 6, 4], x1: [1, 5, 7, 3], y0: [0, 4, 5, 1], y1: [2, 3, 7, 6], z0: [0, 1, 3, 2], z1: [4, 6, 7, 5] };
+function blok(ctx, P, X, Y, Z, opt = {}) {
+  const h = [0, 1, 2, 3, 4, 5, 6, 7].map(k => V(X[k & 1], Y[(k >> 1) & 1], Z[(k >> 2) & 1])), T = opt.T || (p => p), sn = opt.snede || [];
+  lichaam(ctx, P, Object.entries(VLAKKEN).map(([k, idx]) => ({ p: idx.map(i => T(h[i])), snede: sn.includes(k) })), { verborgen: true, ...opt });
+}
+function cilinder(ctx, P, y0, y1, r, opt = {}) {      // prisma met veel zijden langs de y-as
+  const n = 28, T = opt.T || (p => p), ring = y => [...Array(n)].map((_, i) => { const t = 2 * Math.PI * i / n; return T(V(r * Math.cos(t), y, r * Math.sin(t))); });
+  const a = ring(y0), b = ring(y1), vl = [{ p: a, snede: opt.snede === 'y0' }, { p: b.slice().reverse(), snede: opt.snede === 'y1' }];
+  for (let i = 0; i < n; i++) vl.push({ p: [a[i], a[(i + 1) % n], b[(i + 1) % n], b[i]] });
+  // de zijvlakken zonder rand (anders te veel lijnen), daarna de omtreklijnen van de zichtbare kant
+  lichaam(ctx, P, vl.slice(2), { kleur: opt.kleur, rand: false });
+  lichaam(ctx, P, vl.slice(0, 2), { kleur: opt.kleur });
+}
+function grondplaat(ctx, P, c, half, nrm = EZ) {      // gearceerde vaste ondergrond loodrecht op nrm rond c
+  const [e1, e2] = loodrecht(nrm), h = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => P(add(c, add(mul(e1, a * half), mul(e2, b * half)))));
+  poly(ctx, h, '#e4e7eb', '#5b6168', { w: 1.3 });
+  ctx.save(); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1;
+  for (let t = 0.15; t < 1; t += 0.17) { const a = { x: h[0].x + (h[1].x - h[0].x) * t, y: h[0].y + (h[1].y - h[0].y) * t }, b = { x: h[3].x + (h[2].x - h[3].x) * t, y: h[3].y + (h[2].y - h[3].y) * t }; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  ctx.restore();
+}
+function lijn3(ctx, P, a, b, kleur, w = 1.4, dash = null) {
+  const p = P(a), q = P(b); ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore();
+}
+function dubbelPijl3(ctx, P, a, b, kleur, opt = {}) {
+  const p = P(a), q = P(b), L = Math.hypot(q.x - p.x, q.y - p.y); if (L < 30) return;
+  const ux = (q.x - p.x) / L, uy = (q.y - p.y) / L;
+  arrow(ctx, p.x, p.y, q.x, q.y, kleur, opt); arrow(ctx, p.x, p.y, q.x - ux * 11, q.y - uy * 11, kleur, opt);
+}
+function boog3(ctx, P, c, a, r, kleur, zin = 1) {     // gebogen pijl rond de as a door c, met de as zelf
+  const [e1, e2] = loodrecht(a), n = 40, pts = [];
+  for (let i = 0; i <= n; i++) { const t = zin * (0.15 + 1.45 * Math.PI * i / n); pts.push(P(add(c, add(mul(e1, r * Math.cos(t)), mul(e2, r * Math.sin(t)))))); }
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = 2.2; ctx.setLineDash([5, 3]);
+  ctx.beginPath(); pts.slice(0, -2).forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.restore();
+  const p = pts[n - 3], q = pts[n]; arrow(ctx, p.x, p.y, q.x, q.y, kleur, { w: 2.2, head: 11 });
+  lijn3(ctx, P, sub(c, mul(a, r * 1.3)), add(c, mul(a, r * 1.3)), kleur, 1, [2, 3]);
+}
+function assen(ctx, x, y, L = 26) {
+  [[EX, 'x'], [EY, 'y'], [EZ, 'z']].forEach(([e, n]) => {
+    const q = cam(e);
+    if (Math.hypot(q.x, q.y) < 0.2) {                 // as naar de kijker toe (2D-aanzicht): symbool ⊙
+      ctx.save(); ctx.strokeStyle = '#6b737d'; ctx.fillStyle = '#6b737d'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(x, y, 5, 0, 2 * Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+      label(ctx, n, '', x - 15, y + 14, '#6b737d', { vec: false, size: 13 }); return;
+    }
+    arrow(ctx, x, y, x + q.x * L, y - q.y * L, '#6b737d', { w: 1.3, head: 7 });
+    label(ctx, n, '', x + q.x * (L + 9) - 4, y - q.y * (L + 9) + 4, '#6b737d', { vec: false, size: 13 });
+  });
+}
+function bol(ctx, P, c, r, kleur = '#e9edf1') {        // bol (bolscharnier): cirkel met lichte schaduw
+  const q = P(c), R = r * P.S; const g = ctx.createRadialGradient(q.x - R * 0.35, q.y - R * 0.35, R * 0.1, q.x, q.y, R);
+  g.addColorStop(0, '#ffffff'); g.addColorStop(1, kleur);
+  ctx.save(); ctx.fillStyle = g; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(q.x, q.y, R, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+function kom(ctx, P, r) {                             // kom van het bolscharnier: onderste helft van een ring rond O
+  const q = P(O), R = r * P.S;
+  ctx.save(); ctx.fillStyle = '#c3c9d0'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(q.x, q.y, R, 0.1 * Math.PI, 0.9 * Math.PI); ctx.arc(q.x, q.y, R * 0.8, 0.9 * Math.PI, 0.1 * Math.PI, true); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function spiraal(ctx, P, c, as, r0, r1, draai, kleur = '#3d454f') {   // spiraalveer rond de as door c; de binnenkant draait mee
+  const [e1, e2] = loodrecht(as), n = 90;
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = 1.6; ctx.beginPath();
+  for (let i = 0; i <= n; i++) { const f = i / n, t = f * 4.5 * Math.PI + draai * (1 - f), r = r0 + (r1 - r0) * f; const q = P(add(c, add(mul(e1, r * Math.cos(t)), mul(e2, r * Math.sin(t))))); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+  ctx.stroke(); ctx.restore();
+}
+
+// ---------- de rijen van de tabel ----------
+// rotaties rond x, y en z door het verbindingspunt O; verh = verhinderd (contactmoment), veer = tegengewerkt door een momentveer
+const rot = (a, verh, extra = {}) => ({ id: 'r' + a, as: a, tekst: `rotatie rond <i>${a}</i>`, verh, ...extra });
+const RIJEN = [
+  { id: 'bol', groep: 'Vormgesloten', naam: 'vast scharnier (bolscharnier)', sub: 'kogel in een kom',
+    bew: [rot('x', false), rot('y', false), rot('z', false)], geen: 'geen rotatie verhinderd',
+    // drie nulcomponenten; de component van de geprobeerde (mogelijke) rotatie licht op
+    formule: m => `${kM('\\vec M')} = ${kM(`\\begin{Bmatrix}${m('rx', kM('0'))}\\\\ ${m('ry', kM('0'))}\\\\ ${m('rz', kM('0'))}\\end{Bmatrix}`)}` },
+  { id: 'as', groep: 'Vormgesloten', naam: 'gedeeltelijke inklemming', sub: 'as in een andere as (figuur 6.9)',
+    bew: [rot('x', true), rot('y', false, { uit: 'mogelijk: de as draait in de bus → <i>M<sub>y</sub></i> = 0' }), rot('z', true)],
+    formule: m => `${kM('\\vec M')} = ${kM(`\\begin{Bmatrix}${m('rx', kM('M_x'))}\\\\ ${m('ry', kM('0'))}\\\\ ${m('rz', kM('M_z'))}\\end{Bmatrix}`)}` },
+  { id: 'inkl', groep: 'Vormgesloten', naam: 'inklemming', sub: 'balk in een wand (figuur 6.8)',
+    bew: [rot('x', true), rot('y', true), rot('z', true)],
+    formule: m => `${kM('\\vec M')} = ${kM(`\\begin{Bmatrix}${m('rx', kM('M_x'))}\\\\ ${m('ry', kM('M_y'))}\\\\ ${m('rz', kM('M_z'))}\\end{Bmatrix}`)}` },
+  // momentveer enkel in 2D (zoals in onderdeel 6.5.2): rotatie in het yz-vlak, het aanzicht staat dan vast
+  { id: 'veer', groep: 'Elastisch', naam: 'momentveer', sub: 'in 2D: rotatie in het <i>yz</i>-vlak (onderdeel 6.5.2)', d2: true,
+    bew: [rot('x', true, { veer: true, tekst: 'rotatie in het vlak (rond <i>x</i>)' })],
+    formule: m => `${kM('\\vec M = ')}${m('rx', kM('M'))}${kM('\\,\\vec e_x, \\qquad M = k\\,(\\theta-\\theta_0)')}` }
+];
+const BOEK = { rx: 'Rotatie rond <i>x</i>', ry: 'Rotatie rond <i>y</i>', rz: 'Rotatie rond <i>z</i>' };
+const rijVan = id => RIJEN.find(r => r.id === id);
+const kM = s => `\\textcolor{${C.M}}{${s}}`;
+const tekstVrij = b => b.uit || `mogelijk → geen moment rond <i>${b.as}</i>`;
+
+// ---------- de verbinding en het stukje lichaam ----------
+// het lichaam is telkens een staaf/balk volgens +y vanaf het verbindingspunt O (de rest is weggesneden bij y = 1.6)
+function tekenVerbinding(ctx, r, P, T, draai) {
+  if (r.id === 'inkl') {
+    blok(ctx, P, [-1, 1], [-0.3, 0], [-1, 1], { kleur: '#b9bfc6' });                    // wand
+    blok(ctx, P, [-0.35, 0.35], [0, 1.6], [-0.3, 0.3], { snede: ['y1'], T });
+  } else if (r.id === 'as') {
+    // de bus (vast, licht) en de donkere as die erin draait; tekenvolgorde volgens de kant waar je naar kijkt
+    const voor = cam(EY).z > 0;
+    const as = () => cilinder(ctx, P, 0, 1.6, 0.22, { kleur: '#7f8b98', snede: 'y1', T });   // het deel in de bus is niet zichtbaar
+    const bus = () => cilinder(ctx, P, -1.0, 0, 0.45, { kleur: '#d6dbe1' });   // zonder grondvlak (zoals figuur 6.9)
+    if (voor) { bus(); as(); } else { as(); bus(); }
+  } else if (r.id === 'bol') {
+    // kom op een voetstuk, de kogel aan het lichaam
+    // volgorde: voetstuk, kogel, kom (houdt de kogel van onderen vast), dan de staaf die uit de kogel steekt
+    grondplaat(ctx, P, V(0, 0, -0.75), 0.6);
+    blok(ctx, P, [-0.22, 0.22], [-0.22, 0.22], [-0.75, -0.3], { kleur: '#d6dbe1' });
+    bol(ctx, P, T(O), 0.26);
+    kom(ctx, P, 0.33);
+    blok(ctx, P, [-0.12, 0.12], [0.18, 1.6], [-0.12, 0.12], { snede: ['y1'], T });
+  } else {
+    // momentveer in 2D (aanzicht volgens x): de buitenkant van de spiraal zit vast aan de omgeving, de binnenkant aan
+    // het lichaam (pen in O)
+    const q = P(O), s = P.S;
+    // de buitenkant van de spiraal (recht onder O) is met een staafje verbonden met de vaste grond
+    ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(q.x, q.y + 0.5 * s); ctx.lineTo(q.x, q.y + 0.85 * s); ctx.stroke(); ctx.restore();
+    const gy = q.y + 0.85 * s; ctx.save(); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(q.x - 0.9 * s, gy); ctx.lineTo(q.x + 0.9 * s, gy); ctx.stroke();
+    ctx.strokeStyle = '#8f969e'; ctx.lineWidth = 1; for (let x = -0.9 * s + 4; x < 0.9 * s; x += 8) { ctx.beginPath(); ctx.moveTo(q.x + x, gy); ctx.lineTo(q.x + x - 6, gy + 7); ctx.stroke(); } ctx.restore();
+    blok(ctx, P, [-0.15, 0.15], [0.08, 1.6], [-0.15, 0.15], { snede: ['y1'], T });
+    spiraal(ctx, P, O, EX, 0.06, 0.5, draai);
+    ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+}
+
+// ---------- figuur ----------
+const fg = setup(document.getElementById('fig'));
+function draw() {
+  const ctx = fg.ctx, W = fg.w, Hall = fg.h; ctx.clearRect(0, 0, W, Hall);
+  const r = rijVan(gekozen), H = Hall * 0.56;
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  titel(r.naam, 18);
+  // projectie rond O; vaste schaal (blijft gelijk bij draaien)
+  const maak = (cx, cy, S) => { const P = p => { const q = cam(p); return { x: cx + q.x * S, y: cy - q.y * S }; }; P.S = S; return P; };
+  const S = Math.min(W / 4.0, (H - 30) / 3.0), P = maak(W / 2 - 0.35 * S, 30 + (H - 30) * 0.52, S);
+  let T = p => p, draai = 0, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = Math.sin(2 * Math.PI * u);
+    zin = s < 0 ? -1 : 1;
+    const ang = b.veer ? 0.35 * s : b.verh ? Math.sin(anim.t * 40) * 0.05 * Math.abs(s) + 0.035 * s : 0.5 * s;
+    T = p => rotAx(p, O, AS[b.as], ang); if (b.veer) draai = ang;
+  }
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 24, W, H - 24); ctx.clip();
+  tekenVerbinding(ctx, r, P, T, draai);
+  ctx.restore();
+  if (anim) {
+    const b = anim.b, kl = b.verh && !b.veer ? '#c0392b' : b.veer ? '#c0392b' : '#2f7d3a';
+    boog3(ctx, P, O, AS[b.as], 0.75, kl, zin);
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'right';
+    ctx.fillText((b.veer ? '✕ tegengewerkt door de veer' : b.verh ? '✕ verhinderd' : '✓ mogelijk') + ' (in beide zinnen)', W - 12, 18); ctx.restore();
+  }
+  assen(ctx, 30, H - 22);
+
+  // ----- vrijgemaakt -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  titel('Vrijgemaakt: verbinding weggesneden', H + 18);
+  const H2 = Hall - H, S2 = Math.min(W / 4.4, (H2 - 40) / 2.6), P2 = maak(W / 2 + 0.2 * S2, H + 26 + (H2 - 26) * 0.48, S2);
+  // enkel het stukje lichaam (zonder verbinding)
+  if (r.id === 'as') cilinder(ctx, P2, -0.9, 1.6, 0.22, { kleur: '#7f8b98', snede: 'y1' });
+  else if (r.id === 'inkl') blok(ctx, P2, [-0.35, 0.35], [0, 1.6], [-0.3, 0.3], { snede: ['y1'] });
+  else if (r.id === 'bol') { bol(ctx, P2, O, 0.26); blok(ctx, P2, [-0.12, 0.12], [0.18, 1.6], [-0.12, 0.12], { snede: ['y1'] }); }
+  else { blok(ctx, P2, [-0.15, 0.15], [0.08, 1.6], [-0.15, 0.15], { snede: ['y1'] }); }
+  // contactmoment als dubbele pijl (punt in O), met zijn componenten als trapje (grijs); de as van de geprobeerde
+  // verhinderde rotatie licht op door O
+  const comp = { as: [0.85, 0, 0.75], inkl: [0.85, 0.55, 0.75] }[r.id];
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1, Lm = 1.05;
+  if (r.d2) {
+    // momentveer in 2D: het veermoment als gebogen pijl rond O; licht op bij de proef
+    const q = P2(O), R = 0.55 * S2, g = licht && licht.r === r.id ? puls : 0;
+    const boogM = (kl, w) => { ctx.save(); ctx.strokeStyle = kl; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(q.x, q.y, R, -0.35 * Math.PI, -1.75 * Math.PI, true); ctx.stroke(); ctx.restore();
+      const a1 = 1.75 * Math.PI, ex = q.x + R * Math.cos(-a1), ey = q.y + R * Math.sin(-a1), tx = Math.sin(-a1), ty = -Math.cos(-a1);
+      ctx.save(); ctx.fillStyle = kl; ctx.beginPath(); ctx.moveTo(ex + tx * (w + 7), ey + ty * (w + 7)); ctx.lineTo(ex - ty * (w / 2 + 4), ey + tx * (w / 2 + 4)); ctx.lineTo(ex + ty * (w / 2 + 4), ey - tx * (w / 2 + 4)); ctx.closePath(); ctx.fill(); ctx.restore(); };
+    if (g) boogM(GLOED + (0.35 + 0.5 * g) + ')', 11);
+    boogM(C.M, g ? 3.4 : 2.4);
+    label(ctx, 'M', '', q.x - R - 24, q.y - R * 0.6, C.M, { vec: false, size: g ? 17 : 15 });
+    ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  if (licht && licht.r === r.id && !r.d2) {
+    const b = r.bew.find(x => x.id === licht.b);
+    if (b && b.verh) { const a = sub(O, mul(AS[b.as], 0.75 * Lm)), z = add(O, mul(AS[b.as], 0.75 * Lm));
+      lijn3(ctx, P2, a, z, GLOED + (0.35 + 0.5 * puls) + ')', 10); lijn3(ctx, P2, a, z, C.M, 2.6, [3, 4]); }
+  }
+  if (comp) {
+    const m = V(...comp.map(c => c * Lm)), t = sub(O, m);
+    let p = t; [EX, EY, EZ].forEach((e, i) => { const q = add(p, mul(e, comp[i] * Lm)); lijn3(ctx, P2, p, q, '#9aa1aa', 1.3, [3, 4]); p = q; });
+    dubbelPijl3(ctx, P2, t, O, C.M, { w: 2.6, head: 12 });
+    const tl = P2(t); label(ctx, 'M', '', tl.x - 22, tl.y + 4, C.M, { vec: true, size: 15 });
+  } else if (!r.d2) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.M; ctx.textAlign = 'center'; ctx.fillText('geen contactmoment', W / 2, Hall - 34); ctx.restore(); }
+  assen(ctx, 30, Hall - 24);
+  if (licht && licht.r === r.id) {
+    const b = r.bew.find(x => x.id === licht.b);
+    const t = b && (b.veer ? 'tegengewerkt: de momentveer wekt een gekend moment k(θ − θ₀) op' : b.verh ? '' : tekstVrij(b).replace(/<[^>]+>/g, ''));
+    if (t) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = b.verh ? '#4f5862' : '#2f7d3a'; ctx.textAlign = 'center'; ctx.fillText(t, W / 2 + 20, Hall - 12); ctx.restore(); }
+  }
+}
+
+// ---------- formule onder de figuur ----------
+const markeer = r => (id, s) => (licht && licht.r === r.id && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function formule() { if (!window.katex) return; const r = rijVan(gekozen); render1(document.getElementById('formule'), r.formule(markeer(r))); }
+
+// ---------- proeven ----------
+const $ = id => document.getElementById(id);
+function proefTabel() {
+  const r = rijVan(gekozen), pr = proeven[r.id] || {};
+  $('proef').innerHTML = r.bew.map(b => {
+    const uit = !pr[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.veer ? `<span class="uit verh">✕ tegengewerkt</span> → <span class="k-M"><span class="i">M</span></span> = <i>k</i>(θ − θ<sub>0</sub>) (gekend)`
+      : b.verh ? `<span class="uit verh">✕ verhinderd</span> → <span class="k-M"><span class="i">M</span><sub>${b.as}</sub></span>`
+      : `<span class="uit vrij">✓</span> ${tekstVrij(b)}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = r.bew.find(x => x.id === k.dataset.b);
+    (proeven[r.id] = proeven[r.id] || {})[b.id] = true;
+    anim = { b, t: 0, T: 2.6 }; licht = { r: r.id, b: b.id };
+    render();
+  });
+}
+
+// ---------- de tabel ----------
+function tabel() {
+  const groepen = {}; RIJEN.forEach(r => { groepen[r.groep] = (groepen[r.groep] || 0) + 1; });
+  let vorige = null;
+  $('tabel').innerHTML = '<tr><th></th><th>Verbinding</th><th>Verhinderde rotatie</th><th>Contactmoment</th></tr>' + RIJEN.map(r => {
+    const pr = proeven[r.id] || {}, klaar = r.bew.every(b => pr[b.id]), n = r.bew.filter(b => pr[b.id]).length;
+    let verh = r.bew.filter(b => b.verh && (alles || pr[b.id])).map(b => `<div>${b.veer ? 'Rotatie in het vlak' : BOEK[b.id]}${b.veer ? ' <span class="n">(tegengewerkt door de veer)</span>' : ''}</div>`).join('');
+    if (!verh && (alles || klaar) && r.geen) verh = `<div>— ${r.geen}</div>`;
+    const groep = r.groep !== vorige ? `<td class="groep" rowspan="${groepen[r.groep]}">${r.groep}</td>` : ''; vorige = r.groep;
+    return `<tr class="rij${r.id === gekozen ? ' aan' : ''}" data-r="${r.id}">${groep}
+      <td class="naam"><b>${r.naam}</b><span class="n">${r.sub}${alles || klaar ? '' : ` · ${n}/${r.bew.length} geprobeerd`}</span></td>
+      <td class="verh">${verh || '<span class="vraag">?</span>'}</td>
+      <td class="reac" data-reac="${r.id}">${alles || klaar ? '' : '<span class="vraag">' + (n ? 'probeer alle rotaties' : '?') + '</span>'}</td></tr>`;
+  }).join('');
+  if (window.katex) $('tabel').querySelectorAll('td.reac').forEach(td => {
+    const r = rijVan(td.dataset.reac), pr = proeven[r.id] || {};
+    if (alles || r.bew.every(b => pr[b.id])) render1(td, r.formule((id, s) => s));
+  });
+  $('tabel').querySelectorAll('tr.rij').forEach(tr => tr.onclick = () => kies(tr.dataset.r));
+}
+
+// de momentveer staat in 2D: vast aanzicht volgens de x-as (niet draaibaar); terug naar 3D bij een andere rij
+const VLAK = { yaw: 0, pitch: 0 };
+function kies(id) {
+  const was = rijVan(gekozen).d2, wordt = rijVan(id).d2;
+  if (wordt) Object.assign(view, VLAK); else if (was) Object.assign(view, STANDAARD);
+  gekozen = id; anim = null; licht = null; render();
+}
+function render() { $('alles').textContent = alles ? 'tabel weer verbergen' : 'volledige tabel tonen'; proefTabel(); draw(); formule(); tabel(); }
+$('wis').onclick = () => { proeven = {}; anim = null; licht = null; render(); };
+$('alles').onclick = () => { alles = !alles; render(); };
+$('aanzicht').onclick = () => { Object.assign(view, STANDAARD); draw(); };
+window.addEventListener('load', () => { formule(); tabel(); });
+// slepen draait het aanzicht
+(() => {
+  const cv = fg.c; let neer = null;
+  cv.addEventListener('pointerdown', e => { if (rijVan(gekozen).d2) return; neer = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = 'grabbing'; });
+  cv.addEventListener('pointermove', e => { if (!neer) return; view.yaw = neer.yaw + (e.clientX - neer.x) * 0.008; view.pitch = Math.max(rad(-15), Math.min(rad(80), neer.pitch + (e.clientY - neer.y) * 0.008)); draw(); });
+  const los = () => { neer = null; cv.style.cursor = ''; };
+  cv.addEventListener('pointerup', los); cv.addEventListener('pointercancel', los);
+})();
+
+TM1.bijGrootte([fg], render);
+TM1.lus(dt => { if (!anim) return; anim.t += dt; if (anim.t >= anim.T) anim = null; draw(); }, () => !!anim);
+})();
+</script>
+</body>
+</html>

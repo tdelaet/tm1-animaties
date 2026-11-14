@@ -133,7 +133,7 @@ function bewegingen(v) {
   return [
     { id: 'kw', tekst: 'weg van het ophangpunt (kabel verlengt)', d: { x: -k.x, y: -k.y }, verh: true, kracht: ['F', v.id], f: k, trek: true },
     { id: 'kn', tekst: 'naar het ophangpunt toe (kabel wordt slap)', d: k, verh: false, vrijTekst: 'translatie mogelijk → geen duwkracht (een kabel kan niet duwen)' },
-    { id: 'kl', tekst: 'loodrecht op de kabel', d: n, verh: false, vrijTekst: 'translatie mogelijk → geen kracht loodrecht op de kabel' },
+    { id: 'kl', tekst: 'loodrecht op de kabel', d: n, verh: false, vrijTekst: 'cirkelboog rond het ophangpunt (lokaal ⊥ kabel) mogelijk → geen kracht ⊥ kabel' },
     { id: 'rz', tekst: 'rotatie rond <i>z</i>', rot: true, verh: false }];
 }
 // richting van de contactkracht bij een verhinderde beweging (de kracht werkt de verhinderde beweging tegen)
@@ -209,7 +209,7 @@ function letterBijLoep(ctx, v, q, r) {
   ctx.save(); ctx.font = '600 15px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(v.id, x, y); ctx.restore();
 }
-function tekenVerbinding(ctx, v, P, S, met = true) {
+function tekenVerbinding(ctx, v, P, S, met = true, qBew = null) {   // qBew: bewogen aanhechtingspunt (kabel, in de loep)
   const q = P(v.p);
   if (v.type === 'inklemming') {
     const top = P({ x: 0, y: 1.2 }), bot = P({ x: 0, y: -1.2 });
@@ -226,11 +226,15 @@ function tekenVerbinding(ctx, v, P, S, met = true) {
       label(ctx, 'θ', '', gx + (r + 9) * Math.cos(phi / 2), gy - (r + 9) * Math.sin(phi / 2) + 5, '#4f5862', { vec: false, size: 14 });
     }
   } else {
-    const a = P(ANKER);
-    ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(a.x, a.y); ctx.stroke(); ctx.restore();
+    const a = P(ANKER), e = qBew || q;
+    // kabel van het (eventueel bewogen) aanhechtingspunt naar het ophangpunt; komt het punt dichter bij het ophangpunt,
+    // dan hangt de kabel slap door (zoals in de interactieve tabel 3.1)
+    const L0 = Math.hypot(a.x - q.x, a.y - q.y), L = Math.hypot(a.x - e.x, a.y - e.y), slap = Math.max(0, L0 - L);
+    const m = { x: (a.x + e.x) / 2, y: (a.y + e.y) / 2 + slap * 1.6 };
+    ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.quadraticCurveTo(m.x, m.y, a.x, a.y); ctx.stroke(); ctx.restore();
     grond(ctx, a.x - 0.8 * S, a.y, a.x + 0.8 * S, a.y, S);
-    ctx.save(); ctx.fillStyle = '#3d454f'; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
-    if (met) {                                        // hoek α tussen de horizontale en de kabel
+    if (!qBew) { ctx.save(); ctx.fillStyle = '#3d454f'; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+    if (met && !qBew) {                               // hoek α tussen de horizontale en de kabel
       const k = kabel(), al = Math.atan2(k.y, k.x), r = 0.7 * S;
       ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x + 1.0 * S, q.y); ctx.stroke(); ctx.setLineDash([]);
       ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(q.x, q.y, r, -al, 0); ctx.stroke(); ctx.restore();
@@ -340,19 +344,28 @@ function drawLoep() {
   const S = Math.min(W / 3.2, H / 2.3);                // sterk vergroot: ongeveer 3.2 m breed en 2.3 m hoog in beeld
   const c = { x: W / 2, y: H / 2 + 0.2 * S };
   const P = q => ({ x: c.x + (q.x - v.p.x) * S, y: c.y - (q.y - v.p.y) * S });
-  // verbinding zelf (vast)
-  tekenVerbinding(ctx, v, P, S * 0.9);
   // het stukje lichaam: een kort deel van de balk aan de kant van de rest van het lichaam, met een snede
   // beweging in twee richtingen (eerst +, dan −), behalve langs de kabel: daar zijn beide zinnen aparte proeven
   let dx = 0, dy = 0, rot = 0, schud = 0, zin = 1;
+  const boog = anim && v.type === 'kabel' && anim.b.id === 'kl';   // loodrecht op de kabel: eigenlijk een cirkelboog rond het ophangpunt
   if (anim) {
     const b = anim.b, u = Math.min(anim.t / anim.T, 1);
     const s = tweeZin(b) ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u);
     zin = s < 0 ? -1 : 1;
     if (b.verh) schud = Math.sin(anim.t * 40) * 0.06 * Math.abs(s) + 0.04 * s;   // geblokkeerd: duwt even en trilt op zijn plaats
     else if (b.rot) rot = 0.35 * s;
+    else if (boog) {
+      const R = Math.hypot(ANKER.x - v.p.x, ANKER.y - v.p.y), ph = -0.55 * s / R, rx = v.p.x - ANKER.x, ry = v.p.y - ANKER.y;
+      dx = ANKER.x + rx * Math.cos(ph) - ry * Math.sin(ph) - v.p.x; dy = ANKER.y + rx * Math.sin(ph) + ry * Math.cos(ph) - v.p.y;
+    }
     else { dx = b.d.x * 0.55 * s; dy = b.d.y * 0.55 * s; }
     if (b.verh && !b.rot) { dx = b.d.x * schud; dy = b.d.y * schud; } else if (b.verh) rot = schud;
+  }
+  // verbinding zelf (vast); de kabel loopt naar het bewogen aanhechtingspunt (en hangt slap als dat dichterbij komt)
+  tekenVerbinding(ctx, v, P, S * 0.9, true, anim && v.type === 'kabel' ? P({ x: v.p.x + dx, y: v.p.y + dy }) : null);
+  if (boog) {                                         // de cirkelboog rond het ophangpunt die het punt kan volgen
+    const a = P(ANKER), q = P(v.p), R = Math.hypot(q.x - a.x, q.y - a.y), a0 = Math.atan2(q.y - a.y, q.x - a.x);
+    ctx.save(); ctx.strokeStyle = '#2f7d3a'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(a.x, a.y, R, a0 - 0.45, a0 + 0.45); ctx.stroke(); ctx.restore();
   }
   const naarRechts = v.p.x === 0;                          // bij A ligt de rest van de balk rechts, bij B links
   const x0 = naarRechts ? v.p.x - (v.type === 'inklemming' ? 0 : 0.35) : v.p.x - 1.6, x1 = naarRechts ? v.p.x + 1.6 : v.p.x + 0.35;
