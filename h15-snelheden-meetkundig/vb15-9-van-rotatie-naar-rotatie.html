@@ -80,8 +80,7 @@
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
       <p class="fn"><b>1. Afleiden van de vectoriële ketting</b> uit Voorbeeld 2.12:</p>
-      <div class="tex">l\begin{Bmatrix}\cos\theta_1(t)\\ \sin\theta_1(t)\end{Bmatrix}</div>
-      <div class="tex">\qquad = \begin{Bmatrix}l\frac{\sqrt2}{2}\\ 0\end{Bmatrix} + |AB(t)|\begin{Bmatrix}\cos\theta_2(t)\\ \sin\theta_2(t)\end{Bmatrix}</div>
+      <div class="tex">l\begin{Bmatrix}\cos\theta_1(t)\\ \sin\theta_1(t)\end{Bmatrix} = \begin{Bmatrix}l\frac{\sqrt2}{2}\\ 0\end{Bmatrix} + |AB(t)|\begin{Bmatrix}\cos\theta_2(t)\\ \sin\theta_2(t)\end{Bmatrix}</div>
       <div class="tex">\ubvl{l\begin{Bmatrix}-\sin\theta_1(t)\\ \cos\theta_1(t)\end{Bmatrix}\omega_1}{\kvl{\vec v_A}} =</div>
       <div class="tex">\qquad \ubvm{\frac{\mathrm{d}|AB(t)|}{\mathrm{d}t}\begin{Bmatrix}\cos\theta_2(t)\\ \sin\theta_2(t)\end{Bmatrix}}{} + \ubw{|AB(t)|\begin{Bmatrix}-\sin\theta_2(t)\\ \cos\theta_2(t)\end{Bmatrix}\omega_2(t)}{}</div>
       <div class="tex">\omega_2(t) = \frac{l}{|AB|}\cos\big(\theta_2(t) - \theta_1\big)\,\omega_1</div>
@@ -171,11 +170,19 @@ function drawScene() {
     if (arrow(ctx, B.x, B.y, A.x, A.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'A/B', (A.x + B.x) / 2 + 10, (A.y + B.y) / 2 + 4, C.r, { size: 13 });
     arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 2.2, head: 10 });
   }
+  // een echte breuk (teller boven, noemer onder een breukstreep) op het canvas; x = linkerrand, y = hoogte van de streep
+  const breuk = (ctx, teller, noemer, x, y, kleur, size) => {
+    ctx.save(); ctx.font = `italic 500 ${size}px "Source Serif 4", Georgia, serif`; ctx.fillStyle = kleur; ctx.strokeStyle = kleur; ctx.textAlign = 'center';
+    const w = Math.max(ctx.measureText(teller).width, ctx.measureText(noemer).width) + 4, cx = x + w / 2;
+    ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.stroke();
+    ctx.textBaseline = 'alphabetic'; ctx.fillText(teller, cx, y - 3); ctx.textBaseline = 'top'; ctx.fillText(noemer, cx, y + 2);
+    ctx.restore();
+  };
   // snelheden in A
   const tipv = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
   if (show.comp) {
     const p1 = tipv(A, st.v1), p2 = tipv(p1, st.v2);
-    if (arrow(ctx, A.x, A.y, p1.x, p1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) TM1.formule(ctx, '$\\frac{d|AB|}{dt}$', p1.x + 8, p1.y + 4, { color: K1, size: 12 });
+    if (arrow(ctx, A.x, A.y, p1.x, p1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) breuk(ctx, 'd|AB|', 'dt', p1.x + 8, p1.y + 4, K1, 13);
     if (arrow(ctx, p1.x, p1.y, p2.x, p2.y, K2, { w: 2.4, dash: [7, 4], head: 10 })) TM1.formule(ctx, '$|AB|\\omega_2$', (p1.x + p2.x) / 2 + 8, (p1.y + p2.y) / 2 + 4, { color: K2, size: 12 });
   }
   if (show.vA) {
