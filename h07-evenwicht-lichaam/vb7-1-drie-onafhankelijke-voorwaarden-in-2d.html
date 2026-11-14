@@ -160,7 +160,10 @@ function grond(ctx, x0, y0, x1, y1, S) {            // gearceerde vaste omgeving
   for (let s = 6; s < L; s += 8) { const px = x0 + ux * s, py = y0 + uy * s; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + nx * 7 - ux * 6, py + ny * 7 - uy * 6); ctx.stroke(); }
   ctx.restore();
 }
-function scharnier(ctx, x, y, s, glijdend, hoek = 0) {   // driehoek met pen in (x,y); hoek = helling van de ondergrond
+// driehoek met pen in (x,y); hoek = helling van de ondergrond. schuif: verplaatsing (px) van de wagen (driehoek, wieltjes
+// en pen) langs de geleiding, terwijl de ondergrond zelf vast blijft (proef "translatie langs de geleiding" in de loep)
+function scharnier(ctx, x0, y0, s, glijdend, hoek = 0, schuif = 0) {
+  const x = x0 + Math.cos(hoek) * schuif, y = y0 - Math.sin(hoek) * schuif;
   ctx.save(); ctx.translate(x, y); ctx.rotate(-hoek);
   ctx.fillStyle = '#eef1f4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-0.7 * s, 1.1 * s); ctx.lineTo(0.7 * s, 1.1 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -170,8 +173,8 @@ function scharnier(ctx, x, y, s, glijdend, hoek = 0) {   // driehoek met pen in 
   ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 0.16 * s, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
   // ondergrond (gekanteld), net onder de driehoek of de wieltjes; de arcering ligt onder de grondlijn
   // (rotate(-hoek) zet de lokale "naar beneden" (0, yb) op (sin·yb, cos·yb) in schermcoördinaten)
-  const c = Math.cos(hoek), sn = Math.sin(hoek), gx = x + sn * yb, gy = y + c * yb;
-  grond(ctx, gx + c * 1.3 * s, gy - sn * 1.3 * s, gx - c * 1.3 * s, gy + sn * 1.3 * s, s);   // van rechts naar links: arcering onderaan
+  const c = Math.cos(hoek), sn = Math.sin(hoek), gx = x0 + sn * yb, gy = y0 + c * yb, gl = (glijdend ? 2.4 : 1.3) * s;
+  grond(ctx, gx + c * gl, gy - sn * gl, gx - c * gl, gy + sn * gl, s);   // van rechts naar links: arcering onderaan (vast)
 }
 function momentPijl(ctx, x, y, r, kleur, positief = true, dikte = 2.4, hoeken = null) {   // gebogen pijl (tegen de wijzers in); hoeken = [van, tot] (rad, enkel positief)
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = dikte;
@@ -217,10 +220,12 @@ function tekenVerbinding(ctx, v, P, S, met = true, qBew = null) {   // qBew: bew
     grond(ctx, top.x, bot.y, top.x, top.y, S);
   } else if (v.type === 'scharnier') scharnier(ctx, q.x, q.y + DIK / 2 * S * 0, 0.42 * S, false);
   else if (v.type === 'glijdend') {
-    scharnier(ctx, q.x, q.y, 0.42 * S, true, phi);
+    // de wagen schuift mee met het stukje lichaam langs de geleiding (enkel de component langs de geleiding)
+    const schuif = qBew ? (qBew.x - q.x) * Math.cos(phi) - (qBew.y - q.y) * Math.sin(phi) : 0;
+    scharnier(ctx, q.x, q.y, 0.42 * S, true, phi, schuif);
     if (met && phi > 0.02) {                          // hoek θ tussen de horizontale en de helling, aan het linkse uiteinde van de grond
       const s = 0.42 * S, yb = 1.42 * s, c = Math.cos(phi), sn = Math.sin(phi);
-      const gx = q.x + sn * yb - c * 1.3 * s, gy = q.y + c * yb + sn * 1.3 * s, r = 1.25 * s;
+      const gx = q.x + sn * yb - c * 2.4 * s, gy = q.y + c * yb + sn * 2.4 * s, r = 1.25 * s;
       ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + 1.7 * s, gy); ctx.stroke(); ctx.setLineDash([]);
       ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(gx, gy, r, -phi, 0); ctx.stroke(); ctx.restore();
       label(ctx, 'θ', '', gx + (r + 9) * Math.cos(phi / 2), gy - (r + 9) * Math.sin(phi / 2) + 5, '#4f5862', { vec: false, size: 14 });
@@ -362,7 +367,7 @@ function drawLoep() {
     if (b.verh && !b.rot) { dx = b.d.x * schud; dy = b.d.y * schud; } else if (b.verh) rot = schud;
   }
   // verbinding zelf (vast); de kabel loopt naar het bewogen aanhechtingspunt (en hangt slap als dat dichterbij komt)
-  tekenVerbinding(ctx, v, P, S * 0.9, true, anim && v.type === 'kabel' ? P({ x: v.p.x + dx, y: v.p.y + dy }) : null);
+  tekenVerbinding(ctx, v, P, S * 0.9, true, anim && (v.type === 'kabel' || v.type === 'glijdend') ? P({ x: v.p.x + dx, y: v.p.y + dy }) : null);
   if (boog) {                                         // de cirkelboog rond het ophangpunt die het punt kan volgen
     const a = P(ANKER), q = P(v.p), R = Math.hypot(q.x - a.x, q.y - a.y), a0 = Math.atan2(q.y - a.y, q.x - a.x);
     ctx.save(); ctx.strokeStyle = '#2f7d3a'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(a.x, a.y, R, a0 - 0.45, a0 + 0.45); ctx.stroke(); ctx.restore();

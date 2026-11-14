@@ -50,7 +50,7 @@ TM1.catalogus = [
     { nr: 7, titel: 'Evenwicht van een lichaam', map: 'h07-evenwicht-lichaam', items: [
       { id: '7.1', titel: 'Drie onafhankelijke voorwaarden in 2D', status: 'klaar' },
       { id: '7.2', titel: 'Zes onafhankelijke voorwaarden in 3D', status: 'klaar' },
-      { id: '7.3', titel: 'Een last aan een kraanhaak' },
+      { id: '7.3', titel: 'Een last aan een kraanhaak', status: 'klaar' },
       { id: '7.4', titel: 'Een ingeklemde balk' },
       { id: '7.5', titel: 'Een luifel met sneeuwlast' },
       { id: '7.6', titel: 'Een man staat op een ladder' },
