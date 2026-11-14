@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 7.2 – Zes onafhankelijke voorwaarden in 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* boven: het lichaam met de verbindingen (3D); onder: het vrijlichaamsdiagram */
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer;touch-action:pan-y}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:380px;touch-action:pan-y}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600;white-space:nowrap}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .loepnoot{font-size:12px;color:var(--muted);margin:2px 0 0}
+  .teller{font-size:13px;margin:10px 0 2px;padding-top:8px;border-top:1px solid var(--line)}
+  .teller h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 6px}
+  .teller .blok{border:1.5px solid transparent;border-radius:8px;padding:4px 8px;margin:0 0 4px}
+  .teller .blok.aan{border-color:#1d5c96;background:rgba(29,92,150,0.10)}
+  .teller .regel{padding:1px 6px;margin:2px 0 0 8px;border-radius:5px}
+  .teller .regel.licht{background:#ffe08a;font-weight:600}
+  .teller .n{color:var(--muted);font-size:12px}
+  .teller .totaal{margin-top:4px;font-weight:500}
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .instructie .kies{font-size:13px;color:var(--muted);align-self:center}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 28px;align-items:center;padding:2px 14px 6px;font-size:16px;min-height:52px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 7.2 — Zes onafhankelijke voorwaarden in 3D</h1>
+    <span class="kicker">Evenwicht van een lichaam · welke beweging verhindert elke verbinding in de ruimte, en welke contactkracht of welk contactmoment hoort daarbij bij het vrijmaken?</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Een verbinding verhindert een beweging <b>op de plaats van de verbinding</b>. Klik op een loep in de figuur (of in het vrijlichaamsdiagram) en probeer rechts welke bewegingen het stukje lichaam daar kan maken: in de loep zie je enkel die verbinding, de rest van het lichaam en de andere verbindingen zijn weggelaten. Elke verhinderde beweging geeft bij het vrijmaken een contactkracht of -moment; die licht op in het vrijlichaamsdiagram. <b>Sleep</b> in de figuur of in de loep om het aanzicht te draaien.</p>
+    <div class="btnrow modus" style="margin:0">
+      <span class="kies">Situatie:</span>
+      <button id="s1">inklemming</button>
+      <button id="s2">vast scharnier + drie kabels</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Een blok met verbindingen aan de omgeving in 3D; klik op een verbinding om ze in de loep te nemen, sleep om het aanzicht te draaien"></canvas>
+      <div class="vldformules" id="vldf" aria-label="Contactkrachten en -momenten als vectoren"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Aanzicht</h2>
+        <div class="btnrow" style="margin:0"><button id="aanzicht">standaardaanzicht</button></div>
+        <p class="loepnoot">Sleep in de figuur of in de loep om te draaien.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="210">
+      <h3 id="loeptitel">Loep</h3>
+      <canvas id="loep" style="cursor:grab"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="btnrow" style="margin:6px 0 0"><button id="wis">proeven wissen</button></div>
+      <div class="teller" id="teller"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+const LB = 4;                                         // lengte van het blok volgens x [m]
+let sit = 1, gekozen = 'A', anim = null, licht = null;
+let proeven = {};                                     // proeven[situatie + verbinding][beweging] = 'vrij' | 'verh'
+const sleutel = id => sit + id;
+
+// ---------- vectoren ----------
+const V = (x, y, z) => ({ x, y, z });
+const add = (a, b) => V(a.x + b.x, a.y + b.y, a.z + b.z), sub = (a, b) => V(a.x - b.x, a.y - b.y, a.z - b.z);
+const mul = (a, s) => V(a.x * s, a.y * s, a.z * s), dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+const cross = (a, b) => V(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+const unit = a => mul(a, 1 / Math.hypot(a.x, a.y, a.z));
+const EX = V(1, 0, 0), EY = V(0, 1, 0), EZ = V(0, 0, 1);
+function rotAx(p, c, a, ang) {                       // rotatie van p rond de as door c met richting a (Rodrigues)
+  const r = sub(p, c), cs = Math.cos(ang), sn = Math.sin(ang);
+  return add(c, add(add(mul(r, cs), mul(cross(a, r), sn)), mul(a, dot(a, r) * (1 - cs))));
+}
+function loodrecht(a) {                               // twee eenheidsvectoren loodrecht op a
+  const e1 = unit(cross(a, Math.abs(a.y) < 0.9 ? EY : EX)); return [e1, cross(a, e1)];
+}
+
+// ---------- aanzicht (draaibaar) ----------
+const STANDAARD = { yaw: rad(-32), pitch: rad(20) };   // ongeveer zoals de figuren in het handboek: z naar linksonder
+const view = { ...STANDAARD };
+function cam(p, vw = view) {                          // camera-coördinaten: x naar rechts, y omhoog, z naar de kijker
+  const cy = Math.cos(vw.yaw), sy = Math.sin(vw.yaw), cp = Math.cos(vw.pitch), sp = Math.sin(vw.pitch);
+  const x1 = p.x * cy + p.z * sy, z1 = -p.x * sy + p.z * cy;
+  return V(x1, p.y * cp - z1 * sp, p.y * sp + z1 * cp);
+}
+// projectie die de punten in het kader past; de schaal hangt af van het standaardaanzicht (blijft gelijk bij draaien)
+function maakP(punten, r, pad) {
+  const bnd = vw => { let a = 1e9, b = -1e9, c = 1e9, d = -1e9; punten.forEach(p => { const q = cam(p, vw); a = Math.min(a, q.x); b = Math.max(b, q.x); c = Math.min(c, q.y); d = Math.max(d, q.y); }); return [a, b, c, d]; };
+  const [a, b, c, d] = bnd(STANDAARD);
+  const S = Math.min((r.w - 2 * pad) / Math.max(b - a, 0.1), (r.h - 2 * pad) / Math.max(d - c, 0.1));
+  let m = V(0, 0, 0); punten.forEach(p => { m = add(m, p); }); m = mul(m, 1 / punten.length);
+  const mc = cam(m), ms = cam(m, STANDAARD), cx0 = (a + b) / 2 - ms.x, cy0 = (c + d) / 2 - ms.y;
+  const ox = r.x + r.w / 2 - S * (mc.x + cx0), oy = r.y + r.h / 2 + S * (mc.y + cy0);
+  const P = p => { const q = cam(p); return { x: ox + q.x * S, y: oy - q.y * S, d: q.z }; };
+  P.S = S; return P;
+}
+
+// ---------- tekenhulp in 3D ----------
+const kleurMix = (hex, f) => { const n = parseInt(hex.slice(1), 16); const k = v => Math.max(0, Math.min(255, Math.round(v * f))); return `rgb(${k(n >> 16)},${k((n >> 8) & 255)},${k(n & 255)})`; };
+const LICHT = unit(V(-0.35, 0.75, 0.6));
+function poly(ctx, pts, fill, stroke, opt = {}) {
+  ctx.save(); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = opt.w || 1.4; ctx.lineJoin = 'round'; if (opt.dash) ctx.setLineDash(opt.dash); ctx.stroke(); }
+  ctx.restore();
+}
+const blokHoeken = (X, Y, Z) => [0, 1, 2, 3, 4, 5, 6, 7].map(k => V(X[k & 1], Y[(k >> 1) & 1], Z[(k >> 2) & 1]));
+const VLAKKEN = { x0: [0, 2, 6, 4], x1: [1, 5, 7, 3], y0: [0, 4, 5, 1], y1: [2, 3, 7, 6], z0: [0, 1, 3, 2], z1: [4, 6, 7, 5] };
+// convex lichaam: vlakken (lijsten van hoekpunten); achtervlakken als stippellijn (zoals in het handboek), voorvlakken gevuld
+function lichaam(ctx, P, vlakken, opt = {}) {
+  const basis = opt.kleur || '#cdd8e4';
+  let mid = V(0, 0, 0), n = 0; vlakken.forEach(f => f.p.forEach(p => { mid = add(mid, p); n++; })); mid = mul(mid, 1 / n);
+  const info = vlakken.map(f => {
+    let nrm = unit(cross(sub(f.p[1], f.p[0]), sub(f.p[2], f.p[0])));
+    let fm = V(0, 0, 0); f.p.forEach(p => { fm = add(fm, p); }); fm = mul(fm, 1 / f.p.length);
+    if (dot(nrm, sub(fm, mid)) < 0) nrm = mul(nrm, -1);
+    const nc = cam(nrm); return { f, nc, zicht: nc.z > 1e-6 };
+  });
+  if (!opt.geenVerborgen) info.filter(i => !i.zicht).forEach(i => poly(ctx, i.f.p.map(P), null, '#8f969e', { w: 1, dash: [3, 3] }));
+  info.filter(i => i.zicht).forEach(i => {
+    const f = 0.8 + 0.22 * Math.max(0, dot(i.nc, LICHT));
+    if (i.f.snede) poly(ctx, i.f.p.map(P), '#f3f6f9', '#3d454f', { w: 1.3, dash: [4, 3] });   // snede: de rest is weggelaten
+    else poly(ctx, i.f.p.map(P), kleurMix(basis, f), '#3d454f', { w: 1.4 });
+  });
+}
+function blok(ctx, P, X, Y, Z, opt = {}) {
+  const h = blokHoeken(X, Y, Z), snede = opt.snede || [];
+  lichaam(ctx, P, Object.entries(VLAKKEN).map(([k, idx]) => ({ p: idx.map(i => opt.T ? opt.T(h[i]) : h[i]), snede: snede.includes(k) })), opt);
+}
+function grondplaat(ctx, P, c, half) {                // horizontale vaste ondergrond (gearceerd) rond c
+  const h = [V(-half, 0, -half), V(half, 0, -half), V(half, 0, half), V(-half, 0, half)].map(d => P(add(c, d)));
+  poly(ctx, h, '#e4e7eb', '#5b6168', { w: 1.3 });
+  ctx.save(); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1;
+  for (let t = 0.15; t < 1; t += 0.17) { const a = { x: h[0].x + (h[1].x - h[0].x) * t, y: h[0].y + (h[1].y - h[0].y) * t }; const b = { x: h[3].x + (h[2].x - h[3].x) * t, y: h[3].y + (h[2].y - h[3].y) * t }; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  ctx.restore();
+}
+function steunpiramide(ctx, P, A, s) {                // vast scharnier: piramide met de top in A op een grondplaat
+  const yb = A.y - 1.4 * s, b = [V(-s, 0, -s), V(s, 0, -s), V(s, 0, s), V(-s, 0, s)].map(d => add(V(A.x, yb, A.z), d));
+  grondplaat(ctx, P, V(A.x, yb, A.z), 1.6 * s);
+  lichaam(ctx, P, [{ p: [b[0], b[1], b[2], b[3]] }, { p: [b[0], b[1], A] }, { p: [b[1], b[2], A] }, { p: [b[2], b[3], A] }, { p: [b[3], b[0], A] }], { kleur: '#eef1f4', geenVerborgen: true });
+  const q = P(A); ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+function pijl3(ctx, P, a, b, kleur, opt = {}) { const p = P(a), q = P(b); return arrow(ctx, p.x, p.y, q.x, q.y, kleur, opt); }
+function lijn3(ctx, P, a, b, kleur, w = 1.4, dash = null) {
+  const p = P(a), q = P(b); ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore();
+}
+function dubbelPijl3(ctx, P, a, b, kleur, opt = {}) {  // momentvector: dubbele pijl (zoals in het handboek)
+  const p = P(a), q = P(b), L = Math.hypot(q.x - p.x, q.y - p.y); if (L < 30) return;
+  const ux = (q.x - p.x) / L, uy = (q.y - p.y) / L;
+  arrow(ctx, p.x, p.y, q.x, q.y, kleur, opt); arrow(ctx, p.x, p.y, q.x - ux * 11, q.y - uy * 11, kleur, opt);
+}
+function boog3(ctx, P, c, a, r, kleur, zin = 1, opt = {}) {   // gebogen pijl rond de as a door c (rechterhandregel bij zin +1)
+  const [e1, e2] = loodrecht(a), n = 40, pts = [];
+  for (let i = 0; i <= n; i++) { const t = zin * (0.15 + 1.45 * Math.PI * i / n); pts.push(P(add(c, add(mul(e1, r * Math.cos(t)), mul(e2, r * Math.sin(t)))))); }
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = opt.w || 2.2; if (opt.dash) ctx.setLineDash(opt.dash);
+  ctx.beginPath(); pts.slice(0, -2).forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.restore();
+  const p = pts[n - 3], q = pts[n]; arrow(ctx, p.x, p.y, q.x, q.y, kleur, { w: opt.w || 2.2, head: 11 });
+  lijn3(ctx, P, sub(c, mul(a, r * 1.25)), add(c, mul(a, r * 1.25)), kleur, 1, [2, 3]);    // de as zelf
+}
+function assen(ctx, x, y, L = 30) {                   // assenkruis dat meedraait met het aanzicht
+  [[EX, 'x'], [EY, 'y'], [EZ, 'z']].forEach(([e, n]) => {
+    const q = cam(e); arrow(ctx, x, y, x + q.x * L, y - q.y * L, '#6b737d', { w: 1.3, head: 7 });
+    label(ctx, n, '', x + q.x * (L + 9) - 4, y - q.y * (L + 9) + 4, '#6b737d', { vec: false, size: 13 });
+  });
+}
+
+// ---------- situaties en verbindingen ----------
+function blokMaten() {                                // het blok: x van 0 tot LB
+  return sit === 1 ? { X: [0, LB], Y: [-0.5, 0.5], Z: [-0.6, 0.6] } : { X: [0, LB], Y: [0, 1], Z: [-1.2, 0] };
+}
+const B = V(LB, 1, 0);
+const ANKERS = [V(0.5, 2.4, -0.6), V(2.2, 0.5, -1.6), V(1.4, -2.2, 0.9)].map(d => add(B, d));   // ophangpunten (niet in één vlak)
+const KAB = ANKERS.map(a => unit(sub(a, B)));          // eenheidsvectoren volgens de kabels, naar het ophangpunt
+const SLAP = unit(add(add(KAB[0], KAB[1]), KAB[2]));  // richting waarin alle drie de kabels slap worden
+function verbindingen() {
+  if (sit === 1) return [{ id: 'A', type: 'inklemming', p: V(0, 0, 0) }];
+  return [{ id: 'A', type: 'scharnier', p: V(0, 0, 0) }, { id: 'B', type: 'kabels', p: B }];
+}
+const NAAM = { inklemming: 'Inklemming', scharnier: 'Vast scharnier', kabels: 'Drie kabels' };
+const AS = { x: EX, y: EY, z: EZ };
+function bewegingen(v) {
+  const tr = (a, verh, kr) => ({ id: 't' + a, tekst: `translatie ∥ <i>${a}</i>`, d: AS[a], verh, kracht: kr });
+  const ro = (a, verh, kr) => ({ id: 'r' + a, tekst: `rotatie rond <i>${a}</i>`, rot: AS[a], verh, kracht: kr });
+  if (v.type === 'inklemming') return ['x', 'y', 'z'].map(a => tr(a, true, ['F', 'A' + a])).concat(['x', 'y', 'z'].map(a => ro(a, true, ['M', 'A' + a])));
+  if (v.type === 'scharnier') return ['x', 'y', 'z'].map(a => tr(a, true, ['F', 'A' + a])).concat(['x', 'y', 'z'].map(a => ro(a, false)));
+  return [0, 1, 2].map(i => ({ id: 'k' + (i + 1), tekst: `weg van ophangpunt ${i + 1} (kabel ${i + 1} verlengt)`, d: mul(KAB[i], -1), verh: true, kracht: ['F', 'B' + (i + 1)], f: KAB[i] }))
+    .concat([{ id: 'kn', tekst: 'naar de ophangpunten toe (alle kabels slap)', d: SLAP, verh: false, vrijTekst: 'translatie mogelijk → geen duwkrachten (kabels kunnen niet duwen)' }])
+    .concat(['x', 'y', 'z'].map(a => ro(a, false)));
+}
+// proef in beide zinnen (heen en terug), behalve langs de kabels: daar hangt het resultaat af van de zin
+const tweeZin = b => !b.id.startsWith('k');
+const GLOED = 'rgba(255,196,0,';
+
+// ---------- overzicht: lichaam met verbindingen (boven) en vrijlichaamsdiagram (onder) ----------
+const sc = setup(document.getElementById('scene'));
+const LOEPKLEUR = 'rgba(29,92,150,0.16)';
+let raak = [];                                        // aanklikbare loepen: { id, x, y, r }
+function letterBijLoep(ctx, v, q, r) {
+  const a = rad(v.id === 'A' ? 128 : 52), x = q.x + (r + 10) * Math.cos(a), y = q.y - (r + 10) * Math.sin(a);
+  ctx.save(); ctx.font = '600 15px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(v.id, x, y); ctx.restore();
+}
+function loepCirkel(ctx, v, q, r) {
+  const aan = v.id === gekozen;
+  ctx.save();
+  if (aan) { ctx.fillStyle = LOEPKLEUR; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2;
+  ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke();
+  ctx.restore(); letterBijLoep(ctx, v, q, r);
+  raak.push({ id: v.id, x: q.x, y: q.y, r });
+}
+function tekenVerbinding(ctx, v, P, T = null) {
+  if (v.type === 'inklemming') blok(ctx, P, [-0.3, 0], [-1.1, 1.1], [-1.1, 1.1], { kleur: '#b9bfc6' });
+  else if (v.type === 'scharnier') steunpiramide(ctx, P, v.p, 0.3);
+}
+function tekenKabels(ctx, P, lengte = null) {          // de drie kabels vanuit B, met hun ophangpunt (of afgeknipt in de loep)
+  ANKERS.forEach((a, i) => {
+    const eind = lengte ? add(B, mul(KAB[i], lengte)) : a;
+    lijn3(ctx, P, B, eind, '#3d454f', 2);
+    if (lengte) lijn3(ctx, P, eind, add(eind, mul(KAB[i], 0.5)), '#3d454f', 1.4, [3, 4]);
+    else {                                            // klein vast plaatje loodrecht op de kabel
+      const [e1, e2] = loodrecht(KAB[i]), s = 0.22;
+      poly(ctx, [add(add(a, mul(e1, s)), mul(e2, s)), add(sub(a, mul(e1, s)), mul(e2, s)), sub(sub(a, mul(e1, s)), mul(e2, s)), sub(add(a, mul(e1, s)), mul(e2, s))].map(P), '#c3c8ce', '#5b6168', { w: 1.2 });
+    }
+    const m = P(add(B, mul(KAB[i], lengte ? lengte * 0.62 : 1.3))), [e1] = loodrecht(KAB[i]);
+    ctx.save(); ctx.font = '600 12px Inter, sans-serif'; ctx.fillStyle = '#4f5862'; ctx.fillText(String(i + 1), m.x + 6, m.y - 4); ctx.restore();
+  });
+  const q = P(B); ctx.save(); ctx.fillStyle = '#3d454f'; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+}
+// contactkrachten en -momenten (enkel in het vrijlichaamsdiagram); die van de geprobeerde beweging lichten op
+function tekenReacties(ctx, v, P, Lf) {
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1;
+  const gl = id => (licht && licht.v === v.id && licht.b === id ? puls : 0);
+  const gloed = g => GLOED + (0.35 + 0.5 * g) + ')';
+  // een vector met zijn componenten als trapje van stippellijnen (x, dan y, dan z); de component van de geprobeerde
+  // beweging licht op
+  const trap = (staart, comp, ids, kleur) => {
+    let p = staart;
+    [EX, EY, EZ].forEach((e, i) => { const q = add(p, mul(e, comp[i])); lijn3(ctx, P, p, q, '#9aa1aa', 1.3, [3, 4]); p = q; });
+  };
+  // geprobeerde verhinderde beweging bij A: de component licht op als stippellijn volgens de as door het punt van de
+  // verbinding (waar kracht en moment naartoe wijzen), niet in het trapje van de componenten
+  let asLicht = null;
+  if (licht && licht.v === v.id && v.type !== 'kabels') {
+    const b = bewegingen(v).find(x => x.id === licht.b);
+    if (b && b.verh) asLicht = { e: b.rot || b.d, kl: b.rot ? C.M : C.F, g: gl(b.id) };
+  }
+  const tekenAsLicht = () => {
+    if (!asLicht) return;
+    const a = sub(v.p, mul(asLicht.e, 0.6 * Lf)), z = add(v.p, mul(asLicht.e, 0.6 * Lf));
+    lijn3(ctx, P, a, z, gloed(asLicht.g), 10);
+    lijn3(ctx, P, a, z, asLicht.kl, 2.6, [3, 4]);
+  };
+  if (v.type === 'inklemming' || v.type === 'scharnier') {
+    const f = [0.5, 1.0, 0.45].map(c => c * Lf), t = sub(v.p, V(...f));
+    trap(t, f, ['tx', 'ty', 'tz'], C.F);
+    tekenAsLicht();
+    pijl3(ctx, P, t, v.p, C.F, { w: 2.8, head: 12 });
+    const tl = P(t); label(ctx, 'F', v.id, tl.x - 26, tl.y + 4, C.F, { vec: true, size: 15 });
+    if (v.type === 'inklemming') {
+      const m = [1.0, 0.35, 0.8].map(c => c * Lf), tm = sub(v.p, V(...m));
+      trap(tm, m, ['rx', 'ry', 'rz'], C.M);
+      dubbelPijl3(ctx, P, tm, v.p, C.M, { w: 2.6, head: 12 });
+      const ml = P(tm); label(ctx, 'M', v.id, ml.x - 30, ml.y - 4, C.M, { vec: true, size: 15 });
+    }
+  } else {
+    KAB.forEach((k, i) => {
+      const g = gl('k' + (i + 1)), e = add(B, mul(k, Lf * 1.1));
+      if (g) pijl3(ctx, P, B, e, gloed(g), { w: 12, head: 22 });
+      pijl3(ctx, P, B, e, C.F, { w: g ? 3.6 : 2.8, head: g ? 14 : 12 });
+      const q = P(e); label(ctx, 'F', 'B' + (i + 1), q.x + 6, q.y + 4, C.F, { vec: true, size: g ? 17 : 15 });
+    });
+  }
+}
+function vrijeTekst(ctx, v, P, r, W, Lf) {            // geprobeerde beweging die mogelijk is: geen kracht/moment
+  if (!licht || licht.v !== v.id) return;
+  const b = bewegingen(v).find(x => x.id === licht.b); if (!b || b.verh) return;
+  const q = P(v.p), t = b.vrijTekst || (b.rot ? 'rotatie mogelijk → geen moment' : 'translatie mogelijk → geen kracht');
+  const y = q.y + r + 18;
+  ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center';
+  const w = ctx.measureText(t).width, x = Math.max(w / 2 + 6, Math.min(W - w / 2 - 6, q.x));
+  ctx.fillText(t, x, y); ctx.restore();
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall); raak = [];
+  const H = Hall * 0.55;
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  const m = blokMaten(), vs = verbindingen();
+  // ----- boven: lichaam met verbindingen -----
+  titel('Lichaam met verbindingen', 18);
+  const pts = blokHoeken(m.X, m.Y, m.Z).concat(sit === 1 ? blokHoeken([-0.3, 0], [-1.1, 1.1], [-1.1, 1.1]) : ANKERS.concat([V(-0.5, -0.45, -0.5), V(0.5, -0.45, 0.5)]));
+  const P = maakP(pts, { x: 0, y: 24, w: W, h: H - 24 }, 26), S = P.S;
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 22, W, H - 22); ctx.clip();
+  vs.forEach(v => { if (v.id === gekozen) { const q = P(v.p); ctx.save(); ctx.fillStyle = LOEPKLEUR; ctx.beginPath(); ctx.arc(q.x, q.y, 0.75 * S, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); } });
+  vs.forEach(v => tekenVerbinding(ctx, v, P));
+  blok(ctx, P, m.X, m.Y, m.Z);
+  if (sit === 2) tekenKabels(ctx, P);
+  vs.forEach(v => loepCirkel(ctx, v, P(v.p), 0.75 * S));
+  ctx.restore();
+  assen(ctx, 30, H - 26, 26);
+  // ----- onder: vrijlichaamsdiagram -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  titel('Vrijlichaamsdiagram: verbindingen weggesneden', H + 18);
+  const Lf = 1.7;                                     // lengte van de krachtvectoren in het VLD [m]
+  const pv = blokHoeken(m.X, m.Y, m.Z).concat(sit === 1 ? [V(-1.7, -0.6, -1.36), V(-0.85, -1.7, -0.77)] : [V(-0.85, -1.7, -0.77), add(B, mul(KAB[0], 2.0)), add(B, mul(KAB[1], 2.0)), add(B, mul(KAB[2], 2.0))]);
+  const P2 = maakP(pv, { x: 0, y: H + 24, w: W, h: Hall - H - 44 }, 22), S2 = P2.S;
+  vs.forEach(v => { if (v.id === gekozen) { const q = P2(v.p); ctx.save(); ctx.fillStyle = LOEPKLEUR; ctx.beginPath(); ctx.arc(q.x, q.y, 0.95 * S2, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); } });
+  blok(ctx, P2, m.X, m.Y, m.Z);
+  vs.forEach(v => loepCirkel(ctx, v, P2(v.p), 0.95 * S2));
+  vs.forEach(v => tekenReacties(ctx, v, P2, Lf));
+  vs.forEach(v => vrijeTekst(ctx, v, P2, 0.95 * S2, W, Lf));
+  assen(ctx, 30, Hall - 26, 26);
+}
+
+// ---------- loep ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  const v = verbindingen().find(x => x.id === gekozen); if (!v) return;
+  const S = Math.min(W / 3.6, H / 2.7), c0 = cam(v.p), ox = W / 2 - c0.x * S, oy = H / 2 + 12 + c0.y * S;
+  const P = p => { const q = cam(p); return { x: ox + q.x * S, y: oy - q.y * S, d: q.z }; };
+  // beweging van het stukje lichaam; in beide zinnen (eerst +, dan −) behalve langs de kabels
+  let T = p => p, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = tweeZin(b) ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u);
+    zin = s < 0 ? -1 : 1;
+    const schud = Math.sin(anim.t * 40) * 0.05 * Math.abs(s) + 0.035 * s;      // geblokkeerd: duwt even en trilt
+    if (b.rot) { const ang = b.verh ? schud : 0.4 * s; T = p => rotAx(p, v.p, b.rot, ang); }
+    else { const amp = b.verh ? schud : 0.5 * s; T = p => add(p, mul(b.d, amp)); }
+  }
+  tekenVerbinding(ctx, v, P);
+  // het stukje lichaam rond de verbinding, met sneden waar de rest van het lichaam weggelaten is
+  if (v.type === 'inklemming') blok(ctx, P, [0, 1.5], [-0.5, 0.5], [-0.6, 0.6], { snede: ['x1'], T });
+  else if (v.type === 'scharnier') blok(ctx, P, [0, 1.1], [0, 0.8], [-0.9, 0], { snede: ['x1', 'y1', 'z0'], T });
+  else blok(ctx, P, [LB - 1.1, LB], [0.2, 1], [-0.9, 0], { snede: ['x0', 'y0', 'z0'], T });
+  if (v.type === 'kabels') tekenKabels(ctx, P, 1.2);
+  if (v.type === 'scharnier') { const q = P(T(v.p)); ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  assen(ctx, 28, H - 24, 24);
+  // (geen krachten in de loep: de verbinding is hier nog aanwezig)
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a';
+    if (b.rot) boog3(ctx, P, v.p, b.rot, 0.95, kl, zin, { dash: [5, 3] });
+    else { const u = mul(b.d, zin); pijl3(ctx, P, add(v.p, mul(u, 0.3)), add(v.p, mul(u, 1.25)), kl, { w: 2.2, dash: [5, 3], head: 10 }); }
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center';
+    ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (tweeZin(b) ? ' (in beide zinnen)' : ''), W / 2, 18); ctx.restore();
+  }
+}
+
+// ---------- proeftabel ----------
+const $ = id => document.getElementById(id);
+const kr = (b, v) => b.rot ? `<span class="k-M"><span class="i">M</span><sub>${b.kracht[1]}</sub></span>` : `<span class="k-F"><span class="i">F</span><sub>${b.kracht[1]}</sub></span>`;
+const kabelVoorw = () => [1, 2, 3].map(i => `<span class="i">F</span><sub>B${i}</sub>`).join(', ');
+function tabel() {
+  const v = verbindingen().find(x => x.id === gekozen), pr = proeven[sleutel(gekozen)] || {};
+  $('loeptitel').textContent = `${NAAM[v.type]} in ${v.id}`;
+  $('proef').innerHTML = bewegingen(v).map(b => {
+    const r = pr[b.id];
+    const uit = !r ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : r === 'vrij' ? '<span class="uit vrij">✓ mogelijk</span>' + (b.id === 'kn' ? ` → <span class="k-F">${kabelVoorw()}</span> ≥ 0` : '')
+      : `<span class="uit verh">✕ verhinderd</span> → ${kr({ ...b, rot: b.kracht[0] === 'M' }, v)}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = bewegingen(v).find(x => x.id === k.dataset.b);
+    (proeven[sleutel(v.id)] = proeven[sleutel(v.id)] || {})[b.id] = b.verh ? 'verh' : 'vrij';
+    anim = { b, t: 0, T: tweeZin(b) ? 2.6 : 1.4 };
+    licht = { v: v.id, b: b.id };
+    render();
+  });
+}
+
+// ---------- boekhouding van de beperkingen op het hele lichaam (zoals in het handboek) ----------
+const BOEK = {
+  tx: 'verhindert translatie ∥ <i>x</i>', ty: 'verhindert translatie ∥ <i>y</i>', tz: 'verhindert translatie ∥ <i>z</i>',
+  rx: 'verhindert rotatie rond <i>x</i>', ry: 'verhindert rotatie rond <i>y</i>', rz: 'verhindert rotatie rond <i>z</i>',
+  k1: 'kabel 1 verhindert translatie – enkel verlenging – volgens de kabel', k2: 'kabel 2 verhindert translatie – enkel verlenging – volgens de kabel',
+  k3: 'kabel 3 verhindert translatie – enkel verlenging – volgens de kabel'
+};
+function boekhouding() {
+  let som = 0;
+  const blokken = verbindingen().map(v => {
+    const verh = bewegingen(v).filter(b => b.verh); som += verh.length;
+    const regels = verh.map(b => {
+      const lit = licht && licht.v === v.id && licht.b === b.id;
+      return `<div class="regel${lit ? ' licht' : ''}">${BOEK[b.id]} <span class="n">(1 beperking)</span> → ${kr({ ...b, rot: b.kracht[0] === 'M' }, v)}</div>`;
+    }).join('');
+    const voorw = v.type === 'kabels'
+      ? `<div class="regel${licht && licht.v === v.id && licht.b === 'kn' ? ' licht' : ''}">voorwaarde: <span class="k-F">${kabelVoorw()}</span> ≥ 0 <span class="n">(een kabel kan enkel trekken, niet duwen)</span></div>` : '';
+    return `<div class="blok${v.id === gekozen ? ' aan' : ''}"><b>${NAAM[v.type]} ${v.id}</b> <span class="n">· ${verh.length} beperking${verh.length > 1 ? 'en' : ''}</span>${regels}${voorw}</div>`;
+  }).join('');
+  $('teller').innerHTML = `<h4>Boekhouding: beperkingen op het hele lichaam</h4>${blokken}` +
+    `<div class="totaal">Totaal: <b>${som}</b> beperkingen in 3D voor 6 vrijheidsgraden van het lichaam in 3D → statisch bepaald</div>`;
+}
+
+// ---------- formules van de contactkrachten en -momenten (onder het vrijlichaamsdiagram) ----------
+function formules() {
+  const el = $('vldf'); if (!el || !window.katex) return;
+  const kF = s => `\\textcolor{${C.F}}{${s}}`, kM = s => `\\textcolor{${C.M}}{${s}}`;
+  const mark = (v, id, s) => (licht && licht.v === v && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [];
+  verbindingen().forEach(v => {
+    const i = v.id;
+    if (v.type === 'inklemming' || v.type === 'scharnier') {
+      delen.push(`${kF(`\\vec F_${i}`)} = ${kF(`\\begin{Bmatrix}${['x', 'y', 'z'].map(a => mark(i, 't' + a, kF(`F_{${i}${a}}`))).join('\\\\ ')}\\end{Bmatrix}`)}`);
+      if (v.type === 'inklemming') delen.push(`${kM(`\\vec M_${i}`)} = ${kM(`\\begin{Bmatrix}${['x', 'y', 'z'].map(a => mark(i, 'r' + a, kM(`M_{${i}${a}}`))).join('\\\\ ')}\\end{Bmatrix}`)}`);
+    } else {
+      [1, 2, 3].forEach(k => delen.push(`${kF(`\\vec F_{B${k}}`)} = ${mark(i, 'k' + k, kF(`F_{B${k}}`))}${kF(`\\,\\vec e_{B${k}}`)}`));
+      delen.push(mark(i, 'kn', `${kF('F_{B1}')}, ${kF('F_{B2}')}, ${kF('F_{B3}')} \\ge 0`));
+    }
+  });
+  el.innerHTML = delen.map(() => '<span></span>').join('') + (sit === 2 ? '<span class="loepnoot">met <i>e</i><sub>B<i>i</i></sub> de eenheidsvector volgens kabel <i>i</i>, naar het ophangpunt</span>' : '');
+  [...el.children].slice(0, delen.length).forEach((s, j) => { try { katex.render(delen[j], s, { throwOnError: false }); } catch (e) { s.textContent = delen[j]; } });
+}
+window.addEventListener('load', () => formules());
+
+// ---------- bediening ----------
+function knoppen() { ['s1', 's2'].forEach((id, i) => $(id).classList.toggle('actief', sit === i + 1)); }
+function kies(id) { gekozen = id; anim = null; licht = null; render(); }
+function render() { knoppen(); tabel(); drawScene(); drawLoep(); boekhouding(); formules(); }
+const situatie = n => { sit = n; gekozen = 'A'; anim = null; licht = null; render(); };
+$('s1').onclick = () => situatie(1); $('s2').onclick = () => situatie(2);
+$('wis').onclick = () => { proeven = {}; anim = null; licht = null; render(); };
+$('aanzicht').onclick = () => { Object.assign(view, STANDAARD); drawScene(); drawLoep(); };
+// slepen draait het aanzicht; een klik zonder slepen kiest de dichtstbijzijnde loep
+function sleepbaar(cv, bijKlik) {
+  let neer = null;
+  cv.addEventListener('pointerdown', e => { neer = { x: e.clientX, y: e.clientY, sleep: false, yaw: view.yaw, pitch: view.pitch }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+  cv.addEventListener('pointermove', e => {
+    if (!neer) return;
+    const dx = e.clientX - neer.x, dy = e.clientY - neer.y;
+    if (!neer.sleep && Math.hypot(dx, dy) > 5) { neer.sleep = true; cv.style.cursor = 'grabbing'; }
+    if (neer.sleep) { view.yaw = neer.yaw + dx * 0.008; view.pitch = Math.max(rad(-15), Math.min(rad(80), neer.pitch + dy * 0.008)); drawScene(); drawLoep(); }
+  });
+  const los = e => { if (neer && !neer.sleep && bijKlik) bijKlik(e); neer = null; cv.style.cursor = ''; };
+  cv.addEventListener('pointerup', los);
+  cv.addEventListener('pointercancel', () => { neer = null; cv.style.cursor = ''; });
+}
+sleepbaar(sc.c, e => {
+  const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, d = 1e9;
+  raak.forEach(k => { const dd = Math.hypot(k.x - x, k.y - y) / k.r; if (dd < d) { d = dd; best = k.id; } });
+  if (best && d < 1.5) kies(best);
+});
+sleepbaar(LP.c, null);
+
+TM1.bijGrootte([sc, LP], render);
+TM1.lus(dt => {
+  if (!anim) return;
+  anim.t += dt;
+  if (anim.t >= anim.T) anim = null;
+  drawLoep(); drawScene();
+}, () => !!anim);
+})();
+</script>
+</body>
+</html>
