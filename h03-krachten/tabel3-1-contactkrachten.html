@@ -135,7 +135,7 @@ const RIJEN = [
   { id: 'veer', groep: 'Elastisch', naam: 'lineaire veer', hoek: 'θ', soort: 'staaf',
     bew: () => [
       { id: 'langs', tekst: 'translatie volgens de veer (heen en terug)', d: neg(E()), twee: true, verh: true, veer: true, kr: 'F', sub: 'v', kl: MAGENTA, boek: 'Translatie die veer verkort/verlengt (trek of druk)' },
-      { id: 'lood', tekst: 'translatie loodrecht op de veer', d: lood(E()), twee: true, verh: false, uit: 'mogelijk: de veer draait mee → geen kracht ⊥ veer' }],
+      { id: 'lood', tekst: 'translatie loodrecht op de veer', d: lood(E()), twee: true, verh: false, uit: 'mogelijk: het punt beweegt over een cirkelboog rond het vaste punt (lokaal ⊥ veer) → geen kracht ⊥ veer' }],
     formule: [['langs', k => k(MAGENTA, '\\vec F_v = F_v\\begin{Bmatrix}-\\cos\\theta\\\\ -\\sin\\theta\\end{Bmatrix}')], ['langs', k => k(MAGENTA, 'F_v = k\\,\\Delta l')]] }
 ];
 const rijVan = id => RIJEN.find(r => r.id === id);
@@ -196,13 +196,16 @@ function tekenOmgeving(ctx, r, g, P, S, cBew) {       // de vaste omgeving van d
       label(ctx, 'θ', '', o.x + (R + 8) * Math.cos(theta / 2), o.y - (R + 8) * Math.sin(theta / 2) + 5, '#4f5862', { vec: false, size: 14 }); }
     if (r.id === 'wrijving') { const m = P({ x: g.c.x + 1.3 * t.x, y: g.c.y + 1.3 * t.y - 0.3 }); ctx.save(); ctx.font = 'italic 600 15px "Source Serif 4", serif'; ctx.fillStyle = '#4f5862'; ctx.fillText('μ ≠ 0', m.x, m.y); ctx.restore(); }
   } else if (r.soort === 'vast' || r.soort === 'glij') {
-    const q = P(g.c), s = 0.36 * S;
+    // bij de glijverbinding bewegen driehoek en rollen mee met het stukje lichaam (naar boven of langs x);
+    // de ondergrond blijft vast. Bij het vaste punt staat de steun vast.
+    const q0 = P(g.c), q = r.soort === 'glij' ? P(cBew) : q0, s = 0.36 * S;
     ctx.save(); ctx.fillStyle = '#eef1f4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - 0.7 * s, q.y + 1.1 * s); ctx.lineTo(q.x + 0.7 * s, q.y + 1.1 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
-    let yb = q.y + 1.1 * s;
-    if (r.soort === 'glij') { for (const dx of [-0.42, 0, 0.42]) { ctx.beginPath(); ctx.arc(q.x + dx * s, yb + 0.16 * s, 0.15 * s, 0, 2 * Math.PI); ctx.stroke(); } yb += 0.32 * s; }
+    let yb = q0.y + 1.1 * s;
+    if (r.soort === 'glij') { for (const dx of [-0.42, 0, 0.42]) { ctx.beginPath(); ctx.arc(q.x + dx * s, q.y + 1.1 * s + 0.16 * s, 0.15 * s, 0, 2 * Math.PI); ctx.stroke(); } yb += 0.32 * s; }
     ctx.restore();
-    grond(ctx, q.x + 1.6 * s, yb, q.x - 1.6 * s, yb);
+    const gl = (r.soort === 'glij' ? 2.6 : 1.6) * s;
+    grond(ctx, q0.x + gl, yb, q0.x - gl, yb);
   } else {
     const a = P(g.anker), q = P(cBew), e = E(), nx = -e.y, ny = e.x;
     if (r.id === 'veer') veerLijn(ctx, q, a);
@@ -230,7 +233,7 @@ function tekenBlok(ctx, pts, P, snede) {              // stukje lichaam; de sned
 // zijde van het blok waar de rest van het lichaam weggelaten is (index van de zijde)
 const snedeZijde = r => (r.soort === 'staaf' ? 1 : 2);
 // proef loodrecht op een stang of kabel: eigenlijk een beweging over de cirkelboog rond het vaste punt
-const opBoog = (r, b) => (r.id === 'stang' || r.id === 'kabel') && b.id === 'lood';
+const opBoog = (r, b) => (r.id === 'stang' || r.id === 'kabel' || r.id === 'veer') && b.id === 'lood';
 
 function draw() {
   const ctx = lp.ctx, W = lp.w, Hall = lp.h; ctx.clearRect(0, 0, W, Hall);

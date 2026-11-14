@@ -54,8 +54,8 @@ TM1.catalogus = [
       { id: '7.4', titel: 'Een ingeklemde balk', status: 'klaar' },
       { id: '7.5', titel: 'Een luifel met sneeuwlast', status: 'klaar' },
       { id: '7.6', titel: 'Een man staat op een ladder', status: 'klaar' },
-      { id: '7.7', titel: 'Een blok ligt op een hellend vlak' },
-      { id: '7.8', titel: 'Lamp vastgemaakt aan de muur' }]}
+      { id: '7.7', titel: 'Een blok ligt op een hellend vlak', status: 'klaar' },
+      { id: '7.8', titel: 'Lamp vastgemaakt aan de muur', status: 'klaar' }]}
   ]},
   { deel: 'III', titel: 'Statica samengestelde lichamen', hoofdstukken: [
     { nr: 8, titel: 'Samengesteld lichaam in statisch evenwicht', map: 'h08-samengesteld-lichaam', items: [

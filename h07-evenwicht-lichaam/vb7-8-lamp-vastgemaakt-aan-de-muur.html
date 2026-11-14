@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 7.8 – Lamp vastgemaakt aan de muur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:340px}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:center;padding:2px 14px 6px;font-size:15px;min-height:52px}
+  .stap{font-size:13.5px}
+  .stap p{margin:4px 0 8px}
+  .stap h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px}
+  .stap .vgl{font-size:15px;margin:4px 0 4px 6px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+  .stap .noot{font-size:12.5px;color:var(--muted)}
+  .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
+  .stap .slider{margin:6px 0}
+  .stap hr{border:0;border-top:1px solid var(--line);margin:12px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 7.8 — Lamp vastgemaakt aan de muur</h1>
+    <span class="kicker">Evenwicht van een lichaam · een lamp (1.2 kg) hangt aan een vierdelige stang ABCDE (0.8 kg/m), met een vast scharnier in A en een verticaal glijdend scharnier in B; gevraagd: de reactiekrachten in beide steunpunten</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Doorloop de stappen van het plan van aanpak (het opstellen en oplossen van de evenwichtsvergelijkingen is hier gecombineerd). In <b>stap 2, het vrijmaken</b>, klik je op een loep in de figuur (A of B) en probeer je rechts welke bewegingen die verbinding verhindert; elke verhinderde beweging geeft een reactiekracht, die oplicht in het vrijlichaamsdiagram.</p>
+    <div class="stappen modus" id="stappen"></div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="De lamp aan de stang ABCDE met de steunpunten A en B, en eronder het vrijlichaamsdiagram"></canvas>
+      <div class="vldformules" id="vldf"></div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="200">
+      <h3 id="rtitel"></h3>
+      <canvas id="loep"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="stap" id="stap"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+const KL = '#d9822b', KA = C.F, KB = '#c2378a', STANG = '#6b7fd6';   // lasten (oranje), reacties in A en B, de stang
+const GLOED = 'rgba(255,196,0,';
+const g = 10, RHO = 0.8, ML0 = 1.2, H0 = 0.3;          // g = 10 m/s², massadichtheid van de stang, massa van de lamp, hoogte AB
+let stap = 1, gekozen = 'A', anim = null, licht = null, proeven = {};
+let mL = ML0, hAB = H0;
+
+// ---------- geometrie (oorsprong in A, x naar rechts, y omhoog) ----------
+function punten() {
+  const c60 = Math.cos(rad(60)), s60 = Math.sin(rad(60));
+  const A = { x: 0, y: 0 }, B = { x: 0, y: hAB }, Cc = { x: 0.5 * c60, y: hAB + 0.5 * s60 }, D = { x: Cc.x + 0.5, y: Cc.y }, E = { x: D.x + 0.5 * c60, y: hAB };
+  return { A, B, C: Cc, D, E };
+}
+function zwaartepunt() {                             // zwaartepunt van de vierdelige stang (som van de vier delen)
+  const p = punten(), del = [[p.A, p.B], [p.B, p.C], [p.C, p.D], [p.D, p.E]];
+  let m = 0, x = 0, y = 0;
+  const delen = del.map(([a, b]) => { const l = Math.hypot(b.x - a.x, b.y - a.y), mi = RHO * l, c = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; m += mi; x += mi * c.x; y += mi * c.y; return { m: mi, c }; });
+  return { m, Z: { x: x / m, y: y / m }, delen };
+}
+function oplossing() {
+  const p = punten(), z = zwaartepunt(), Gs = z.m * g, Gl = mL * g;
+  const M = -Gs * z.Z.x - Gl * p.E.x;                 // moment van de gewichten rond A (z-component)
+  const RB = M / hAB;                                   // M − h·R_B = 0
+  return { Gs, Gl, M, RB, RAx: -RB, RAy: Gs + Gl, z };
+}
+
+// ---------- tekenhulp (2D) ----------
+function grond(ctx, x0, y0, x1, y1) {
+  const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, nx = uy, ny = -ux;
+  ctx.save(); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#8f969e';
+  for (let s = 6; s < L; s += 8) { const px = x0 + ux * s, py = y0 + uy * s; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + nx * 7 - ux * 6, py + ny * 7 - uy * 6); ctx.stroke(); }
+  ctx.restore();
+}
+// steun aan de wand (driehoek met de punt naar rechts, in het punt q); glijdend: met rolletjes langs de wand
+function steun(ctx, q, s, glijdend, wandX) {
+  ctx.save(); ctx.fillStyle = '#eef1f4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+  const bx = q.x - (glijdend ? 1.0 : 1.32) * s;       // de wand ligt op 1.32 s links van het punt (rollen of driehoek raken ze)
+  ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(bx, q.y - 0.65 * s); ctx.lineTo(bx, q.y + 0.65 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (glijdend) for (const dy of [-0.4, 0, 0.4]) { ctx.beginPath(); ctx.arc(bx - 0.17 * s, q.y + dy * s, 0.15 * s, 0, 2 * Math.PI); ctx.stroke(); }
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+function stangLijn(ctx, P, pts, kleur, w) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); pts.forEach((p, i) => { const q = P(p); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }); ctx.stroke(); ctx.restore(); }
+function lamp(ctx, P, E, S) {
+  const q = P(E), w1 = 0.12 * S, w2 = 0.28 * S, hh = 0.2 * S;
+  ctx.save(); ctx.fillStyle = '#9aa1aa'; ctx.beginPath(); ctx.moveTo(q.x - w1, q.y); ctx.lineTo(q.x + w1, q.y); ctx.lineTo(q.x + w2, q.y + hh); ctx.lineTo(q.x - w2, q.y + hh); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function zMerk(ctx, q) {                              // zwaartepuntsymbool
+  ctx.save(); ctx.strokeStyle = '#111'; ctx.lineWidth = 1.2; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(q.x, q.y, 7, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#111'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.arc(q.x, q.y, 7, -Math.PI / 2, 0); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.arc(q.x, q.y, 7, Math.PI / 2, Math.PI); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function lbl(ctx, q, n, dx = 7, dy = -7) { label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 14 }); }
+function assen(ctx, x, y) {
+  arrow(ctx, x, y, x + 30, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + 33, y + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, x, y, x, y - 30, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 12, y - 24, '#6b737d', { vec: false, size: 13 });
+}
+function boogPijl(ctx, x, y, r, kleur, zin = 1) {
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = 2.2; ctx.setLineDash([5, 3]);
+  const a0 = 0.2 * Math.PI, a1 = a0 + zin * 1.2 * Math.PI; ctx.beginPath(); ctx.arc(x, y, r, -a0, -a1, zin > 0); ctx.stroke(); ctx.setLineDash([]);
+  const ex = x + r * Math.cos(-a1), ey = y + r * Math.sin(-a1), tx = Math.sin(-a1) * zin, ty = -Math.cos(-a1) * zin;
+  ctx.fillStyle = kleur; ctx.beginPath(); ctx.moveTo(ex + tx * 9, ey + ty * 9); ctx.lineTo(ex - ty * 5, ey + tx * 5); ctx.lineTo(ex + ty * 5, ey - tx * 5); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+// ---------- verbindingen en proefbewegingen ----------
+const VERB = { A: { naam: 'Verbinding A: vast scharnier aan de wand', k: KA }, B: { naam: 'Verbinding B: verticaal glijdend scharnier', k: KB } };
+const ROT = { id: 'rz', rot: true, twee: true, tekst: 'rotatie rond <i>z</i>', verh: false, uit: 'mogelijk → geen moment' };
+function bewegingen(id) {
+  if (id === 'A') return [{ id: 'x', d: { x: 1, y: 0 }, twee: true, tekst: 'translatie ∥ <i>x</i>', verh: true, kr: 'R_{Ax}' },
+    { id: 'y', d: { x: 0, y: 1 }, twee: true, tekst: 'translatie ∥ <i>y</i>', verh: true, kr: 'R_{Ay}' }, ROT];
+  return [{ id: 'x', d: { x: 1, y: 0 }, twee: true, tekst: 'translatie ∥ <i>x</i> (loodrecht op de wand)', verh: true, kr: 'R_{B}' },
+    { id: 'y', d: { x: 0, y: 1 }, twee: true, tekst: 'translatie ∥ <i>y</i> (langs de wand)', verh: false, uit: 'mogelijk: het scharnier glijdt verticaal → geen kracht ∥ <i>y</i>' }, ROT];
+}
+
+// ---------- figuur ----------
+const sc = setup(document.getElementById('scene'));
+let raak = [];
+function loepCirkel(ctx, id, q, r) {
+  const aan = id === gekozen && stap === 2;
+  ctx.save();
+  if (aan) { ctx.fillStyle = 'rgba(29,92,150,0.16)'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2; ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(id, q.x + (r + 11) * Math.cos(rad(25)), q.y - (r + 11) * Math.sin(rad(25))); ctx.restore();
+  raak.push({ id, x: q.x, y: q.y, r });
+}
+function last(ctx, P, p, waarde, naam, S) {
+  const q = P(p), l = (0.15 + waarde / 40) * S;
+  arrow(ctx, q.x, q.y, q.x, q.y + l, KL, { w: 2.6, head: 11 }); label(ctx, naam[0], naam[1], q.x + 6, q.y + l, KL, { vec: true, size: 14 });
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall); raak = [];
+  const H = Hall * 0.5, S = Math.min(W / 1.7, (H - 40) / 1.15);
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  const p = punten(), o = oplossing(), Z = o.z.Z, ptsS = [p.A, p.B, p.C, p.D, p.E];
+  // ----- boven: situatie -----
+  titel('Situatie', 18);
+  const P = q => ({ x: W / 2 + (q.x - 0.45) * S, y: 30 + (H - 30) * 0.8 - q.y * S });
+  const w0 = P({ x: 0, y: -0.12 }), w1 = P({ x: 0, y: hAB + 0.15 }), s = 0.11 * S;
+  grond(ctx, w0.x - s * 1.32, w0.y, w1.x - s * 1.32, w1.y);
+  steun(ctx, P(p.A), s, false); steun(ctx, P(p.B), s, true);
+  stangLijn(ctx, P, ptsS, STANG, 6); lamp(ctx, P, p.E, S);
+  const lq = P(p.E); ctx.save(); ctx.fillStyle = '#e03131'; ctx.beginPath(); ctx.arc(lq.x, lq.y + 0.12 * S, 4, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  lbl(ctx, P(p.C), 'C', -4, -10); lbl(ctx, P(p.D), 'D', -4, -10); lbl(ctx, P(p.E), 'E', 10, -6);
+  if (stap <= 2) ['A', 'B'].forEach(id => loepCirkel(ctx, id, P(p[id]), 0.13 * S));
+  else { lbl(ctx, P(p.A), 'A', 8, 14); lbl(ctx, P(p.B), 'B', 8, 14); }
+  assen(ctx, 24, H - 18);
+  // ----- onder: vrijlichaamsdiagram -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst het vrij te maken lichaam', H + 18); assen(ctx, 24, Hall - 18); return; }
+  titel('Vrijgemaakt: stang met lamp, steunen weggenomen', H + 18);
+  const P2 = q => ({ x: W / 2 + (q.x - 0.45) * S, y: H + 26 + (Hall - H - 26) * 0.72 - q.y * S });
+  stangLijn(ctx, P2, ptsS, '#9aa1aa', 4);
+  ['A', 'B'].forEach(id => { const q = P2(p[id]); ctx.save(); ctx.strokeStyle = C.accent; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(q.x, q.y, 0.09 * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore(); });
+  zMerk(ctx, P2(Z)); lbl(ctx, P2(Z), 'Z', -20, 4);
+  last(ctx, P2, Z, o.Gs, ['G', 's'], S); last(ctx, P2, p.E, o.Gl, ['G', 'l'], S);
+  lbl(ctx, P2(p.E), 'E', 8, -6); lbl(ctx, P2(p.D), 'D', -4, -10);
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1;
+  const gl = (v, b) => (stap === 2 && licht && licht.v === v && licht.b === b ? puls : 0), gloed = q => GLOED + (0.35 + 0.5 * q) + ')';
+  const lijn = (a, b, gq, kleur) => { ctx.save(); ctx.lineCap = 'round'; if (gq) { ctx.strokeStyle = gloed(gq); ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+    ctx.setLineDash([3, 4]); ctx.strokeStyle = gq ? kleur : '#9aa1aa'; ctx.lineWidth = gq ? 2.6 : 1.3; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore(); };
+  // R_A vanuit A schuin naar rechtsboven, met de projecties op de assen
+  const sk = 0.0075 * S, a = P2(p.A), fx = stap >= 3 ? o.RAx * sk : 0.3 * S, fy = stap >= 3 ? o.RAy * sk : 0.16 * S;
+  const tip = { x: a.x + fx, y: a.y - fy }, px = { x: tip.x, y: a.y }, py = { x: a.x, y: tip.y };
+  lijn(tip, px, 0, KA); lijn(tip, py, 0, KA); lijn(a, px, gl('A', 'x'), KA); lijn(a, py, gl('A', 'y'), KA);
+  arrow(ctx, a.x, a.y, tip.x, tip.y, KA, { w: 2.8, head: 12 }); label(ctx, 'R', 'A', tip.x + 6, tip.y + 4, KA, { vec: true, size: 14 });
+  // R_B horizontaal in B (in stap 3 en 4 met de gevonden zin: naar links)
+  const b = P2(p.B), lb = stap >= 3 ? o.RB * sk : 0.3 * S, gB = gl('B', 'x');
+  if (gB) arrow(ctx, b.x, b.y, b.x + lb, b.y, gloed(gB), { w: 12, head: 22 });
+  arrow(ctx, b.x, b.y, b.x + lb, b.y, KB, { w: gB ? 3.6 : 2.8, head: gB ? 14 : 12 }); label(ctx, 'R', 'B', b.x + lb + (lb < 0 ? -22 : 6), b.y - 6, KB, { vec: true, size: 14 });
+  lbl(ctx, a, 'A', -16, 14); lbl(ctx, b, 'B', -16, -6);
+  if (stap === 2 && licht) { const bb = bewegingen(licht.v).find(x => x.id === licht.b); if (bb && !bb.verh) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'right'; ctx.fillText(bb.uit.replace(/<[^>]+>/g, ''), W - 10, H + 36); ctx.restore(); } }
+  assen(ctx, 24, Hall - 18);
+}
+
+// ---------- loep ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2) return;
+  const p = punten(), p0 = p[gekozen], S = Math.min(W / 0.5, H / 0.42);
+  const P = q => ({ x: W * 0.42 + (q.x - p0.x) * S, y: H / 2 + 8 - (q.y - p0.y) * S });
+  let d = { x: 0, y: 0 }, rot = 0, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = Math.sin(2 * Math.PI * u); zin = s < 0 ? -1 : 1;
+    const schud = Math.sin(anim.t * 40) * 0.01 * Math.abs(s) + 0.008 * s;
+    if (b.rot) rot = 0.35 * s; else { const a = b.verh ? schud : 0.08 * s; d = { x: b.d.x * a, y: b.d.y * a }; }
+  }
+  const T = q => { const x = q.x - p0.x, y = q.y - p0.y, c = Math.cos(rot), sn = Math.sin(rot); return { x: p0.x + d.x + x * c - y * sn, y: p0.y + d.y + x * sn + y * c }; };
+  const s = 0.045 * S;
+  const w0 = P({ x: 0, y: p0.y - 0.2 }), w1 = P({ x: 0, y: p0.y + 0.2 }); grond(ctx, w0.x - s * 1.32, w0.y, w1.x - s * 1.32, w1.y);
+  // het scharnier: bij B glijdt het mee langs de wand (enkel de verticale component van de beweging)
+  const qs = gekozen === 'B' ? P({ x: p0.x, y: p0.y + d.y }) : P(p0);
+  steun(ctx, qs, s, gekozen === 'B');
+  // stukje stang rond het punt, met sneden (gestippelde uiteinden)
+  const stuk = gekozen === 'A' ? [p0, { x: 0, y: 0.17 }] : [{ x: 0, y: p0.y - 0.15 }, p0, { x: 0.5 * Math.cos(rad(60)) * 0.32, y: p0.y + 0.5 * Math.sin(rad(60)) * 0.32 }];
+  const pts = stuk.map(T);
+  stangLijn(ctx, P, pts, STANG, 7);
+  [pts[0], pts[pts.length - 1]].forEach((q, i) => { if (gekozen === 'A' && i === 0) return; const z = P(q); ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(z.x, z.y, 6, 0, 2 * Math.PI); ctx.stroke(); ctx.restore(); });
+  const q0 = P(T(p0)); ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q0.x, q0.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  assen(ctx, 22, H - 18);
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a', c0 = P(p0);
+    if (b.rot) boogPijl(ctx, c0.x, c0.y, 0.09 * S, kl, zin);
+    else { const u = { x: b.d.x * zin, y: b.d.y * zin }, o = { x: 0.06, y: gekozen === 'A' ? 0.08 : -0.08 }; const a0 = P({ x: p0.x + o.x + u.x * 0.02, y: p0.y + o.y + u.y * 0.02 }), a1 = P({ x: p0.x + o.x + u.x * 0.1, y: p0.y + o.y + u.y * 0.1 }); arrow(ctx, a0.x, a0.y, a1.x, a1.y, kl, { w: 2.2, dash: [5, 3], head: 10 }); }
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + ' (in beide zinnen)', W / 2, 18); ctx.restore();
+  }
+}
+
+// ---------- formules ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+const nf = (x, d = 1) => (Math.round(x * 10 ** d) / 10 ** d).toString();
+function vldFormules() {
+  const el = document.getElementById('vldf'); if (!window.katex) return;
+  if (stap === 1) { el.innerHTML = ''; return; }
+  const o = oplossing(), mk = (v, id, s) => (stap === 2 && licht && licht.v === v && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [`${kl(KL, '\\vec G_s')} = ${kl(KL, `-${nf(o.Gs)}\\ \\text{N}\\,\\vec e_y`)}`, `${kl(KL, '\\vec G_l')} = ${kl(KL, `-${nf(o.Gl)}\\ \\text{N}\\,\\vec e_y`)}`,
+    `${kl(KA, '\\vec R_A')} = ${kl(KA, `\\begin{Bmatrix}${mk('A', 'x', kl(KA, 'R_{Ax}'))}\\\\ ${mk('A', 'y', kl(KA, 'R_{Ay}'))}\\end{Bmatrix}`)}`,
+    `${kl(KB, '\\vec R_B')} = ${kl(KB, `\\begin{Bmatrix}${mk('B', 'x', kl(KB, 'R_B'))}\\\\ ${mk('B', 'y', kl(KB, '0'))}\\end{Bmatrix}`)}`];
+  el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
+}
+
+// ---------- rechterkaart ----------
+const $ = id => document.getElementById(id);
+const STAPPEN = ['Vrij te maken lichaam', 'Vrijmaken', 'Opstellen en oplossen', 'Interpretatie'];
+const ISO = `<div class="kader"><b>Statisch bepaald (isostatisch).</b> Het vaste scharnier A verhindert translatie ∥ <i>x</i> en ∥ <i>y</i> (2 beperkingen), het verticaal glijdend scharnier B enkel translatie ∥ <i>x</i> (1 beperking): drie beperkingen voor de drie vrijheidsgraden van het lichaam in 2D, dus drie scalaire onbekenden.</div>`;
+function proefTabel() {
+  if (stap !== 2) { $('proef').innerHTML = ''; return; }
+  const pr = proeven[gekozen] || {};
+  $('proef').innerHTML = bewegingen(gekozen).map(b => {
+    const uit = !pr[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.verh ? `<span class="uit verh">✕ verhinderd</span> → <span data-tex="${kl(VERB[gekozen].k, b.kr)}"></span>` : `<span class="uit vrij">✓</span> ${b.uit}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  if (window.katex) $('proef').querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = bewegingen(gekozen).find(x => x.id === k.dataset.b);
+    (proeven[gekozen] = proeven[gekozen] || {})[b.id] = true;
+    anim = { b, t: 0, T: 2.6 }; licht = { v: gekozen, b: b.id }; render();
+  });
+}
+function stapInhoud() {
+  const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
+  $('rtitel').textContent = stap === 2 ? VERB[gekozen].naam : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
+  const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
+  const t = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const o = oplossing(), p = punten(), Z = o.z.Z;
+  const Gs = kl(KL, '\\vec G_s'), Gl = kl(KL, '\\vec G_l'), RA = kl(KA, '\\vec R_A'), RB = kl(KB, '\\vec R_B');
+  let h = '';
+  if (stap === 1) h = `<p>Gevraagd zijn de reactiekrachten in de beide steunpunten A en B. Die worden extern als we de steunen wegnemen. Het vrij te maken lichaam is het <b>geheel van de vierdelige stang ABCDE en de lamp</b>.</p>
+      <p class="noot">Assen: oorsprong in A, <i>x</i> horizontaal naar rechts, <i>y</i> verticaal omhoog; <i>g</i> = 10 m/s².</p>`;
+  else if (stap === 2) {
+    const d = o.z.delen.map(q => `${nf(q.m, 2)}\\,\\text{kg}\\begin{Bmatrix}${nf(q.c.x, 3)}\\\\ ${nf(q.c.y, 3)}\\end{Bmatrix}`);
+    h = `<p class="noot">In de loep zie je enkel de gekozen steun en een stukje van de stang (de rest is weggelaten). Klik op de andere loep in de figuur om de andere steun te bekijken.</p>${ISO}
+      <h4>Gewichten</h4>
+      <p>De lamp (${nf(mL, 1)} kg) geeft ${t(`${Gl} = ${kl(KL, `-${nf(o.Gl)}\\ \\text{N}\\,\\vec e_y`)}`)} in E. De stang (0.8 kg/m, totale lengte ${nf(o.z.m / RHO, 2)} m, massa ${nf(o.z.m, 2)} kg) geeft ${t(`${Gs} = ${kl(KL, `-${nf(o.Gs)}\\ \\text{N}\\,\\vec e_y`)}`)} in haar zwaartepunt Z:</p>
+      ${v(`\\vec r_Z = \\frac{1}{${nf(o.z.m, 2)}\\,\\text{kg}}\\left(${d[0]} + ${d[1]}\\right.`)}
+      ${v(`\\left. + ${d[2]} + ${d[3]}\\right) = \\begin{Bmatrix}${nf(Z.x, 3)}\\ \\text{m}\\\\ ${nf(Z.y, 3)}\\ \\text{m}\\end{Bmatrix}`)}`;
+  } else if (stap === 3) {
+    const det = (r, f, kc) => `\\begin{vmatrix}\\vec e_x & \\vec e_y & \\vec e_z\\\\ ${r}\\\\ ${f.map(x => kl(kc, x)).join(' & ')}\\end{vmatrix}`;
+    h = `<h4>Momentenevenwicht rond A</h4>
+      ${v(`(\\vec r_Z - \\vec r_A)\\times ${Gs} + (\\vec r_E - \\vec r_A)\\times ${Gl} + (\\vec r_B - \\vec r_A)\\times ${RB} + (\\vec r_A - \\vec r_A)\\times ${RA} = \\vec 0`)}
+      <p class="noot">Door de keuze van het punt A valt ${t(RA)} weg: enkel ${t(kl(KB, 'R_B'))} blijft als onbekende over.</p>
+      <h4>Krachtenevenwicht</h4>${v(`${Gs} + ${Gl} + ${RB} + ${RA} = \\vec 0`)}
+      <hr>
+      <h4>Momentenevenwicht rond A, uitgewerkt met determinanten</h4>
+      ${v(`${det(`${nf(Z.x, 3)}\\,\\text{m} & ${nf(Z.y, 3)}\\,\\text{m} & 0`, ['0', `-${nf(o.Gs)}\\,\\text{N}`, '0'], KL)} + ${det(`${nf(p.E.x, 3)}\\,\\text{m} & ${nf(p.E.y, 3)}\\,\\text{m} & 0`, ['0', `-${nf(o.Gl)}\\,\\text{N}`, '0'], KL)}`)}
+      ${v(`+ ${det(`0 & ${nf(hAB, 2)}\\,\\text{m} & 0`, ['R_B', '0', '0'], KB)} = \\vec 0`)}
+      ${v(`\\Leftrightarrow\\; (${nf(o.M)}\\ \\text{N\\,m} - ${nf(hAB, 2)}\\ \\text{m}\\;${kl(KB, 'R_B')})\\,\\vec e_z = \\vec 0 \\;\\Rightarrow\\; ${kl(KB, 'R_B')} = ${nf(o.RB)}\\ \\text{N}`)}
+      <h4>Krachtenevenwicht in componenten</h4>
+      ${v(`${kl(KL, `\\begin{Bmatrix}0\\\\ -${nf(o.Gs)}\\,\\text{N}\\end{Bmatrix}`)} + ${kl(KL, `\\begin{Bmatrix}0\\\\ -${nf(o.Gl)}\\,\\text{N}\\end{Bmatrix}`)} + ${kl(KB, `\\begin{Bmatrix}${nf(o.RB)}\\,\\text{N}\\\\ 0\\end{Bmatrix}`)} + ${kl(KA, '\\begin{Bmatrix}R_{Ax}\\\\ R_{Ay}\\end{Bmatrix}')} = \\begin{Bmatrix}0\\\\ 0\\end{Bmatrix}`)}
+      ${v(`\\Rightarrow\\; ${RA} = ${kl(KA, `\\begin{Bmatrix}${nf(o.RAx)}\\ \\text{N}\\\\ ${nf(o.RAy)}\\ \\text{N}\\end{Bmatrix}`)}, \\qquad ${RB} = ${kl(KB, `\\begin{Bmatrix}${nf(o.RB)}\\ \\text{N}\\\\ 0\\end{Bmatrix}`)}`)}`;
+  } else {
+    h = `<p>Hoewel er enkel <b>verticale</b> belastingen optreden, is de grootste reactiecomponent volgens de <b>horizontale</b> as. De gewichten geven een moment rond A dat enkel door het koppel van de horizontale krachten in A en B (met arm AB) gecompenseerd kan worden: ${t(`${kl(KB, 'R_B')} = M_\\text{gewichten}/\\overline{AB}`)}.</p>
+      <div class="slider"><div class="lab"><span>Afstand <span class="i">AB</span> tussen de steunpunten</span><b>${nf(hAB, 2)} m</b></div><input type="range" id="hH" min="0.1" max="0.8" step="0.01" value="${hAB}"></div>
+      <div class="slider"><div class="lab"><span>Massa van de lamp</span><b>${nf(mL, 1)} kg</b></div><input type="range" id="mL" min="0" max="5" step="0.1" value="${mL}"></div>
+      ${v(`${RA} = ${kl(KA, `\\begin{Bmatrix}${nf(o.RAx)}\\ \\text{N}\\\\ ${nf(o.RAy)}\\ \\text{N}\\end{Bmatrix}`)}, \\qquad ${RB} = ${kl(KB, `\\begin{Bmatrix}${nf(o.RB)}\\ \\text{N}\\\\ 0\\end{Bmatrix}`)}`)}
+      <p class="noot">Hoe dichter A en B bij elkaar liggen, hoe groter de horizontale reacties. De verticale reactie in A draagt het volledige gewicht: ${t(`${kl(KA, 'R_{Ay}')} = G_s + G_l`)}.</p>`;
+  }
+  el.innerHTML = h;
+  if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  const bind = (id, f) => { const e = $(id); if (e) e.oninput = ev => { f(+ev.target.value); render(); }; };
+  bind('hH', x => { hAB = x; }); bind('mL', x => { mL = x; });
+}
+function stapKnoppen() {
+  $('stappen').innerHTML = STAPPEN.map((tt, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${tt}</button>`).join('');
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 4) { hAB = H0; mL = ML0; } render(); });
+}
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+window.addEventListener('load', () => { vldFormules(); stapInhoud(); proefTabel(); });
+sc.c.addEventListener('click', e => {
+  const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, d = 1e9; raak.forEach(k => { const dd = Math.hypot(k.x - x, k.y - y) / k.r; if (dd < d) { d = dd; best = k.id; } });
+  if (best && d < 1.3) { gekozen = best; stap = 2; anim = null; licht = null; render(); }
+});
+
+TM1.bijGrootte([sc, LP], render);
+TM1.lus(dt => { if (!anim) return; anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); drawScene(); }, () => !!anim);
+})();
+</script>
+</body>
+</html>
