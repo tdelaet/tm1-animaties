@@ -437,7 +437,10 @@
         kaarten.forEach(k => {
           const c = k.querySelector('canvas'); if (!c) return;
           const rest = k.offsetHeight - c.offsetHeight;
-          c.style.height = Math.max(90, Math.floor(netto * gew(k) / som - rest)) + 'px';
+          // data-minhoogte="…" op een kaart: die grafiek wordt nooit lager (de kolom mag dan iets hoger worden);
+          // in px ("210") of als fractie van de breedte van de grafiek ("0.62w")
+          const mh = k.dataset.minhoogte || '90', min = mh.endsWith('w') ? parseFloat(mh) * c.clientWidth : +mh;
+          c.style.height = Math.max(min, Math.floor(netto * gew(k) / som - rest)) + 'px';
         });
       }
     };

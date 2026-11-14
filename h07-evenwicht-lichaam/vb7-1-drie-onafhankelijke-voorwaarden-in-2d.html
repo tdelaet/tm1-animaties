@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 7.1 – Drie onafhankelijke voorwaarden in 2D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  /* boven: de situatie (x van −2 tot 9 m, y van −2.4 tot 4.2 m); onder: het vrijlichaamsdiagram */
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer}
+  /* figuur en vrijlichaamsdiagram iets hoger dan het standaardwerkblad toelaat, zodat ze groter getekend worden
+     en de kolommen beter in evenwicht zijn met de loep, de tabel en de boekhouding rechts */
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:380px}                               /* de loep groeit niet mee met de hogere figuur links */
+  /* op deze pagina krijgen figuur en loep evenveel breedte */
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600;white-space:nowrap}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .loepnoot{font-size:12px;color:var(--muted);margin:2px 0 0}
+  /* boekhouding van de beperkingen: apart deel onder de loep */
+  .teller{font-size:13px;margin:10px 0 2px;padding-top:8px;border-top:1px solid var(--line)}
+  .teller h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 6px}
+  .teller .blok{border:1.5px solid transparent;border-radius:8px;padding:4px 8px;margin:0 0 4px}
+  .teller .blok.aan{border-color:#1d5c96;background:rgba(29,92,150,0.10)}   /* zelfde kleur als de gekozen loep */
+  .teller .regel{padding:1px 6px;margin:2px 0 0 8px;border-radius:5px}
+  .teller .regel.licht{background:#ffe08a;font-weight:600}
+  .teller .n{color:var(--muted);font-size:12px}
+  .teller .totaal{margin-top:4px;font-weight:500}
+  /* formules van de contactkrachten onder het vrijlichaamsdiagram */
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .instructie .kies{font-size:13px;color:var(--muted);align-self:center}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 28px;align-items:center;padding:2px 14px 6px;font-size:16px;min-height:52px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 7.1 — Drie onafhankelijke voorwaarden in 2D</h1>
+    <span class="kicker">Evenwicht van een lichaam · welke beweging verhindert elke verbinding, en welke contactkracht of welk contactmoment hoort daarbij bij het vrijmaken?</span>
+  </header>
+
+  <!-- instructie en keuze van de situatie boven de applets -->
+  <div class="instructie card">
+    <p>Een verbinding verhindert een beweging <b>op de plaats van de verbinding</b>. Klik op een loep in de figuur (of in het vrijlichaamsdiagram) en probeer rechts welke bewegingen het stukje lichaam daar kan maken: in de loep zie je enkel die verbinding, de rest van het lichaam en de andere verbindingen zijn weggelaten. Elke verhinderde beweging geeft bij het vrijmaken een contactkracht of -moment; die licht op in het vrijlichaamsdiagram.</p>
+    <div class="btnrow modus" style="margin:0">
+      <span class="kies">Situatie:</span>
+      <button id="s1">inklemming</button>
+      <button id="s2">vast scharnier + glijdend scharnier</button>
+      <button id="s3">vast scharnier + kabel</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Een balk met verbindingen aan de omgeving; klik op een verbinding om ze in de loep te nemen"></canvas>
+      <div class="vldformules" id="vldf" aria-label="Contactkrachten en -momenten als vectoren"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="slider" id="hoekslider">
+          <div class="lab"><span>Helling <span class="i">θ</span> van de geleiding in B</span><b id="phival"></b></div>
+          <input type="range" id="phi" min="0" max="60" step="1" value="30">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="210">
+      <h3 id="loeptitel">Loep</h3>
+      <canvas id="loep" style="cursor:default"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="btnrow" style="margin:6px 0 0"><button id="wis">proeven wissen</button></div>
+      <div class="teller" id="teller"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad, deg } = TM1;
+const C = TM1.kleuren();
+const XMIN = -1.2, XMAX = 8.6, YMIN = -2.0, YMAX = 3.9;   // strak rond het voorwerp: weinig witruimte
+const LB = 6, DIK = 0.32;                         // lengte en dikte van de balk [m]
+const ANKER = { x: 7.7, y: 3.4 };                 // ophangpunt van de kabel
+let sit = 2, gekozen = 'B', phi = rad(30), vrij = false;
+let proeven = {};                                 // proeven[situatie + verbinding][beweging] = 'vrij' | 'verh'
+// sleutel per situatie én verbinding: A is een inklemming in situatie 1 maar een vast scharnier in 2 en 3
+const sleutel = id => sit + id;
+let anim = null;                                  // lopende proefbeweging in de loep
+
+// ---------- verbindingen per situatie ----------
+const geleiding = () => ({ x: Math.cos(phi), y: Math.sin(phi) });   // richting van de schuine geleiding
+const kabel = () => { const dx = ANKER.x - LB, dy = ANKER.y, n = Math.hypot(dx, dy); return { x: dx / n, y: dy / n }; };
+function verbindingen() {
+  if (sit === 1) return [{ id: 'A', type: 'inklemming', p: { x: 0, y: 0 } }];
+  if (sit === 2) return [{ id: 'A', type: 'scharnier', p: { x: 0, y: 0 } }, { id: 'B', type: 'glijdend', p: { x: LB, y: 0 } }];
+  return [{ id: 'A', type: 'scharnier', p: { x: 0, y: 0 } }, { id: 'B', type: 'kabel', p: { x: LB, y: 0 } }];
+}
+const NAAM = { inklemming: 'Inklemming', scharnier: 'Vast scharnier', glijdend: 'Glijdend scharnier', kabel: 'Kabel' };
+// proefbewegingen van het stukje lichaam bij een verbinding: richting (translatie) of rotatie,
+// en of de verbinding ze verhindert (met de contactkracht/-moment die erbij hoort)
+function bewegingen(v) {
+  const ex = { x: 1, y: 0 }, ey = { x: 0, y: 1 };
+  if (v.type === 'inklemming') return [
+    { id: 'tx', tekst: 'translatie ∥ <i>x</i>', d: ex, verh: true, kracht: ['F', 'Ax'] },
+    { id: 'ty', tekst: 'translatie ∥ <i>y</i>', d: ey, verh: true, kracht: ['F', 'Ay'] },
+    { id: 'rz', tekst: 'rotatie rond <i>z</i>', rot: true, verh: true, kracht: ['M', 'A'] }];
+  if (v.type === 'scharnier') return [
+    { id: 'tx', tekst: 'translatie ∥ <i>x</i>', d: ex, verh: true, kracht: ['F', v.id + 'x'] },
+    { id: 'ty', tekst: 'translatie ∥ <i>y</i>', d: ey, verh: true, kracht: ['F', v.id + 'y'] },
+    { id: 'rz', tekst: 'rotatie rond <i>z</i>', rot: true, verh: false }];
+  if (v.type === 'glijdend') { const g = geleiding(), n = { x: -g.y, y: g.x }; return [
+    { id: 'tl', tekst: 'translatie langs de geleiding', d: g, verh: false, vrijTekst: 'translatie mogelijk → geen kracht evenwijdig met de helling' },
+    { id: 'tn', tekst: 'translatie loodrecht op de geleiding', d: n, verh: true, kracht: ['F', v.id] },
+    { id: 'rz', tekst: 'rotatie rond <i>z</i>', rot: true, verh: false }]; }
+  const k = kabel(), n = { x: -k.y, y: k.x };
+  return [
+    { id: 'kw', tekst: 'weg van het ophangpunt (kabel verlengt)', d: { x: -k.x, y: -k.y }, verh: true, kracht: ['F', v.id], f: k, trek: true },
+    { id: 'kn', tekst: 'naar het ophangpunt toe (kabel wordt slap)', d: k, verh: false, vrijTekst: 'translatie mogelijk → geen duwkracht (een kabel kan niet duwen)' },
+    { id: 'kl', tekst: 'loodrecht op de kabel', d: n, verh: false, vrijTekst: 'translatie mogelijk → geen kracht loodrecht op de kabel' },
+    { id: 'rz', tekst: 'rotatie rond <i>z</i>', rot: true, verh: false }];
+}
+// richting van de contactkracht bij een verhinderde beweging (de kracht werkt de verhinderde beweging tegen)
+// richting van de contactkracht: componenten in de positieve asrichting (F_Ax ∥ +x, F_Ay ∥ +y), bij het glijdend
+// scharnier van de geleiding naar het lichaam, bij de kabel een trekkracht naar het ophangpunt (b.f)
+const krachtRichting = b => b.f || b.d;
+// proef in beide zinnen (heen en terug), behalve langs de kabel: daar hangt het resultaat af van de zin (kw / kn)
+const tweeZin = b => b.id !== 'kw' && b.id !== 'kn';
+const GLOED = 'rgba(255,196,0,';                     // gele gloed rond de kracht van de geprobeerde beweging
+function krachtPijl(ctx, q, b, len, S, size, gloed = 0) {
+  const r = krachtRichting(b);
+  let x0, y0, x1, y1, lx, ly;
+  if (b.trek) { x0 = q.x; y0 = q.y; x1 = q.x + r.x * len * S; y1 = q.y - r.y * len * S; lx = x1 + 6; ly = y1 + 4; }   // trekkracht: vertrekt in het punt
+  else { x0 = q.x - r.x * len * S; y0 = q.y + r.y * len * S; x1 = q.x; y1 = q.y; lx = x0 + (r.x > 0.5 ? -24 : 6); ly = y0 + (r.y > 0.5 ? 14 : -6); }
+  if (gloed > 0) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * gloed) + ')', { w: 12, head: 22 });
+  if (arrow(ctx, x0, y0, x1, y1, C.F, { w: gloed ? 3.6 : 2.8, head: gloed ? 14 : 12 })) label(ctx, b.kracht[0], b.kracht[1], lx, ly, C.F, { vec: !!b.vecLabel, size: gloed ? size + 2 : size });
+}
+
+// ---------- tekenhulp ----------
+function grond(ctx, x0, y0, x1, y1, S) {            // gearceerde vaste omgeving langs de lijn (x0,y0)-(x1,y1)
+  const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, nx = uy, ny = -ux;
+  ctx.save(); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#8f969e';
+  for (let s = 6; s < L; s += 8) { const px = x0 + ux * s, py = y0 + uy * s; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + nx * 7 - ux * 6, py + ny * 7 - uy * 6); ctx.stroke(); }
+  ctx.restore();
+}
+function scharnier(ctx, x, y, s, glijdend, hoek = 0) {   // driehoek met pen in (x,y); hoek = helling van de ondergrond
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-hoek);
+  ctx.fillStyle = '#eef1f4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-0.7 * s, 1.1 * s); ctx.lineTo(0.7 * s, 1.1 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+  let yb = 1.1 * s;
+  if (glijdend) { for (const dx of [-0.42, 0, 0.42]) { ctx.beginPath(); ctx.arc(dx * s, 1.1 * s + 0.16 * s, 0.15 * s, 0, 2 * Math.PI); ctx.stroke(); } yb = 1.42 * s; }
+  ctx.restore();
+  ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 0.16 * s, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  // ondergrond (gekanteld), net onder de driehoek of de wieltjes; de arcering ligt onder de grondlijn
+  // (rotate(-hoek) zet de lokale "naar beneden" (0, yb) op (sin·yb, cos·yb) in schermcoördinaten)
+  const c = Math.cos(hoek), sn = Math.sin(hoek), gx = x + sn * yb, gy = y + c * yb;
+  grond(ctx, gx + c * 1.3 * s, gy - sn * 1.3 * s, gx - c * 1.3 * s, gy + sn * 1.3 * s, s);   // van rechts naar links: arcering onderaan
+}
+function momentPijl(ctx, x, y, r, kleur, positief = true, dikte = 2.4, hoeken = null) {   // gebogen pijl (tegen de wijzers in); hoeken = [van, tot] (rad, enkel positief)
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = dikte;
+  let a0 = positief ? 0.35 * Math.PI : 0.65 * Math.PI, a1 = positief ? 1.75 * Math.PI : -0.75 * Math.PI;
+  if (hoeken) [a0, a1] = hoeken;
+  ctx.beginPath(); ctx.arc(x, y, r, -a0, -a1, positief); ctx.stroke();
+  const ex = x + r * Math.cos(-a1), ey = y + r * Math.sin(-a1), tx = Math.sin(-a1) * (positief ? 1 : -1), ty = -Math.cos(-a1) * (positief ? 1 : -1);
+  ctx.fillStyle = kleur; ctx.beginPath(); ctx.moveTo(ex + tx * 9, ey + ty * 9); ctx.lineTo(ex - ty * 5, ey + tx * 5); ctx.lineTo(ex + ty * 5, ey - tx * 5); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function balk(ctx, P, x0, x1, S, opt = {}) {          // balk van x0 tot x1 langs de x-as (wereld), opt.snedeL/R: zaagsnede
+  const a = P({ x: x0, y: DIK / 2 }), b = P({ x: x1, y: -DIK / 2 });
+  ctx.save(); ctx.fillStyle = opt.kleur || '#cdd8e4'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.rect(a.x, a.y, b.x - a.x, b.y - a.y); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, a.y); ctx.moveTo(a.x, b.y); ctx.lineTo(b.x, b.y);
+  if (!opt.snedeL) { ctx.moveTo(a.x, a.y); ctx.lineTo(a.x, b.y); }
+  if (!opt.snedeR) { ctx.moveTo(b.x, a.y); ctx.lineTo(b.x, b.y); }
+  ctx.stroke();
+  for (const [kant, x] of [['snedeL', a.x], ['snedeR', b.x]]) if (opt[kant]) {     // gekartelde snede: "de rest is weggelaten"
+    ctx.setLineDash([3, 3]); ctx.beginPath(); const n = 5;
+    for (let i = 0; i <= n; i++) { const yy = a.y + (b.y - a.y) * i / n, xx = x + (i % 2 ? 5 : -5); i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+// ---------- overzicht ----------
+const sc = setup(document.getElementById('scene'));
+let schaalSc = 1, PSc = q => q, schaalVld = 1, PVld = q => q;
+const LOEPKLEUR = 'rgba(29,92,150,0.16)';             // inkleuring van de gekozen loep (figuur en vrijlichaamsdiagram)
+const RL = 1.2;                                        // straal van de loep in de bovenste figuur (m)
+// letter van de verbinding net buiten de rand van de loep, schuin boven (A links, B rechts), weg van de krachten
+function letterBijLoep(ctx, v, q, r) {
+  const a = rad(v.p.x ? 52 : 128), x = q.x + (r + 9) * Math.cos(a), y = q.y - (r + 9) * Math.sin(a);
+  ctx.save(); ctx.font = '600 15px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(v.id, x, y); ctx.restore();
+}
+function tekenVerbinding(ctx, v, P, S, met = true) {
+  const q = P(v.p);
+  if (v.type === 'inklemming') {
+    const top = P({ x: 0, y: 1.2 }), bot = P({ x: 0, y: -1.2 });
+    ctx.save(); ctx.fillStyle = '#e4e7eb'; ctx.fillRect(top.x - 0.5 * S, top.y, 0.5 * S, bot.y - top.y); ctx.restore();
+    grond(ctx, top.x, bot.y, top.x, top.y, S);
+  } else if (v.type === 'scharnier') scharnier(ctx, q.x, q.y + DIK / 2 * S * 0, 0.42 * S, false);
+  else if (v.type === 'glijdend') {
+    scharnier(ctx, q.x, q.y, 0.42 * S, true, phi);
+    if (met && phi > 0.02) {                          // hoek θ tussen de horizontale en de helling, aan het linkse uiteinde van de grond
+      const s = 0.42 * S, yb = 1.42 * s, c = Math.cos(phi), sn = Math.sin(phi);
+      const gx = q.x + sn * yb - c * 1.3 * s, gy = q.y + c * yb + sn * 1.3 * s, r = 1.25 * s;
+      ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + 1.7 * s, gy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(gx, gy, r, -phi, 0); ctx.stroke(); ctx.restore();
+      label(ctx, 'θ', '', gx + (r + 9) * Math.cos(phi / 2), gy - (r + 9) * Math.sin(phi / 2) + 5, '#4f5862', { vec: false, size: 14 });
+    }
+  } else {
+    const a = P(ANKER);
+    ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(a.x, a.y); ctx.stroke(); ctx.restore();
+    grond(ctx, a.x - 0.8 * S, a.y, a.x + 0.8 * S, a.y, S);
+    ctx.save(); ctx.fillStyle = '#3d454f'; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+    if (met) {                                        // hoek α tussen de horizontale en de kabel
+      const k = kabel(), al = Math.atan2(k.y, k.x), r = 0.7 * S;
+      ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x + 1.0 * S, q.y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(q.x, q.y, r, -al, 0); ctx.stroke(); ctx.restore();
+      label(ctx, 'α', '', q.x + (r + 9) * Math.cos(al / 2), q.y - (r + 9) * Math.sin(al / 2) + 5, '#4f5862', { vec: false, size: 14 });
+    }
+  }
+}
+// contactkrachten en -momenten van een verbinding (enkel in het vrijlichaamsdiagram, waar de verbinding weggesneden is).
+// De kracht of het moment van de laatst geprobeerde beweging (licht) krijgt een (pulserende) gele gloed.
+let licht = null;                                    // { v, b } : laatst geprobeerde beweging
+function tekenReacties(ctx, v, P, S, lengte = 1.6) {
+  const q = P(v.p);
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1;
+  const gl = id => (licht && licht.v === v.id && licht.b === id ? puls : 0);
+  const gloed = g => GLOED + (0.35 + 0.5 * g) + ')';
+  if (v.type === 'inklemming' || v.type === 'scharnier') {
+    // F_A als één vector; stippellijnen tonen haar projecties op de x- en de y-as (zonder labels of pijlen).
+    // De projectie die hoort bij de geprobeerde beweging licht op.
+    const r = { x: Math.cos(rad(55)), y: Math.sin(rad(55)) }, L = lengte * 1.15 * S;
+    const t = { x: q.x - r.x * L, y: q.y + r.y * L };                 // staart van F_A (de pijl eindigt in het punt)
+    const px = { x: q.x - r.x * L, y: q.y }, py = { x: q.x, y: q.y + r.y * L };
+    const gx = gl('tx'), gy = gl('ty');
+    const lijn = (a, b, g) => {
+      ctx.save(); ctx.lineCap = 'round';
+      if (g) { ctx.strokeStyle = gloed(g); ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+      ctx.setLineDash([3, 4]); ctx.strokeStyle = g ? C.F : '#9aa1aa'; ctx.lineWidth = g ? 2.6 : 1.3;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore();
+    };
+    lijn(t, px, 0); lijn(t, py, 0);                                    // loodlijnen van de punt van F_A naar de assen
+    lijn(px, q, gx); lijn(py, q, gy);                                  // de projecties zelf
+    arrow(ctx, t.x, t.y, q.x, q.y, C.F, { w: 2.8, head: 12 });
+    label(ctx, 'F', v.id, t.x - 24, t.y - 4, C.F, { vec: true, size: 15 });
+    if (v.type === 'inklemming') {
+      const g = gl('rz');
+      // M_A linksboven (bovenste halve cirkel), weg van F_A en haar projecties die links en onder het punt liggen
+      const hk = [rad(28), rad(172)], rm = 0.62 * S;
+      if (g) momentPijl(ctx, q.x, q.y, rm, gloed(g), true, 11, hk);
+      momentPijl(ctx, q.x, q.y, rm, C.M, true, g ? 3.4 : 2.4, hk);
+      label(ctx, 'M', v.id, q.x - rm - 26, q.y - rm - 2, C.M, { vec: true, size: g ? 17 : 15 });
+    }
+  } else {
+    for (const b of bewegingen(v)) if (b.verh) krachtPijl(ctx, q, { ...b, vecLabel: true }, lengte, S, 15, gl(b.id));
+  }
+  // geprobeerde beweging die mogelijk is: geen kracht/moment
+  if (licht && licht.v === v.id) {
+    const b = bewegingen(v).find(x => x.id === licht.b);
+    if (b && !b.verh) {
+      ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center';
+      ctx.fillText(b.vrijTekst || (b.rot ? 'rotatie mogelijk → geen moment' : 'translatie mogelijk → geen kracht'), q.x + (v.p.x ? -0.9 * S : 0.9 * S), q.y + 1.85 * S + 16); ctx.restore();
+    }
+  }
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
+  const H = Hall * 0.55;                             // bovenste deel: de situatie; onderste deel: het vrijlichaamsdiagram
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  titel('Lichaam met verbindingen', 18);
+  const S = Math.min(W / (XMAX - XMIN), (H - 20) / (YMAX - YMIN)); schaalSc = S;
+  const ox = (W - S * (XMAX - XMIN)) / 2, oy = (H - S * (YMAX - YMIN)) / 2;
+  const P = q => ({ x: ox + (q.x - XMIN) * S, y: H - oy - (q.y - YMIN) * S }); PSc = P;
+  const vs = verbindingen();
+  // de gekozen loep ingekleurd (achter de tekening), zodat duidelijk is naar welke verbinding je kijkt
+  vs.forEach(v => { if (v.id === gekozen) { const q = P(v.p); ctx.save(); ctx.fillStyle = LOEPKLEUR; ctx.beginPath(); ctx.arc(q.x, q.y, RL * S, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); } });
+  vs.forEach(v => tekenVerbinding(ctx, v, P, S));
+  balk(ctx, P, 0, LB, S);
+  // een loepcirkel rond elke verbinding (aanklikbaar); de gekozen verbinding vol en dikker
+  vs.forEach(v => {
+    const q = P(v.p), aan = v.id === gekozen;
+    ctx.save(); ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]);
+    ctx.beginPath(); ctx.arc(q.x, q.y, RL * S, 0, 2 * Math.PI); ctx.stroke();
+    // handvat van de loep
+    const hx = q.x + RL * S * Math.cos(-Math.PI / 4), hy = q.y - RL * S * Math.sin(-Math.PI / 4);
+    ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.35 * S, hy + 0.35 * S); ctx.stroke(); ctx.restore();
+    letterBijLoep(ctx, v, q, RL * S);
+  });
+  // assen
+  const a0 = P({ x: -1.0, y: -1.75 });
+  arrow(ctx, a0.x, a0.y, a0.x + 36, a0.y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', a0.x + 39, a0.y + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, a0.x, a0.y, a0.x, a0.y - 36, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', a0.x - 13, a0.y - 30, '#6b737d', { vec: false, size: 13 });
+
+  // ----- onderaan: het vrijlichaamsdiagram (verbindingen weggesneden) -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  titel('Vrijlichaamsdiagram: verbindingen weggesneden', H + 18);
+  const H2 = Hall - H, S2 = Math.min(W / 10, (H2 - 44) / 4.7);   // ruimte voor de snijcirkels en de tekst eronder
+  const P2 = q => ({ x: W / 2 + (q.x - LB / 2) * S2, y: H + 20 + (H2 - 20) / 2 - q.y * S2 }); PVld = P2; schaalVld = S2;
+  vs.forEach(v => {                                  // snijcirkel waar de verbinding weggesneden is; de gekozen ingekleurd
+    const q = P2(v.p), aan = v.id === gekozen;
+    ctx.save(); if (aan) { ctx.fillStyle = LOEPKLEUR; ctx.beginPath(); ctx.arc(q.x, q.y, 1.85 * S2, 0, 2 * Math.PI); ctx.fill(); }
+    ctx.strokeStyle = C.accent; ctx.setLineDash(aan ? [] : [6, 4]); ctx.lineWidth = aan ? 3 : 1.6; ctx.beginPath(); ctx.arc(q.x, q.y, 1.85 * S2, 0, 2 * Math.PI); ctx.stroke();
+    // handvat van de loep, zoals in de figuur erboven
+    const hx = q.x + 1.85 * S2 * Math.SQRT1_2, hy = q.y + 1.85 * S2 * Math.SQRT1_2;
+    ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.45 * S2, hy + 0.45 * S2); ctx.stroke(); ctx.restore();
+    letterBijLoep(ctx, v, q, 1.85 * S2);
+  });
+  balk(ctx, P2, 0, LB, S2);
+  // alle contactkrachten en -momenten; die van de geprobeerde beweging lichten op
+  vs.forEach(v => tekenReacties(ctx, v, P2, S2, 1.3));
+}
+
+// ---------- loep ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  const v = verbindingen().find(x => x.id === gekozen); if (!v) return;
+  const S = Math.min(W / 3.2, H / 2.3);                // sterk vergroot: ongeveer 3.2 m breed en 2.3 m hoog in beeld
+  const c = { x: W / 2, y: H / 2 + 0.2 * S };
+  const P = q => ({ x: c.x + (q.x - v.p.x) * S, y: c.y - (q.y - v.p.y) * S });
+  // verbinding zelf (vast)
+  tekenVerbinding(ctx, v, P, S * 0.9);
+  // het stukje lichaam: een kort deel van de balk aan de kant van de rest van het lichaam, met een snede
+  // beweging in twee richtingen (eerst +, dan −), behalve langs de kabel: daar zijn beide zinnen aparte proeven
+  let dx = 0, dy = 0, rot = 0, schud = 0, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1);
+    const s = tweeZin(b) ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u);
+    zin = s < 0 ? -1 : 1;
+    if (b.verh) schud = Math.sin(anim.t * 40) * 0.06 * Math.abs(s) + 0.04 * s;   // geblokkeerd: duwt even en trilt op zijn plaats
+    else if (b.rot) rot = 0.35 * s;
+    else { dx = b.d.x * 0.55 * s; dy = b.d.y * 0.55 * s; }
+    if (b.verh && !b.rot) { dx = b.d.x * schud; dy = b.d.y * schud; } else if (b.verh) rot = schud;
+  }
+  const naarRechts = v.p.x === 0;                          // bij A ligt de rest van de balk rechts, bij B links
+  const x0 = naarRechts ? v.p.x - (v.type === 'inklemming' ? 0 : 0.35) : v.p.x - 1.6, x1 = naarRechts ? v.p.x + 1.6 : v.p.x + 0.35;
+  ctx.save();
+  const pv = P(v.p); ctx.translate(pv.x + dx * S, pv.y - dy * S); ctx.rotate(-rot); ctx.translate(-pv.x, -pv.y);
+  balk(ctx, P, x0, x1, S, { snedeR: naarRechts, snedeL: !naarRechts });
+  if (v.type !== 'inklemming') { ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(pv.x, pv.y, 5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); }
+  ctx.restore();
+  // (geen krachten in de loep: de verbinding is hier nog aanwezig; de krachten komen pas in het vrijlichaamsdiagram)
+  // proefbeweging: pijl die de geprobeerde beweging aangeeft, met het resultaat
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a';
+    // pijl in de zin die nu geprobeerd wordt
+    if (b.rot) { ctx.save(); ctx.setLineDash([4, 3]); momentPijl(ctx, pv.x, pv.y, 1.05 * S, kl, zin > 0); ctx.restore(); }
+    else { const ux = zin * b.d.x, uy = zin * b.d.y; arrow(ctx, pv.x + ux * 0.3 * S, pv.y - uy * 0.3 * S, pv.x + ux * 1.1 * S, pv.y - uy * 1.1 * S, kl, { w: 2.2, dash: [5, 3], head: 10 }); }
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center';
+    const beide = tweeZin(b) ? ' (in beide zinnen)' : '';
+    ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + beide, W / 2, 18); ctx.restore();
+  }
+}
+
+// ---------- proeftabel ----------
+const $ = id => document.getElementById(id);
+function tabel() {
+  const v = verbindingen().find(x => x.id === gekozen), pr = proeven[sleutel(gekozen)] || {};
+  $('loeptitel').textContent = `${NAAM[v.type]} in ${v.id}`;
+  $('proef').innerHTML = bewegingen(v).map(b => {
+    const r = pr[b.id];
+    const uit = !r ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : r === 'vrij' ? '<span class="uit vrij">✓ mogelijk</span>' +
+          (b.id === 'kn' ? ` → <span class="k-F"><span class="i">F</span><sub>${v.id}</sub></span> ≥ 0` : '')   // kabel kan niet duwen
+      : `<span class="uit verh">✕ verhinderd</span> → <span class="${b.rot ? 'k-M' : 'k-F'}"><span class="i">${b.kracht[0]}</span><sub>${b.kracht[1]}</sub></span>`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = bewegingen(v).find(x => x.id === k.dataset.b);
+    (proeven[sleutel(v.id)] = proeven[sleutel(v.id)] || {})[b.id] = b.verh ? 'verh' : 'vrij';   // resultaat meteen in de tabel
+    anim = { b, t: 0, T: tweeZin(b) ? 2.6 : 1.4, v: v.id };
+    licht = { v: v.id, b: b.id };                   // de bijbehorende kracht/het moment licht op in het vrijlichaamsdiagram
+    render();                                       // tabel, loep, vrijlichaamsdiagram en teller
+  });
+}
+
+// ---------- boekhouding van de beperkingen op het hele lichaam (zoals in het handboek) ----------
+// Per verbinding de verhinderde bewegingen, meteen met het resultaat. De verbinding in de loep krijgt een kader in de
+// loepkleur; de regel van de laatst geprobeerde (verhinderde) beweging licht geel op.
+const BOEK = {                                       // omschrijving van de verhinderde bewegingen zoals in het boek
+  tx: 'verhindert translatie ∥ <i>x</i>', ty: 'verhindert translatie ∥ <i>y</i>', rz: 'verhindert rotatie rond <i>z</i>',
+  tn: 'verhindert translatie loodrecht op de schuine geleiding', kw: 'verhindert translatie – enkel verlenging – langs de kabel'
+};
+function drawVLD() {
+  let som = 0;
+  const blokken = verbindingen().map(v => {
+    const verh = bewegingen(v).filter(b => b.verh); som += verh.length;
+    const aan = v.id === gekozen;
+    const regels = verh.map(b => {
+      const lit = licht && licht.v === v.id && licht.b === b.id;
+      const kr = b.rot ? `<span class="k-M"><span class="i">M</span><sub>${v.id}</sub></span>` : `<span class="k-F"><span class="i">F</span><sub>${b.kracht[1]}</sub></span>`;
+      return `<div class="regel${lit ? ' licht' : ''}">${BOEK[b.id]} <span class="n">(1 beperking)</span> → ${kr}</div>`;
+    }).join('');
+    // kabel: de kracht kan enkel trekken, dus F_B ≥ 0; licht op bij de beweging naar het ophangpunt toe (kabel wordt slap)
+    const voorw = v.type === 'kabel'
+      ? `<div class="regel${licht && licht.v === v.id && licht.b === 'kn' ? ' licht' : ''}">voorwaarde: <span class="k-F"><span class="i">F</span><sub>${v.id}</sub></span> ≥ 0 <span class="n">(een kabel kan enkel trekken, niet duwen)</span></div>` : '';
+    return `<div class="blok${aan ? ' aan' : ''}"><b>${NAAM[v.type]} ${v.id}</b> <span class="n">· ${verh.length} beperking${verh.length > 1 ? 'en' : ''}</span>${regels}${voorw}</div>`;
+  }).join('');
+  $('teller').innerHTML = `<h4>Boekhouding: beperkingen op het hele lichaam</h4>${blokken}` +
+    `<div class="totaal">Totaal: <b>${som}</b> beperkingen in 2D voor 3 vrijheidsgraden van het lichaam in 2D → statisch bepaald</div>`;
+}
+
+// ---------- bediening ----------
+function knoppen() {
+  ['s1', 's2', 's3'].forEach((id, i) => $(id).classList.toggle('actief', sit === i + 1));
+  $('hoekslider').style.display = sit === 2 ? '' : 'none';
+  $('phival').textContent = `${deg(phi).toFixed(0)}°`;
+}
+function kies(id) { gekozen = id; anim = null; licht = null; render(); }
+// ---------- formules van de contactkrachten (onder het vrijlichaamsdiagram) ----------
+// De term van de laatst geprobeerde verhinderde beweging krijgt een gele markering, net als de projectie in de tekening.
+function formules() {
+  const el = $('vldf'); if (!el || !window.katex) return;
+  const kF = s => `\\textcolor{${C.F}}{${s}}`, kM = s => `\\textcolor{${C.M}}{${s}}`;
+  const mark = (v, id, s) => (licht && licht.v === v && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = verbindingen().map(v => {
+    const i = v.id;
+    if (v.type === 'inklemming' || v.type === 'scharnier') {
+      // haakjes en eenheidsvector in de kleur van de kracht of het moment
+      let t = `${kF(`\\vec F_${i}`)} = ${kF(`\\begin{Bmatrix}${mark(i, 'tx', kF(`F_{${i}x}`))}\\\\ ${mark(i, 'ty', kF(`F_{${i}y}`))}\\end{Bmatrix}`)}`;
+      if (v.type === 'inklemming') t += `, \\qquad ${kM(`\\vec M_${i}`)} = ${mark(i, 'rz', kM(`M_${i}`))}${kM(`\\,\\vec e_z`)}`;
+      return t;
+    }
+    if (v.type === 'glijdend') return `${kF(`\\vec F_${i}`)} = ${mark(i, 'tn', kF(`F_${i}`))}${kF(`\\begin{Bmatrix}-\\sin\\theta\\\\ \\cos\\theta\\end{Bmatrix}`)}`;
+    // kabel: enkel trekken, dus F_B ≥ 0 (licht op bij de beweging naar het ophangpunt toe)
+    return `${kF(`\\vec F_${i}`)} = ${mark(i, 'kw', kF(`F_${i}`))}${kF(`\\begin{Bmatrix}\\cos\\alpha\\\\ \\sin\\alpha\\end{Bmatrix}`)},\\qquad ${mark(i, 'kn', `${kF(`F_${i}`)} \\ge 0`)}`;
+  });
+  el.innerHTML = delen.map(() => '<span></span>').join('');
+  [...el.children].forEach((s, j) => { try { katex.render(delen[j], s, { throwOnError: false }); } catch (e) { s.textContent = delen[j]; } });
+}
+window.addEventListener('load', () => formules());
+function render() { knoppen(); tabel(); drawScene(); drawLoep(); drawVLD(); formules(); }
+const situatie = n => { sit = n; gekozen = n === 1 ? 'A' : 'B'; anim = null; licht = null; render(); };
+$('s1').onclick = () => situatie(1); $('s2').onclick = () => situatie(2); $('s3').onclick = () => situatie(3);
+$('wis').onclick = () => { proeven = {}; anim = null; licht = null; render(); };
+$('phi').oninput = e => { phi = rad(+e.target.value); render(); };
+sc.c.addEventListener('click', e => {                 // klik op een verbinding in het overzicht
+  const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, d = 1e9;
+  // zowel in de figuur bovenaan als in het vrijlichaamsdiagram eronder
+  verbindingen().forEach(v => {
+    for (const [P, s] of [[PSc, schaalSc], [PVld, schaalVld]]) { const q = P(v.p), dd = Math.hypot(q.x - x, q.y - y) / s; if (dd < d) { d = dd; best = v.id; } }
+  });
+  if (best && d < 1.6) kies(best);
+});
+
+TM1.bijGrootte([sc, LP], render);
+// animatie van een proefbeweging in de loep; na afloop wordt het resultaat bewaard
+TM1.lus(dt => {
+  anim.t += dt;
+  if (anim.t >= anim.T) anim = null;
+  drawLoep(); drawScene();                          // de gloed in het vrijlichaamsdiagram pulseert mee
+}, () => !!anim);
+})();
+</script>
+</body>
+</html>
