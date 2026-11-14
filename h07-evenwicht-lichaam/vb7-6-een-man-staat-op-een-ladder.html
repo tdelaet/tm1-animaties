@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 7.6 – Een man staat op een ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:340px}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:center;padding:2px 14px 6px;font-size:15px;min-height:52px}
+  .stap{font-size:13.5px}
+  .stap p{margin:4px 0 8px}
+  .stap h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px}
+  .stap .vgl{font-size:15px;margin:4px 0 4px 6px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+  .stap .noot{font-size:12.5px;color:var(--muted)}
+  .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
+  .stap .kader.ok{border-color:#2f7d3a;background:#e2f2e4} .stap .kader.slip{border-color:#c0392b;background:#fbe3e1}
+  .stap .slider{margin:6px 0}
+  .stap hr{border:0;border-top:1px solid var(--line);margin:12px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 7.6 — Een man staat op een ladder</h1>
+    <span class="kicker">Evenwicht van een lichaam · een ladder (lengte L, gewicht G) rust op een ruwe vloer (12) en tegen een gladde wand (13); een man met gewicht F staat op hoogte H; gevraagd: de krachten van vloer en wand op de ladder, en of de ladder wegschuift</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Doorloop de stappen van het plan van aanpak (het opstellen en oplossen van de evenwichtsvergelijkingen is hier gecombineerd). In <b>stap 2, het vrijmaken</b>, klik je op een loep in de figuur (12 of 13) en probeer je rechts welke bewegingen die verbinding verhindert; elke verhinderde beweging geeft een reactiekracht, die oplicht in het vrijlichaamsdiagram van de ladder.</p>
+    <div class="stappen modus" id="stappen"></div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="De ladder tegen de wand met de verbindingen 12 en 13, en eronder het vrijlichaamsdiagram van de ladder"></canvas>
+      <div class="vldformules" id="vldf"></div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="200">
+      <h3 id="rtitel"></h3>
+      <canvas id="loep"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="stap" id="stap"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad, deg } = TM1;
+const C = TM1.kleuren();
+const KG = '#2f8f46', KF = '#2b6cb0', K12 = C.F, K13 = '#c2378a';
+const GLOED = 'rgba(255,196,0,';
+// gegevens uit de opgave
+const G0 = 80, F0 = 750, L = 3, A0 = 60, MU0 = 0.4;
+let stap = 1, gekozen = '12', anim = null, licht = null, proeven = {};
+let alfa = rad(A0), mu = MU0, h = 0.65;                // h = H / (L sin α): relatieve hoogte van de man
+const DIK = 0.12;
+
+// ---------- geometrie (oorsprong in de hoek vloer–wand, x naar rechts langs de vloer, y omhoog langs de wand) ----------
+const R12 = () => ({ x: L * Math.cos(alfa), y: 0 }), R13 = () => ({ x: 0, y: L * Math.sin(alfa) });
+const R1 = () => ({ x: 0.5 * L * Math.cos(alfa), y: 0.5 * L * Math.sin(alfa) });
+const Hh = () => h * L * Math.sin(alfa), R14 = () => ({ x: L * Math.cos(alfa) - Hh() / Math.tan(alfa), y: Hh() });
+function oplossing() {
+  const ct = 1 / Math.tan(alfa), F13 = (0.5 * G0 + F0 * h) * ct;
+  return { F13, F12x: -F13, F12y: G0 + F0 };
+}
+
+// ---------- tekenhulp (2D) ----------
+function grond(ctx, x0, y0, x1, y1) {
+  const Lg = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / Lg, uy = (y1 - y0) / Lg, nx = uy, ny = -ux;
+  ctx.save(); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#8f969e';
+  for (let s = 6; s < Lg; s += 8) { const px = x0 + ux * s, py = y0 + uy * s; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + nx * 7 - ux * 6, py + ny * 7 - uy * 6); ctx.stroke(); }
+  ctx.restore();
+}
+function vloer(ctx, P, x0, x1) { const a = P({ x: x1, y: 0 }), b = P({ x: x0, y: 0 }); grond(ctx, a.x, a.y, b.x, b.y); }
+function wand(ctx, P, y0, y1) { const a = P({ x: 0, y: y0 }), b = P({ x: 0, y: y1 }); grond(ctx, a.x, a.y, b.x, b.y); }
+// ladder (of een stuk ervan) van p naar q als balk; T verplaatst/draait; snede: zijde aan de kant van q gestippeld
+function ladder(ctx, P, p, q, opt = {}) {
+  const T = opt.T || (z => z), dx = q.x - p.x, dy = q.y - p.y, l = Math.hypot(dx, dy), nx = -dy / l * DIK / 2, ny = dx / l * DIK / 2;
+  const h4 = [{ x: p.x + nx, y: p.y + ny }, { x: q.x + nx, y: q.y + ny }, { x: q.x - nx, y: q.y - ny }, { x: p.x - nx, y: p.y - ny }].map(z => P(T(z)));
+  ctx.save(); ctx.fillStyle = '#b9c4d0'; ctx.beginPath(); h4.forEach((z, i) => i ? ctx.lineTo(z.x, z.y) : ctx.moveTo(z.x, z.y)); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.5;
+  h4.forEach((z, i) => { const n = h4[(i + 1) % 4]; ctx.setLineDash(opt.snede && i === 1 ? [4, 4] : []); ctx.beginPath(); ctx.moveTo(z.x, z.y); ctx.lineTo(n.x, n.y); ctx.stroke(); });
+  ctx.restore();
+}
+function punt(ctx, q, n, dx = 7, dy = -7) { ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore(); if (n) label(ctx, n, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 13 }); }
+function assen(ctx, x, y) {
+  arrow(ctx, x, y, x + 30, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + 33, y + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, x, y, x, y - 30, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 12, y - 24, '#6b737d', { vec: false, size: 13 });
+}
+function boogPijl(ctx, x, y, r, kleur, zin = 1) {
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = 2.2; ctx.setLineDash([5, 3]);
+  const a0 = 0.2 * Math.PI, a1 = a0 + zin * 1.2 * Math.PI; ctx.beginPath(); ctx.arc(x, y, r, -a0, -a1, zin > 0); ctx.stroke(); ctx.setLineDash([]);
+  const ex = x + r * Math.cos(-a1), ey = y + r * Math.sin(-a1), tx = Math.sin(-a1) * zin, ty = -Math.cos(-a1) * zin;
+  ctx.fillStyle = kleur; ctx.beginPath(); ctx.moveTo(ex + tx * 9, ey + ty * 9); ctx.lineTo(ex - ty * 5, ey + tx * 5); ctx.lineTo(ex + ty * 5, ey - tx * 5); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+// ---------- verbindingen en proefbewegingen ----------
+const VERB = {
+  '12': { naam: 'Verbinding 12: ladder op de ruwe vloer', p: R12, k: K12 },
+  '13': { naam: 'Verbinding 13: ladder tegen de gladde wand', p: R13, k: K13 }
+};
+const ROT = { id: 'rz', rot: true, twee: true, tekst: 'rotatie rond <i>z</i>', verh: false, uit: 'mogelijk → geen moment' };
+function bewegingen(id) {
+  if (id === '12') return [
+    { id: 'yneer', d: { x: 0, y: -1 }, tekst: 'translatie volgens negatieve <i>y</i> (de vloer in)', verh: true, kr: 'F_{12y}' },
+    { id: 'yop', d: { x: 0, y: 1 }, tekst: 'translatie volgens positieve <i>y</i> (van de vloer weg)', verh: false, uit: 'mogelijk: de ladder komt los → <i>F</i><sub>12y</sub> ≥ 0' },
+    { id: 'x', d: { x: 1, y: 0 }, twee: true, tekst: 'translatie ∥ <i>x</i> (langs de ruwe vloer)', verh: true, kr: 'F_{12x}', noot: 'zolang de ladder niet wegschuift: |F<sub>12x</sub>| ≤ μ<sub>s</sub> F<sub>12y</sub>' }, ROT];
+  return [
+    { id: 'xin', d: { x: -1, y: 0 }, tekst: 'translatie volgens negatieve <i>x</i> (de wand in)', verh: true, kr: 'F_{13}' },
+    { id: 'xuit', d: { x: 1, y: 0 }, tekst: 'translatie volgens positieve <i>x</i> (van de wand weg)', verh: false, uit: 'mogelijk: de ladder komt los → <i>F</i><sub>13</sub> ≥ 0' },
+    { id: 'y', d: { x: 0, y: 1 }, twee: true, tekst: 'translatie ∥ <i>y</i> (langs de gladde wand)', verh: false, uit: 'mogelijk: de wand is glad → geen wrijvingskracht' }, ROT];
+}
+
+// ---------- figuur ----------
+const sc = setup(document.getElementById('scene'));
+let raak = [];
+function loepCirkel(ctx, id, q, r) {
+  const aan = id === gekozen && stap === 2;
+  ctx.save();
+  if (aan) { ctx.fillStyle = 'rgba(29,92,150,0.16)'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2; ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(id, q.x + (r + 12) * Math.cos(rad(50)), q.y - (r + 12) * Math.sin(rad(50))); ctx.restore();
+  raak.push({ id, x: q.x, y: q.y, r });
+}
+function verticaal(ctx, P, p, kleur, naam, waarde, S) {    // verticale kracht naar beneden (G of F) in p
+  const q = P(p), l = (0.3 + 0.9 * waarde / 830) * S; arrow(ctx, q.x, q.y, q.x, q.y + l, kleur, { w: 2.6, head: 11 });
+  label(ctx, naam, '', q.x + 6, q.y + l, kleur, { vec: true, size: 15 }); ctx.save(); ctx.fillStyle = kleur; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall); raak = [];
+  const H = Hall * 0.5, S = Math.min(W / 4.2, (H - 40) / 3.3);
+  const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
+  // ----- boven: situatie -----
+  titel('Situatie', 18);
+  const P = q => ({ x: W / 2 + (q.x - 1.2) * S, y: 30 + (H - 30) * 0.88 - q.y * S });
+  vloer(ctx, P, -0.3, 2.6); wand(ctx, P, 0, 3.0);
+  ladder(ctx, P, R12(), R13());
+  verticaal(ctx, P, R1(), KG, 'G', G0, S); verticaal(ctx, P, R14(), KF, 'F', F0, S);
+  // hoek α aan de voet
+  const q12 = P(R12()), ra = 0.45 * S;
+  ctx.save(); ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(q12.x, q12.y, ra, -Math.PI, -Math.PI + alfa); ctx.stroke(); ctx.restore();
+  label(ctx, 'α', '', q12.x - (ra + 12) * Math.cos(alfa / 2) - 4, q12.y - (ra + 4) * Math.sin(alfa / 2), '#4f5862', { vec: false, size: 14 });
+  label(ctx, 'μ', 's', q12.x + 0.25 * S, q12.y + 18, '#4f5862', { vec: false, size: 14 });
+  if (stap <= 2) ['12', '13'].forEach(id => loepCirkel(ctx, id, P(VERB[id].p()), 0.38 * S));
+  else ['12', '13'].forEach(id => punt(ctx, P(VERB[id].p()), id, 8, -8));
+  assen(ctx, 24, H - 18);
+  // ----- onder: vrijlichaamsdiagram -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst het vrij te maken lichaam', H + 18); assen(ctx, 24, Hall - 18); return; }
+  titel('Vrijgemaakte ladder: vloer en wand weggenomen', H + 18);
+  const P2 = q => ({ x: W / 2 + (q.x - 1.2) * S, y: H + 26 + (Hall - H - 26) * 0.86 - q.y * S });
+  ladder(ctx, P2, R12(), R13());
+  ['12', '13'].forEach(id => { const q = P2(VERB[id].p()); ctx.save(); ctx.strokeStyle = C.accent; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(q.x, q.y, 0.3 * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore(); });
+  verticaal(ctx, P2, R1(), KG, 'G', G0, S); verticaal(ctx, P2, R14(), KF, 'F', F0, S);
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1;
+  const gl = (v, b) => (stap === 2 && licht && licht.v === v && licht.b === b ? puls : 0), gloed = g => GLOED + (0.35 + 0.5 * g) + ')';
+  const lijn = (p, q, g, kleur) => { ctx.save(); ctx.lineCap = 'round'; if (g) { ctx.strokeStyle = gloed(g); ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+    ctx.setLineDash([3, 4]); ctx.strokeStyle = g ? kleur : '#9aa1aa'; ctx.lineWidth = g ? 2.6 : 1.3; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); };
+  // F12: vanuit 12 schuin naar linksboven (F12x < 0, F12y > 0), met de projecties op de assen als stippellijnen
+  const o = oplossing(), sk = 1.1 * S / 830, a = P2(R12());
+  const fx = stap >= 3 ? o.F12x * sk : -0.45 * S, fy = stap >= 3 ? o.F12y * sk : 1.0 * S;
+  const tip = { x: a.x + fx, y: a.y - fy }, px = { x: tip.x, y: a.y }, py = { x: a.x, y: tip.y };
+  lijn(tip, px, 0, K12); lijn(tip, py, 0, K12); lijn(a, px, gl('12', 'x'), K12); lijn(a, py, gl('12', 'yneer'), K12);
+  arrow(ctx, a.x, a.y, tip.x, tip.y, K12, { w: 2.8, head: 12 }); label(ctx, 'F', '12', tip.x - 30, tip.y + 2, K12, { vec: true, size: 14 });
+  // F13: vanuit 13 horizontaal naar rechts
+  const b = P2(R13()), l13 = stap >= 3 ? Math.max(14, o.F13 * sk * 2.2) : 0.7 * S, g13 = gl('13', 'xin');
+  if (g13) arrow(ctx, b.x, b.y, b.x + l13, b.y, gloed(g13), { w: 12, head: 22 });
+  arrow(ctx, b.x, b.y, b.x + l13, b.y, K13, { w: g13 ? 3.6 : 2.8, head: g13 ? 14 : 12 }); label(ctx, 'F', '13', b.x + l13 + 6, b.y + 5, K13, { vec: true, size: 14 });
+  punt(ctx, a, '12', 8, 16); punt(ctx, b, '13', -26, -6);
+  if (stap === 2 && licht) { const bb = bewegingen(licht.v).find(x => x.id === licht.b); const t = bb && (bb.verh ? (bb.noot || '') : bb.uit).replace(/<[^>]+>/g, '');
+    if (t) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = bb.verh ? '#4f5862' : '#2f7d3a'; ctx.textAlign = 'right'; ctx.fillText(t, W - 10, H + 36); ctx.restore(); } }
+  assen(ctx, 24, Hall - 18);
+}
+
+// ---------- loep ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2) return;
+  const p0 = VERB[gekozen].p(), S = Math.min(W / 2.6, H / 2.0);
+  const P = q => ({ x: W / 2 + (q.x - p0.x) * S + (gekozen === '13' ? -0.4 * S : 0.3 * S), y: H / 2 + 10 - (q.y - p0.y) * S + (gekozen === '12' ? 0.35 * S : 0) });
+  let T = q => q, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = b.twee ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u); zin = s < 0 ? -1 : 1;
+    const schud = Math.sin(anim.t * 40) * 0.04 * Math.abs(s) + 0.03 * s;
+    if (b.rot) { const ang = 0.35 * s; T = q => { const x = q.x - p0.x, y = q.y - p0.y; return { x: p0.x + x * Math.cos(ang) - y * Math.sin(ang), y: p0.y + x * Math.sin(ang) + y * Math.cos(ang) }; }; }
+    else { const a = b.verh ? schud : 0.35 * s; T = q => ({ x: q.x + b.d.x * a, y: q.y + b.d.y * a }); }
+  }
+  const dir = gekozen === '12' ? { x: -Math.cos(alfa), y: Math.sin(alfa) } : { x: Math.cos(alfa), y: -Math.sin(alfa) };
+  if (gekozen === '12') { vloer(ctx, P, p0.x - 1.2, p0.x + 1.0); label(ctx, 'μ', 's', P(p0).x + 0.45 * S, P(p0).y + 20, '#4f5862', { vec: false, size: 14 }); }
+  else wand(ctx, P, p0.y - 1.1, p0.y + 0.8);
+  ladder(ctx, P, p0, { x: p0.x + dir.x * 1.2, y: p0.y + dir.y * 1.2 }, { T, snede: true });
+  const q = P(T(p0)); ctx.save(); ctx.fillStyle = '#3d454f'; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  assen(ctx, 22, H - 18);
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a', c0 = P(p0);
+    if (b.rot) boogPijl(ctx, c0.x, c0.y, 0.6 * S, kl, zin);
+    else { const u = { x: b.d.x * zin, y: b.d.y * zin }, off = gekozen === '12' ? { x: 0.25, y: 0.25 } : { x: 0.25, y: 0 }; const s0 = P({ x: p0.x + off.x + u.x * 0.15, y: p0.y + off.y + u.y * 0.15 }), s1 = P({ x: p0.x + off.x + u.x * 0.7, y: p0.y + off.y + u.y * 0.7 }); arrow(ctx, s0.x, s0.y, s1.x, s1.y, kl, { w: 2.2, dash: [5, 3], head: 10 }); }
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W / 2, 18); ctx.restore();
+  }
+}
+
+// ---------- formules onder het vrijlichaamsdiagram ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function vldFormules() {
+  const el = document.getElementById('vldf'); if (!window.katex) return;
+  if (stap === 1) { el.innerHTML = ''; return; }
+  const mk = (v, id, s) => (stap === 2 && licht && licht.v === v && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [`${kl(KG, '\\vec G')} = ${kl(KG, '-G\\,\\vec e_y')}`, `${kl(KF, '\\vec F')} = ${kl(KF, '-F\\,\\vec e_y')}`,
+    `${kl(K12, '\\vec F_{12}')} = ${kl(K12, `\\begin{Bmatrix}${mk('12', 'x', kl(K12, 'F_{12x}'))}\\\\ ${mk('12', 'yneer', kl(K12, 'F_{12y}'))}\\\\ 0\\end{Bmatrix}`)}`,
+    `${kl(K13, '\\vec F_{13}')} = ${kl(K13, `\\begin{Bmatrix}${mk('13', 'xin', kl(K13, 'F_{13}'))}\\\\ 0\\\\ 0\\end{Bmatrix}`)}`,
+    `${mk('12', 'yop', `${kl(K12, 'F_{12y}')} \\ge 0`)},\\ ${mk('13', 'xuit', `${kl(K13, 'F_{13}')} \\ge 0`)},\\ ${mk('12', 'x', `|${kl(K12, 'F_{12x}')}| \\le \\mu_s ${kl(K12, 'F_{12y}')}`)}`];
+  el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
+}
+
+// ---------- rechterkaart: inhoud per stap ----------
+const $ = id => document.getElementById(id);
+const STAPPEN = ['Vrij te maken lichaam', 'Vrijmaken', 'Opstellen en oplossen', 'Interpretatie'];
+const ISO = `<div class="kader"><b>Statisch bepaald (isostatisch).</b> De ruwe vloer verhindert in 12 translatie volgens negatieve <i>y</i> en (zolang de ladder niet schuift) translatie ∥ <i>x</i>; de gladde wand verhindert in 13 enkel translatie volgens negatieve <i>x</i>: drie beperkingen voor de drie vrijheidsgraden van de ladder in 2D. Geen enkele verbinding verhindert de rotatie, maar samen verhinderen ze elke beweging van de ladder.</div>`;
+function proefTabel() {
+  if (stap !== 2) { $('proef').innerHTML = ''; return; }
+  const pr = proeven[gekozen] || {};
+  $('proef').innerHTML = bewegingen(gekozen).map(b => {
+    const uit = !pr[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.verh ? `<span class="uit verh">✕ verhinderd</span> → <span data-tex="${kl(VERB[gekozen].k, b.kr)}"></span>${b.noot ? ` <span class="n" style="color:var(--muted)">(${b.noot})</span>` : ''}`
+      : `<span class="uit vrij">✓</span> ${b.uit}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  if (window.katex) $('proef').querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = bewegingen(gekozen).find(x => x.id === k.dataset.b);
+    (proeven[gekozen] = proeven[gekozen] || {})[b.id] = true;
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { v: gekozen, b: b.id }; render();
+  });
+}
+function stapInhoud() {
+  const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
+  $('rtitel').textContent = stap === 2 ? VERB[gekozen].naam : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
+  const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
+  const t = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const G_ = kl(KG, '\\vec G'), F_ = kl(KF, '\\vec F'), F12 = kl(K12, '\\vec F_{12}'), F13 = kl(K13, '\\vec F_{13}');
+  let h_ = '';
+  if (stap === 1) h_ = `<p>Strikt genomen zijn er vier lichamen: 1 = de ladder, 2 = de horizontale vloer, 3 = de verticale wand en 4 = de man. De krachtwerking van de man op de ladder is niet meer dan een verticale kracht: de man blijft buiten beschouwing en zijn gewicht is een uitwendige kracht ${t(F_)} op de ladder.</p>
+      <p>De krachten tussen de ladder en de vloer en tussen de ladder en de wand zijn gevraagd. Door de vloer en de wand weg te nemen, worden die verbindingskrachten externe contactkrachten op het vrijgemaakte lichaam: de <b>ladder</b>.</p>
+      <p class="noot">De ladder bestaat uit twee liggers met sporten; we werken telkens met de volledige kracht op beide liggers samen. Zo wordt het een vlak probleem. Oorsprong in de aansluiting tussen vloer en wand, <i>x</i> langs de vloer, <i>y</i> langs de wand.</p>`;
+  else if (stap === 2) h_ = `<p class="noot">In de loep zie je enkel de gekozen verbinding en een stukje van de ladder (de rest is weggelaten). Klik op de andere loep in de figuur om de andere verbinding te bekijken. Op de ladder werken ook het gewicht ${t(`${G_} = ${kl(KG, '-G\\,\\vec e_y')}`)} in het midden en het gewicht van de man ${t(`${F_} = ${kl(KF, '-F\\,\\vec e_y')}`)} op hoogte <i>H</i>.</p>${ISO}`;
+  else if (stap === 3) {
+    const det = (r, f, kc) => `\\begin{vmatrix}\\vec e_x & \\vec e_y & \\vec e_z\\\\ ${r}\\\\ ${f.map(x => kl(kc, x)).join(' & ')}\\end{vmatrix}`;
+    h_ = `<h4>Krachtenevenwicht</h4>${v(`${G_} + ${F12} + ${F13} + ${F_} = \\vec 0`)}
+      <h4>Momentenevenwicht rond 12</h4>
+      ${v(`(\\vec r_{12} - \\vec r_{12})\\times ${F12} + (\\vec r_1 - \\vec r_{12})\\times ${G_} + (\\vec r_{13} - \\vec r_{12})\\times ${F13} + (\\vec r_{14} - \\vec r_{12})\\times ${F_} = \\vec 0`)}
+      <p class="noot">Door de keuze van het punt 12 komt maar één onbekende reactiekracht in deze vergelijking voor: ${t(F13)}.</p>
+      <hr>
+      <h4>Krachtenevenwicht in componenten</h4>
+      ${v(`${kl(KG, '\\begin{Bmatrix}0\\\\ -G\\\\ 0\\end{Bmatrix}')} + ${kl(K12, '\\begin{Bmatrix}F_{12x}\\\\ F_{12y}\\\\ 0\\end{Bmatrix}')} + ${kl(K13, '\\begin{Bmatrix}F_{13}\\\\ 0\\\\ 0\\end{Bmatrix}')} + ${kl(KF, '\\begin{Bmatrix}0\\\\ -F\\\\ 0\\end{Bmatrix}')} = \\begin{Bmatrix}0\\\\ 0\\\\ 0\\end{Bmatrix}`)}
+      <h4>Momentenevenwicht rond 12, uitgewerkt met determinanten</h4>
+      ${v(`${det('-0.5L\\cos\\alpha & 0.5L\\sin\\alpha & 0', ['0', '-G', '0'], KG)} + ${det('-L\\cos\\alpha & L\\sin\\alpha & 0', ['F_{13}', '0', '0'], K13)}`)}
+      ${v(`+ ${det('-H\\cot\\alpha & H & 0', ['0', '-F', '0'], KF)} = \\vec 0`)}
+      ${v(`\\Leftrightarrow\\; \\begin{Bmatrix}0\\\\ 0\\\\ 0.5GL\\cos\\alpha\\end{Bmatrix} + \\begin{Bmatrix}0\\\\ 0\\\\ -${kl(K13, 'F_{13}')}L\\sin\\alpha\\end{Bmatrix} + \\begin{Bmatrix}0\\\\ 0\\\\ FH\\cot\\alpha\\end{Bmatrix} = \\begin{Bmatrix}0\\\\ 0\\\\ 0\\end{Bmatrix}`)}
+      <h4>Oplossing</h4>
+      ${v(`${kl(K13, 'F_{13}')} = 0.5G\\cot\\alpha + F\\,\\frac{H\\cot\\alpha}{L\\sin\\alpha} = 0.5G\\cot\\alpha + F h\\cot\\alpha`)}
+      <p class="noot">met ${t('h = H/(L\\sin\\alpha)')} de relatieve hoogte van de man op de ladder (<i>h</i> = 0 op de vloer, <i>h</i> = 1 helemaal bovenaan).</p>
+      ${v(`${kl(K12, 'F_{12x}')} = -${kl(K13, 'F_{13}')} = (-0.5G - Fh)\\cot\\alpha, \\qquad ${kl(K12, 'F_{12y}')} = G + F`)}
+      <h4>Numeriek</h4>
+      <p class="noot">Met de gegevens uit de opgave: <i>G</i> = 80 N, <i>F</i> = 750 N, <i>L</i> = 3 m, <i>α</i> = 60°.</p>
+      ${v(`${kl(K12, 'F_{12x}')} = -23.1\\ \\text{N} - 433\\ \\text{N}\\cdot h, \\qquad ${kl(K12, 'F_{12y}')} = 830\\ \\text{N}, \\qquad ${kl(K13, 'F_{13}')} = 23.1\\ \\text{N} + 433\\ \\text{N}\\cdot h`)}`;
+  } else {
+    const o = oplossing(), max = mu * o.F12y, hmax = (mu * (G0 + F0) / (1 / Math.tan(alfa)) - 0.5 * G0) / F0, slip = Math.abs(o.F12x) > max + 1e-9;
+    h_ = `<p>De verticale reactie is onafhankelijk van de plaats waar de man op de ladder staat, maar de horizontale reactie hangt wel af van zijn hoogte: hoe hoger hij klimt, hoe groter de horizontale reactie.</p>
+      <div class="slider"><div class="lab"><span>Relatieve hoogte <span class="i">h</span> van de man</span><b>${h.toFixed(2)}</b></div><input type="range" id="hH" min="0" max="1" step="0.01" value="${h}"></div>
+      <div class="slider"><div class="lab"><span>Hellingshoek <span class="i">α</span></span><b>${Math.round(deg(alfa))}°</b></div><input type="range" id="aA" min="45" max="80" step="1" value="${Math.round(deg(alfa))}"></div>
+      <div class="slider"><div class="lab"><span>Wrijvingscoëfficiënt <span class="i">μ<sub>s</sub></span></span><b>${mu.toFixed(2)}</b></div><input type="range" id="mM" min="0.1" max="0.8" step="0.01" value="${mu}"></div>
+      <p>Voorwaarde opdat de ladder niet wegglijdt in 12:</p>
+      ${v(`|${kl(K12, 'F_{12x}')}| \\le \\mu_s\\,|${kl(K12, 'F_{12y}')}| \\;\\Rightarrow\\; (0.5G + Fh)\\cot\\alpha \\le \\mu_s\\,(G+F)`)}
+      ${v(`|${kl(K12, 'F_{12x}')}| = ${Math.abs(o.F12x).toFixed(0)}\\ \\text{N} \\quad ${slip ? '>' : '\\le'} \\quad \\mu_s ${kl(K12, 'F_{12y}')} = ${max.toFixed(0)}\\ \\text{N}`)}
+      <div class="kader ${slip ? 'slip' : 'ok'}">${slip ? '<b>De ladder schuift weg</b>: de vereiste wrijvingskracht is groter dan wat de vloer kan leveren.' : '<b>De ladder schuift niet weg.</b>'} De horizontale reactie bereikt de maximale wrijvingskracht voor <i>h</i> = ${hmax > 1 ? '&gt; 1 (nooit)' : hmax < 0 ? '&lt; 0 (altijd)' : hmax.toFixed(3)}.</div>
+      <p class="noot">Met de gegevens uit de opgave (<i>α</i> = 60°, <i>μ<sub>s</sub></i> = 0.4) is de wrijvingsweerstand 0.4 · 830 N = 332 N, bereikt voor <i>h</i> = 0.713. Een steilere stand (grotere <i>α</i>, cot <i>α</i> daalt) of een grotere wrijvingscoëfficiënt laten de man hoger klimmen.</p>`;
+  }
+  el.innerHTML = h_;
+  if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  const hh = $('hH'); if (hh) hh.oninput = e => { h = +e.target.value; render(); };
+  const aa = $('aA'); if (aa) aa.oninput = e => { alfa = rad(+e.target.value); render(); };
+  const mm = $('mM'); if (mm) mm.oninput = e => { mu = +e.target.value; render(); };
+}
+function stapKnoppen() {
+  $('stappen').innerHTML = STAPPEN.map((tt, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${tt}</button>`).join('');
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 4) { alfa = rad(A0); mu = MU0; h = 0.65; } render(); });
+}
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+window.addEventListener('load', () => { vldFormules(); stapInhoud(); proefTabel(); });
+sc.c.addEventListener('click', e => {
+  const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, d = 1e9; raak.forEach(k => { const dd = Math.hypot(k.x - x, k.y - y) / k.r; if (dd < d) { d = dd; best = k.id; } });
+  if (best && d < 1.3) { gekozen = best; stap = 2; anim = null; licht = null; render(); }
+});
+
+TM1.bijGrootte([sc, LP], render);
+TM1.lus(dt => { if (!anim) return; anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); drawScene(); }, () => !!anim);
+})();
+</script>
+</body>
+</html>
