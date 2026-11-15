@@ -176,6 +176,15 @@ TM1.catalogus = [
   ]}
 ];
 
+/* Oefenzittingen: oefeningen uit de oefeningenbundel bij het vak. Zelfde opbouw als de catalogus van het handboek;
+   deze pagina's tonen de beweging of de verbindingen en geven tips, maar geen uitgewerkte oplossingen. */
+TM1.oefenzittingen = [
+  { deel: '', titel: 'Oefeningenbundel', hoofdstukken: [
+    { nr: 3, titel: 'Kinematica van een puntmassa', map: 'oefenzittingen', items: [
+      { id: '3.3', soort: 'oef', titel: 'Pin in twee gleuven', status: 'klaar', pad: 'oefenzittingen/oef3-3-pin-in-twee-gleuven.html' }]}
+  ]}
+];
+
 /** Maakt van een titel een bestandsnaamdeel: kleine letters, zonder accenten of leestekens. */
 TM1.slug = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
   .replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

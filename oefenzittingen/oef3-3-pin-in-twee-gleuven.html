@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oefening 3.3 – Pin in twee gleuven</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/88;max-height:660px}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr)} }
+  .opgave{padding:10px 16px;margin:0 0 14px}
+  .opgave p{margin:0 0 6px;font-size:14px}
+  .opgave .label{font:600 11.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .tips h4,.check h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:4px 0 6px}
+  .tip{border:1px solid var(--line);border-radius:8px;margin:0 0 6px;background:#fff}
+  .tip summary{cursor:pointer;padding:6px 10px;font:600 13.5px Inter,sans-serif;text-transform:none;letter-spacing:0;color:var(--ink);list-style:none}
+  .tip summary::-webkit-details-marker{display:none}
+  .tip summary::before{content:'▸';display:inline-block;width:14px;color:var(--accent)}
+  .tip[open] summary::before{content:'▾'}
+  .tip .inh{padding:0 12px 8px 24px;font-size:13.5px}
+  .tip .inh p{margin:4px 0}
+  .check{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13.5px}
+  .check .rij{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 10px;align-items:center;margin:6px 0}
+  .check input{width:100%;font:14px "JetBrains Mono",monospace;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
+  .check input.ok{border-color:#2f7d3a;background:#e2f2e4} .check input.fout{border-color:#c0392b;background:#fbe3e1}
+  .check .kop{font-size:12px;color:var(--muted);text-align:center}
+  .check .fb{margin:6px 0 0;font-size:13px}
+  .geenopl{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#oefenzittingen">← Alle oefeningen</a>
+  <header>
+    <h1>Oefening 3.3 — Pin in twee gleuven</h1>
+    <span class="kicker">Oefenzitting 3 · kinematica van een puntmassa · visualisatie en tips, zonder uitgewerkte oplossing</span>
+  </header>
+
+  <div class="opgave card">
+    <span class="label">Opgave</span>
+    <p>Een pin <i>P</i> beweegt gelijktijdig in twee gleuven: een vaste gleuf onder een hoek van 30° met de horizontale en een gleuf in de bewegende staaf <i>AB</i>. De staaf <i>AB</i> beweegt horizontaal met constante versnelling met grootte <i>a</i> = 2 m/s². Haar snelheid op een gegeven ogenblik is 3 m/s. Bepaal de snelheid en de versnelling van de pin in de gegeven stand.</p>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="De pin P in de vaste schuine gleuf en in de gleuf van de bewegende staaf AB"></canvas>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_baan" checked> <span>baan van <i>P</i> (stroboscoop)</span></label>
+          <label><input type="checkbox" id="t_staaf" checked> <span>snelheid en versnelling van de staaf (gegeven)</span></label>
+        </div>
+      </div>
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button id="play">▶ Afspelen</button> <button id="nul">gegeven ogenblik</button></div>
+        <div class="slider vast">
+          <div class="lab"><span>Tijd <span class="i">t</span> (t = 0: gegeven ogenblik)</span><b id="tval"></b></div>
+          <input type="range" id="tt" min="0" max="1000" step="1">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3>Stappenplan met tips</h3>
+      <div class="tips">
+        <h4>Open een tip pas als je vastzit</h4>
+        <details class="tip"><summary>Stap 1 · Assenstelsel en onbekenden</summary><div class="inh">
+          <p>Kies de oorsprong in de hoek van de figuur, met <i>x</i> horizontaal en <i>y</i> verticaal. Noem <span data-tex="x_A(t)"></span> de positie van de staaf en <span data-tex="\vec r_P(t) = \begin{Bmatrix}x_P(t)\\ y_P(t)\end{Bmatrix}"></span> de positie van de pin.</p>
+          <p>Wat is gegeven over de staaf? Vertaal "snelheid 3 m/s" en "versnelling 2 m/s²" naar afgeleiden van <span data-tex="x_A(t)"></span>.</p>
+        </div></details>
+        <details class="tip"><summary>Stap 2 · Waar ligt de pin?</summary><div class="inh">
+          <p>De pin zit tegelijk in <b>twee</b> gleuven. Elke gleuf legt één voorwaarde op de coördinaten van <i>P</i>.</p>
+          <p>Welke coördinaat van <i>P</i> wordt vastgelegd door de verticale gleuf in de staaf? En hoe luidt de vergelijking van de rechte onder 30° door het punt <span data-tex="(0,\ y_g)"></span>?</p>
+          <p class="noot">Volg in de animatie de pin: beweegt hij met de staaf mee in horizontale richting?</p>
+        </div></details>
+        <details class="tip"><summary>Stap 3 · Snelheid</summary><div class="inh">
+          <p>Leid de positie van <i>P</i> uit stap 2 af naar de tijd. Wat gebeurt er met de constante <span data-tex="y_g"></span> en met <span data-tex="\tan 30^\circ"></span>?</p>
+          <p>Vul daarna de gegeven snelheid van de staaf in op het gegeven ogenblik.</p>
+        </div></details>
+        <details class="tip"><summary>Stap 4 · Versnelling</summary><div class="inh">
+          <p>Leid nog eens af naar de tijd en vul de gegeven versnelling van de staaf in.</p>
+        </div></details>
+        <details class="tip"><summary>Stap 5 · Nadenken over je resultaat</summary><div class="inh">
+          <p>In welke richting moeten <span data-tex="\vec v_P"></span> en <span data-tex="\vec a_P"></span> liggen, als je weet dat de pin altijd in de vaste gleuf blijft? Klopt je resultaat daarmee?</p>
+          <p>Kijk naar de stroboscoop: worden de afstanden tussen opeenvolgende posities groter of kleiner? Wat zegt dat over de zin van de versnelling?</p>
+        </div></details>
+      </div>
+      <div class="check">
+        <h4>Controleer je antwoord</h4>
+        <p style="margin:0 0 4px">Vul je componenten in (in het assenstelsel van stap 1) en klik op controleren. Je krijgt enkel te zien of ze juist zijn.</p>
+        <div class="rij"><span></span><span class="kop"><i>x</i>-component</span><span class="kop"><i>y</i>-component</span>
+          <span><span data-tex="\vec v_P"></span> [m/s]</span><input id="vx" inputmode="decimal" aria-label="x-component van de snelheid"><input id="vy" inputmode="decimal" aria-label="y-component van de snelheid">
+          <span><span data-tex="\vec a_P"></span> [m/s²]</span><input id="ax" inputmode="decimal" aria-label="x-component van de versnelling"><input id="ay" inputmode="decimal" aria-label="y-component van de versnelling"></div>
+        <div class="btnrow" style="margin:0"><button id="check">controleren</button></div>
+        <p class="fb" id="fb"></p>
+        <p class="geenopl">Deze pagina geeft bewust geen uitgewerkte oplossing.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+const KS = '#2b6cb0', KP = C.r;                       // staaf (gegeven), pin
+// beweging van de staaf: x_A(t) = X0 + 3 t + t² (constante versnelling 2 m/s², snelheid 3 m/s op t = 0)
+const X0 = 2.0, V0 = 3, AA = 2, YG = 0.6, HOEK = rad(30), TMIN = -0.9, TMAX = 0.6;
+let t = 0, playing = false;
+const xA = s => X0 + V0 * s + 0.5 * AA * s * s;
+const P = s => ({ x: xA(s), y: YG + Math.tan(HOEK) * xA(s) });
+const XMIN = -0.6, XMAX = 5.2, YMIN = -1.05, YMAX = 3.6, HB = 3.4;   // venster en hoogte van de staaf [m]
+
+const sc = setup(document.getElementById('scene'));
+function draw() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN)), ox = (W - S * (XMAX - XMIN)) / 2, oy = (H - S * (YMAX - YMIN)) / 2;
+  const Q = q => ({ x: ox + (q.x - XMIN) * S, y: H - oy - (q.y - YMIN) * S });
+  // assen
+  const O = Q({ x: 0, y: 0 });
+  arrow(ctx, O.x, O.y, Q({ x: XMAX - 0.1, y: 0 }).x, O.y, '#3d454f', { w: 1.6, head: 9 }); label(ctx, 'X', '', Q({ x: XMAX - 0.25, y: 0 }).x, O.y + 22, '#3d454f', { vec: false, size: 15 });
+  arrow(ctx, O.x, O.y, O.x, Q({ x: 0, y: YMAX - 0.1 }).y, '#3d454f', { w: 1.6, head: 9 }); label(ctx, 'Y', '', O.x - 22, Q({ x: 0, y: YMAX - 0.3 }).y, '#3d454f', { vec: false, size: 15 });
+  // vaste schuine gleuf (twee evenwijdige lijnen) vanaf (0, y_g)
+  const g = 0.07, n = { x: -Math.sin(HOEK), y: Math.cos(HOEK) }, e = { x: Math.cos(HOEK), y: Math.sin(HOEK) }, Lg = 5.0;
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.6;
+  [1, -1].forEach(z => { const a = Q({ x: z * g * n.x, y: YG + z * g * n.y }), b = Q({ x: Lg * e.x + z * g * n.x, y: YG + Lg * e.y + z * g * n.y }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); });
+  ctx.restore();
+  // hoek van 30° bij de pin (met een horizontale hulplijn), y_g aangeduid
+  const p = P(t), q = Q(p);
+  ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x + 0.9 * S, q.y); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(q.x, q.y, 0.6 * S, -HOEK, 0); ctx.stroke(); ctx.restore();
+  label(ctx, '30°', '', q.x + 0.68 * S, q.y - 0.12 * S, '#4f5862', { vec: false, size: 13 });
+  const yg = Q({ x: 0, y: YG });
+  arrow(ctx, O.x - 14, (O.y + yg.y) / 2, O.x - 14, yg.y, C.accent, { w: 1.2, head: 6 }); arrow(ctx, O.x - 14, (O.y + yg.y) / 2, O.x - 14, O.y, C.accent, { w: 1.2, head: 6 });
+  label(ctx, 'y', 'g', O.x - 38, (O.y + yg.y) / 2 + 5, C.accent, { vec: false, size: 14 });
+  // stroboscoop: posities van P op gelijke tijdsintervallen
+  if (document.getElementById('t_baan').checked) {
+    for (let s = TMIN; s <= TMAX + 1e-9; s += 0.1) { const r = Q(P(s)); ctx.save(); ctx.fillStyle = 'rgba(160,60,40,0.35)'; ctx.beginPath(); ctx.arc(r.x, r.y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+  }
+  // de staaf AB met zijn verticale gleuf
+  const xa = xA(t), w = 0.13, a0 = Q({ x: xa - w, y: 0 }), a1 = Q({ x: xa + w, y: HB });
+  ctx.save(); ctx.fillStyle = '#e9edf1'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.6; ctx.fillRect(a0.x, a1.y, a1.x - a0.x, a0.y - a1.y); ctx.strokeRect(a0.x, a1.y, a1.x - a0.x, a0.y - a1.y);
+  const s0 = Q({ x: xa - 0.04, y: 0.05 }), s1 = Q({ x: xa + 0.04, y: HB - 0.05 }); ctx.fillStyle = '#fff'; ctx.fillRect(s0.x, s1.y, s1.x - s0.x, s0.y - s1.y); ctx.strokeRect(s0.x, s1.y, s1.x - s0.x, s0.y - s1.y); ctx.restore();
+  const A = Q({ x: xa, y: 0 }), B = Q({ x: xa, y: HB });
+  label(ctx, 'A', '', A.x - 5, A.y + 20, C.ink, { vec: false, size: 15 }); label(ctx, 'B', '', B.x - 5, B.y - 8, C.ink, { vec: false, size: 15 });
+  // gegeven: snelheid en versnelling van de staaf (horizontaal)
+  if (document.getElementById('t_staaf').checked) {
+    // snelheid van de staaf: de pijl volgt de werkelijke snelheid; enkel op het gegeven ogenblik staat de waarde 3 m/s erbij.
+    // De versnelling a = 2 m/s² is constant (horizontaal).
+    const kv = 0.22 * S, yv = A.y + 34, v = V0 + AA * t, nu = Math.abs(t) < 0.005;
+    arrow(ctx, A.x, yv, A.x + v * kv, yv, KS, { w: 3, head: 12 }); TM1.formule(ctx, nu ? '$v$ = 3 m/s' : '$v$', A.x + v * kv + 8, yv + 4, { color: KS, size: 12 });
+    arrow(ctx, A.x, yv + 22, A.x + AA * kv, yv + 22, '#7b3fb2', { w: 2.4, head: 10 }); TM1.formule(ctx, '$a$ = 2 m/s²', A.x + AA * kv + 8, yv + 26, { color: '#7b3fb2', size: 12 });
+  }
+  // de pin
+  ctx.save(); ctx.fillStyle = KP; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 6, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  label(ctx, 'P', '', q.x - 22, q.y - 8, KP, { vec: false, size: 15 });
+  if (Math.abs(t) < 0.005) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right'; ctx.fillText('gegeven ogenblik (t = 0)', W - 12, 20); ctx.restore(); }
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id), sl = $('tt');
+const naarSlider = () => { sl.value = Math.round((t - TMIN) / (TMAX - TMIN) * 1000); $('tval').textContent = `${t >= 0 ? '' : '−'}${Math.abs(t).toFixed(2)} s`; };
+function render() { draw(); naarSlider(); }
+sl.oninput = () => { playing = false; $('play').textContent = '▶ Afspelen'; t = TMIN + sl.value / 1000 * (TMAX - TMIN); render(); };
+$('play').onclick = () => { playing = !playing; if (playing && t >= TMAX - 1e-3) t = TMIN; $('play').textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
+$('nul').onclick = () => { playing = false; $('play').textContent = '▶ Afspelen'; t = 0; render(); };
+['t_baan', 't_staaf'].forEach(id => $(id).onchange = draw);
+TM1.bijGrootte([sc], render);
+TM1.lus(dt => { t += dt * 0.4; if (t >= TMAX) { t = TMAX; playing = false; $('play').textContent = '▶ Afspelen'; } render(); }, () => playing);
+
+// ---------- tips: wiskunde met KaTeX ----------
+window.addEventListener('load', () => { if (window.katex) document.querySelectorAll('[data-tex]').forEach(e => { try { katex.render(e.dataset.tex, e, { throwOnError: false }); } catch (_) {} }); });
+
+// ---------- controle van het antwoord (geeft enkel juist / niet juist, nooit de oplossing) ----------
+const JUIST = (() => { const k = Math.tan(HOEK); return { vx: V0, vy: k * V0, ax: AA, ay: k * AA }; })();
+const getal = s => parseFloat(String(s).replace(',', '.').replace('−', '-'));
+$('check').onclick = () => {
+  const res = {}; let leeg = false;
+  for (const id of ['vx', 'vy', 'ax', 'ay']) {
+    const el = $(id), x = getal(el.value);
+    if (!isFinite(x)) { el.className = ''; leeg = true; continue; }
+    res[id] = Math.abs(x - JUIST[id]) <= Math.max(0.02, 0.015 * Math.abs(JUIST[id]));
+    el.className = res[id] ? 'ok' : 'fout';
+  }
+  const fb = $('fb'), fouten = Object.entries(res).filter(([, ok]) => !ok).map(([k]) => k);
+  if (leeg && !Object.keys(res).length) { fb.textContent = 'Vul eerst je componenten in.'; return; }
+  if (!fouten.length && !leeg) fb.innerHTML = '<b style="color:#2f7d3a">✓ Alles juist.</b> Ga na of de richting klopt met stap 5.';
+  else if (!fouten.length) fb.textContent = 'Wat je invulde is juist; vul ook de andere componenten in.';
+  else {
+    const tip = fouten.some(k => k[0] === 'v') ? 'stap 2 en 3' : 'stap 4';
+    fb.innerHTML = `<b style="color:#c0392b">✗ Nog niet helemaal juist</b> (rood omrand). Kijk nog eens naar de tips bij ${tip}.`;
+  }
+};
+})();
+</script>
+</body>
+</html>

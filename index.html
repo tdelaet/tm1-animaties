@@ -45,7 +45,11 @@
     <h1>Toegepaste Mechanica 1 — interactieve animaties</h1>
     <span class="kicker">bij het handboek <i>Toegepaste Mechanica. Een vectorgebaseerde aanpak</i></span>
   </header>
-  <p class="intro">Per hoofdstuk vind je hier de voorbeelden uit het handboek als interactieve animatie, van vectoren en meetkunde over krachten en evenwicht tot de beweging van punten en lichamen. Je verkent de vectoren, de verbindingen met hun reactiekrachten en hoe alles samenhangt. De nummering volgt het handboek.</p>
+  <div class="btnrow modus bron" id="bron" style="margin:4px 0 10px">
+    <button data-b="handboek">Handboek</button>
+    <button data-b="oefenzittingen">Oefenzittingen</button>
+  </div>
+  <p class="intro" id="intro"></p>
 
   <div class="bar">
     <input type="search" id="zoek" placeholder="Zoek een voorbeeld, bv. schommel of 13.1" aria-label="Zoeken">
@@ -54,7 +58,7 @@
   </div>
 
   <main id="lijst"></main>
-  <footer>De volgorde en titels volgen de inhoudstafel van het handboek (2026).</footer>
+  <footer>De volgorde en titels volgen de inhoudstafel van het handboek (2026) en de oefeningenbundel.</footer>
 </div>
 
 <script src="catalogus.js"></script>
@@ -66,16 +70,32 @@
   enkel.checked = true;
   try { if (localStorage.getItem('tm1-enkelKlaar') === '0') enkel.checked = false; } catch (e) {}
 
-  let totaal = 0, klaar = 0;
-  TM1.catalogus.forEach(d => d.hoofdstukken.forEach(h => h.items.forEach(it => {
-    totaal++; if (it.status === 'klaar') klaar++;
-  })));
-  document.getElementById('voortgang').innerHTML = `<b>${klaar}</b> van ${totaal} voorbeelden en opgaven beschikbaar`;
+  // keuze tussen de voorbeelden uit het handboek en de oefeningen van de oefenzittingen (onthouden, of via #oefenzittingen)
+  const INTRO = {
+    handboek: 'Per hoofdstuk vind je hier de voorbeelden uit het handboek als interactieve animatie, van vectoren en meetkunde over krachten en evenwicht tot de beweging van punten en lichamen. Je verkent de vectoren, de verbindingen met hun reactiekrachten en hoe alles samenhangt. De nummering volgt het handboek.',
+    oefenzittingen: 'Oefeningen uit de oefeningenbundel bij het vak. De applets tonen de beweging (kinematica) of laten je de verbindingen bestuderen (statica) en geven tips per stap, maar geen uitgewerkte oplossingen: die zoek je zelf. Je kunt wel je eigen antwoord laten controleren.'
+  };
+  let bron = location.hash === '#oefenzittingen' ? 'oefenzittingen' : 'handboek';
+  try { if (!location.hash && localStorage.getItem('tm1-bron') === 'oefenzittingen') bron = 'oefenzittingen'; } catch (e) {}
+  const lijstVan = () => (bron === 'oefenzittingen' ? TM1.oefenzittingen : TM1.catalogus);
+  function bovenkant() {
+    document.querySelectorAll('#bron button').forEach(b => b.classList.toggle('actief', b.dataset.b === bron));
+    document.getElementById('intro').textContent = INTRO[bron];
+    zoek.placeholder = bron === 'oefenzittingen' ? 'Zoek een oefening, bv. gleuf of 3.3' : 'Zoek een voorbeeld, bv. schommel of 13.1';
+    let totaal = 0, klaar = 0;
+    lijstVan().forEach(d => d.hoofdstukken.forEach(h => h.items.forEach(it => { totaal++; if (it.status === 'klaar') klaar++; })));
+    document.getElementById('voortgang').innerHTML = `<b>${klaar}</b> van ${totaal} ${bron === 'oefenzittingen' ? 'oefeningen' : 'voorbeelden en opgaven'} beschikbaar`;
+  }
+  document.querySelectorAll('#bron button').forEach(b => b.onclick = () => {
+    bron = b.dataset.b; try { localStorage.setItem('tm1-bron', bron); } catch (e) {}
+    history.replaceState(null, '', bron === 'oefenzittingen' ? '#oefenzittingen' : location.pathname);
+    bovenkant(); render();
+  });
 
   function render() {
-    const q = zoek.value.trim().toLowerCase(), alleenKlaar = enkel.checked;
+    const q = zoek.value.trim().toLowerCase(), alleenKlaar = enkel.checked, oef = bron === 'oefenzittingen';
     let html = '', iets = false;
-    for (const d of TM1.catalogus) {
+    for (const d of lijstVan()) {
       let hs = '';
       for (const h of d.hoofdstukken) {
         const items = h.items.filter(it =>
@@ -86,7 +106,7 @@
         const nKlaar = h.items.filter(i => i.status === 'klaar').length;
         const lis = items.map(it => {
           const st = it.status || 'gepland';
-          const pre = (it.soort === 'op' ? 'Op. ' : it.soort === 'tabel' ? 'Tabel ' : 'Vb. ') + it.id;
+          const pre = (it.soort === 'op' ? 'Op. ' : it.soort === 'tabel' ? 'Tabel ' : it.soort === 'oef' ? 'Oef. ' : 'Vb. ') + it.id;
           const titel = st === 'klaar'
             ? `<a href="${esc(TM1.pad(h, it))}">${esc(it.titel)}</a>` : esc(it.titel);
           const op = it.opmerking ? `<span class="op">${esc(it.opmerking)}</span>` : '';
@@ -94,13 +114,14 @@
                       : st === 'bezig' ? '<span class="badge bezig">in de maak</span>' : '';
           return `<li class="${st}"><span class="id">${pre}</span><span class="t">${titel}${op}</span>${badge}</li>`;
         }).join('');
-        hs += `<section class="card ch"><div class="nr"><span>Hoofdstuk ${h.nr}</span>${h.items.length ? `<span>${nKlaar}/${h.items.length}</span>` : ''}</div>
+        hs += `<section class="card ch"><div class="nr"><span>${oef ? 'Oefenzitting' : 'Hoofdstuk'} ${h.nr}</span>${h.items.length ? `<span>${nKlaar}/${h.items.length}</span>` : ''}</div>
           <h3>${esc(h.titel)}</h3>${lis ? `<ul>${lis}</ul>` : '<div class="leeg">Geen uitgewerkte voorbeelden in dit hoofdstuk.</div>'}</section>`;
       }
-      if (hs) { iets = true; html += `<section class="deel"><h2><span>Deel ${d.deel}</span> · ${esc(d.titel)}</h2><div class="chapters">${hs}</div></section>`; }
+      if (hs) { iets = true; html += `<section class="deel"><h2>${d.deel ? `<span>Deel ${d.deel}</span> · ` : ''}${esc(d.titel)}</h2><div class="chapters">${hs}</div></section>`; }
     }
-    lijst.innerHTML = iets ? html : '<p class="geen">Geen voorbeelden gevonden.</p>';
+    lijst.innerHTML = iets ? html : `<p class="geen">Geen ${oef ? 'oefeningen' : 'voorbeelden'} gevonden.</p>`;
   }
+  bovenkant();
   zoek.addEventListener('input', render);
   enkel.addEventListener('change', () => { try { localStorage.setItem('tm1-enkelKlaar', enkel.checked ? '1' : '0'); } catch (e) {} render(); });
   render();
