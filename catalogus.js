@@ -181,7 +181,8 @@ TM1.catalogus = [
 TM1.oefenzittingen = [
   { deel: '', titel: 'Oefeningenbundel', hoofdstukken: [
     { nr: 3, titel: 'Kinematica van een puntmassa', map: 'oefenzittingen', items: [
-      { id: '3.3', soort: 'oef', titel: 'Pin in twee gleuven', status: 'klaar', pad: 'oefenzittingen/oef3-3-pin-in-twee-gleuven.html' }]}
+      { id: '3.3', soort: 'oef', titel: 'Pin in twee gleuven', status: 'klaar', pad: 'oefenzittingen/oef3-3-pin-in-twee-gleuven.html' },
+      { id: '3.5', soort: 'oef', titel: 'Pin in een sinusvormige gleuf', status: 'klaar', pad: 'oefenzittingen/oef3-5-pin-in-een-sinusvormige-gleuf.html' }]}
   ]}
 ];
 
