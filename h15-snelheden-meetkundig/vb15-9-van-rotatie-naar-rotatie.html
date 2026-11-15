@@ -17,6 +17,9 @@
   /* vaste schaal: x van −2.6 tot 5.2 m, y van −3.8 tot 3.8 m */
   .scene canvas{height:auto;aspect-ratio:78/76;max-height:560px}
   .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
+  /* breuk in een titel: teller boven een breukstreep, noemer eronder */
+  .breuk{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.82em;line-height:1.15;margin:0 2px}
+  .breuk>span:first-child{border-bottom:1px solid currentColor;padding:0 2px}
 </style>
 </head>
 <body>
@@ -71,7 +74,7 @@
       <canvas id="g1"></canvas>
     </div>
     <div class="card graph">
-      <h3>Glijsnelheid d|<span class="i">AB</span>|/d<span class="i">t</span> in de sleuf in functie van <span class="i">θ</span><sub>1</sub></h3>
+      <h3>Glijsnelheid <span class="breuk"><span>d|<span class="i">AB</span>|</span><span>d<span class="i">t</span></span></span> in de sleuf in functie van <span class="i">θ</span><sub>1</sub></h3>
       <canvas id="g2"></canvas>
     </div>
   </div>
@@ -215,7 +218,17 @@ function drawGraphs() {
   F1 = frame(G1, [0, 360], [0, 3.6], '$\\theta_1$ [°]', '$\\omega_2/\\omega_1$ [-]');
   curve(G1.ctx, F1, 360, 0, 2 * Math.PI, u => deg(u), u => state(u).w2 / W1, K2, 2.2);
   TM1.cursor(G1.ctx, F1, d); dot(G1.ctx, F1.X(d), F1.Y(st.w2 / W1), K2);
-  F2 = frame(G2, [0, 360], [-2.2, 2.2], '$\\theta_1$ [°]', 'd|AB|/dt [m/s]');
+  F2 = frame(G2, [0, 360], [-2.2, 2.2], '$\\theta_1$ [°]', '');
+  // asbijschrift als echte breuk (gedraaid langs de verticale as): d|AB| over dt, gevolgd door de eenheid
+  { const c = G2.ctx, m = F2.m; c.save(); c.translate(14, m.t + (G2.h - m.t - m.b) / 2); c.rotate(-Math.PI / 2);
+    c.fillStyle = C.muted; c.strokeStyle = C.muted; c.font = 'italic 500 12px "Source Serif 4", Georgia, serif';
+    const wt = Math.max(c.measureText('d|AB|').width, c.measureText('dt').width) + 4;
+    c.font = '11px Inter, sans-serif'; const we = c.measureText(' [m/s]').width, x0 = -(wt + we) / 2;
+    c.lineWidth = 1; c.beginPath(); c.moveTo(x0, 0); c.lineTo(x0 + wt, 0); c.stroke();
+    c.font = 'italic 500 12px "Source Serif 4", Georgia, serif'; c.textAlign = 'center';
+    c.textBaseline = 'alphabetic'; c.fillText('d|AB|', x0 + wt / 2, -2); c.textBaseline = 'top'; c.fillText('dt', x0 + wt / 2, 1);
+    c.font = '11px Inter, sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(' [m/s]', x0 + wt, 0);
+    c.restore(); }
   curve(G2.ctx, F2, 360, 0, 2 * Math.PI, u => deg(u), u => state(u).dAB, K1, 2.2);
   TM1.cursor(G2.ctx, F2, d); dot(G2.ctx, F2.X(d), F2.Y(st.dAB), K1);
 }
