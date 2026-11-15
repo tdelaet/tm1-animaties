@@ -170,12 +170,16 @@
   function frame(G, xr, yr, xl, yl, xfmt) {
     const C = kleuren();
     const ctx = G.ctx, w = G.w, h = G.h, m = { l: 44, r: 10, t: 10, b: 34 };
-    const X = x => m.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - m.l - m.r);
-    const Y = y => h - m.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - m.t - m.b);
     ctx.clearRect(0, 0, w, h);
     ctx.font = '11px Inter, sans-serif'; ctx.lineWidth = 1;
     const sx = niceStep(xr[1] - xr[0], 6), sy = niceStep(yr[1] - yr[0], 5);
     const dx = Math.max(0, -Math.floor(Math.log10(sx) + 1e-9)), dy = Math.max(0, -Math.floor(Math.log10(sy) + 1e-9));
+    // linkermarge zo breed dat het asbijschrift niet over de getallen van de y-as valt (bv. 0.25, −0.05)
+    let wy = 0;
+    for (let y = Math.ceil(yr[0] / sy - 1e-9) * sy; y <= yr[1] + 1e-9; y += sy) wy = Math.max(wy, ctx.measureText((Math.abs(y) < 1e-9 ? 0 : y).toFixed(dy).replace('-', '−')).width);
+    m.l = Math.max(44, Math.ceil(wy) + 36);
+    const X = x => m.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - m.l - m.r);
+    const Y = y => h - m.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - m.t - m.b);
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (let x = Math.ceil(xr[0] / sx - 1e-9) * sx; x <= xr[1] + 1e-9; x += sx) {
       ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(X(x), m.t); ctx.lineTo(X(x), h - m.b); ctx.stroke();
@@ -473,8 +477,30 @@
     schaalLegende(G.ctx, G.h, [[waarde * k, kleur, tekst]], { rechtsboven: { w: G.w, y: 6 } });
   }
 
+  /** Breuk op het canvas, bv. een afgeleide d|AB|/dt: teller boven een breukstreep, noemer eronder. De differentiaal
+      "d" vooraan staat recht, letters cursief, andere tekens (|, cijfers) recht. y = hoogte van de breukstreep;
+      align 'left' (x = linkerrand), 'right' (x = rechterrand) of 'center'. Geeft de breedte terug. */
+  function breuk(ctx, teller, noemer, x, y, opt = {}) {
+    const size = opt.size ?? 13, kleur = opt.kleur ?? css('--ink'), align = opt.align ?? 'left', halo = opt.halo ?? true;
+    const serif = '"Source Serif 4", Georgia, serif', fRecht = `500 ${size}px ${serif}`, fCurs = `italic 500 ${size}px ${serif}`;
+    const delen = s => [...s].map((ch, i) => ({ ch, f: (i === 0 && ch === 'd') || !/[A-Za-zͰ-Ͽ]/.test(ch) ? fRecht : fCurs }));
+    const breedte = d => d.reduce((w, p) => { ctx.font = p.f; return w + ctx.measureText(p.ch).width; }, 0);
+    ctx.save();
+    const T = delen(teller), N = delen(noemer), wT = breedte(T), wN = breedte(N), w = Math.max(wT, wN) + 4;
+    const x0 = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+    const schrijf = (d, wd, yy, basis) => {
+      let cx = x0 + (w - wd) / 2; ctx.textAlign = 'left'; ctx.textBaseline = basis;
+      d.forEach(p => { ctx.font = p.f; if (halo) { ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.strokeText(p.ch, cx, yy); }
+        ctx.fillStyle = kleur; ctx.fillText(p.ch, cx, yy); cx += ctx.measureText(p.ch).width; });
+    };
+    ctx.strokeStyle = kleur; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke();
+    schrijf(T, wT, y - 3, 'alphabetic'); schrijf(N, wN, y + 2, 'top');
+    ctx.restore();
+    return w;
+  }
+
   global.TM1 = Object.assign(global.TM1 || {}, {
-    tex, werkblad, vastVak, vasteSchaal, driehoekLegende,
+    tex, werkblad, vastVak, vasteSchaal, driehoekLegende, breuk,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
     frame, curve, dot, cursor, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });

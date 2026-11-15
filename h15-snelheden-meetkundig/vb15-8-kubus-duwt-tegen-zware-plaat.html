@@ -158,14 +158,8 @@ function drawScene() {
     if (arrow(ctx, A.x, A.y, H.x, H.y, C.r, { w: 2.2, head: 10 })) label(ctx, 'r', 'H/A', A.x + 0.55 * (H.x - A.x) - 14, A.y + 0.55 * (H.y - A.y) - 16, C.r, { size: 13 });
   }
   // een echte breuk (teller boven, noemer onder een breukstreep) op het canvas; x = rechterrand, y = hoogte van de streep
-  const breuk = (ctx, teller, noemer, x, y, kleur, size) => {
-    ctx.save(); ctx.font = `italic 500 ${size}px "Source Serif 4", Georgia, serif`; ctx.fillStyle = kleur; ctx.textAlign = 'center';
-    const w = Math.max(ctx.measureText(teller).width, ctx.measureText(noemer).width) + 4, cx = x - w / 2;
-    ctx.strokeStyle = kleur; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - w, y); ctx.lineTo(x, y); ctx.stroke();
-    const tekst = (s, yy) => { ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.strokeText(s, cx, yy); ctx.fillText(s, cx, yy); };
-    ctx.textBaseline = 'alphabetic'; tekst(teller, y - 3); ctx.textBaseline = 'top'; tekst(noemer, y + 2);
-    ctx.restore();
-  };
+  // (de differentiaal d staat recht, zie TM1.breuk)
+  const breuk = (ctx, teller, noemer, x, y, kleur, size) => TM1.breuk(ctx, teller, noemer, x, y, { kleur, size, align: 'right' });
   // snelheden in H
   const tipv = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
   // labels buiten de snelheidsdriehoek (H, t1, t2), naast het midden van elke pijl, zodat ze niet overlappen

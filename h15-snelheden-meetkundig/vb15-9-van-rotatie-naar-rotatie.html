@@ -174,13 +174,9 @@ function drawScene() {
     arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 2.2, head: 10 });
   }
   // een echte breuk (teller boven, noemer onder een breukstreep) op het canvas; x = linkerrand, y = hoogte van de streep
+  // (de differentiaal d staat recht, zie TM1.breuk)
   const breuk = (ctx, teller, noemer, x, y, kleur, size) => {
-    ctx.save(); ctx.font = `italic 500 ${size}px "Source Serif 4", Georgia, serif`; ctx.fillStyle = kleur; ctx.strokeStyle = kleur; ctx.textAlign = 'center';
-    const w = Math.max(ctx.measureText(teller).width, ctx.measureText(noemer).width) + 4, cx = x + w / 2;
-    ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.stroke();
-    const tekst = (s, yy) => { ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.strokeText(s, cx, yy); ctx.fillText(s, cx, yy); };
-    ctx.textBaseline = 'alphabetic'; tekst(teller, y - 3); ctx.textBaseline = 'top'; tekst(noemer, y + 2);
-    ctx.restore();
+    TM1.breuk(ctx, teller, noemer, x, y, { kleur, size, align: 'left' });
   };
   // snelheden in A: de labels staan buiten de snelheidsdriehoek (A, p1, p2), naast het midden van elke pijl,
   // zodat ze niet over elkaar en niet over de staaf vallen
@@ -221,13 +217,10 @@ function drawGraphs() {
   F2 = frame(G2, [0, 360], [-2.2, 2.2], '$\\theta_1$ [°]', '');
   // asbijschrift als echte breuk (gedraaid langs de verticale as): d|AB| over dt, gevolgd door de eenheid
   { const c = G2.ctx, m = F2.m; c.save(); c.translate(14, m.t + (G2.h - m.t - m.b) / 2); c.rotate(-Math.PI / 2);
-    c.fillStyle = C.muted; c.strokeStyle = C.muted; c.font = 'italic 500 12px "Source Serif 4", Georgia, serif';
-    const wt = Math.max(c.measureText('d|AB|').width, c.measureText('dt').width) + 4;
-    c.font = '11px Inter, sans-serif'; const we = c.measureText(' [m/s]').width, x0 = -(wt + we) / 2;
-    c.lineWidth = 1; c.beginPath(); c.moveTo(x0, 0); c.lineTo(x0 + wt, 0); c.stroke();
-    c.font = 'italic 500 12px "Source Serif 4", Georgia, serif'; c.textAlign = 'center';
-    c.textBaseline = 'alphabetic'; c.fillText('d|AB|', x0 + wt / 2, -2); c.textBaseline = 'top'; c.fillText('dt', x0 + wt / 2, 1);
-    c.font = '11px Inter, sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(' [m/s]', x0 + wt, 0);
+    c.font = '11px Inter, sans-serif'; const we = c.measureText(' [m/s]').width;
+    const wt = TM1.breuk(c, 'd|AB|', 'dt', -1000, -1000, { size: 12, kleur: C.muted, halo: false }), x0 = -(wt + we) / 2;   // eerst meten
+    TM1.breuk(c, 'd|AB|', 'dt', x0, 0, { size: 12, kleur: C.muted, halo: false });
+    c.font = '11px Inter, sans-serif'; c.fillStyle = C.muted; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(' [m/s]', x0 + wt, 0);
     c.restore(); }
   curve(G2.ctx, F2, 360, 0, 2 * Math.PI, u => deg(u), u => state(u).dAB, K1, 2.2);
   TM1.cursor(G2.ctx, F2, d); dot(G2.ctx, F2.X(d), F2.Y(st.dAB), K1);

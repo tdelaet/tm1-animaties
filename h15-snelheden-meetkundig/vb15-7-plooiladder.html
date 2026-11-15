@@ -217,10 +217,12 @@ const G = ['g1', 'g2', 'g3'].map(id => setup(document.getElementById(id)));
 const F = [];
 function drawGraphs() {
   const T = tEind(), st = state(t);
+  // bereik van de y-as uit de hele kromme (het maximum kan ook tussen begin en einde liggen)
+  const bereik = f => { let mn = 0, mx = 0.2; for (let i = 0; i <= 200; i++) { const y = f(T * i / 200); mn = Math.min(mn, y); mx = Math.max(mx, y); } return [mn < 0 ? mn * 1.15 : 0, mx * 1.15]; };
   const reeks = [
     [[0, 6.2], '$x_A$ [m]', u => state(u).xA, C.r, st.xA],
-    [[0, Math.max(state(T).vA, 0.2) * 1.15], '$v_A$ [m/s]', u => state(u).vA, C.v, st.vA],
-    [[0, Math.max(state(0).aA, state(T).aA, 0.2) * 1.15], '$a_A$ [m/s²]', u => state(u).aA, C.a, st.aA]
+    [bereik(u => state(u).vA), '$v_A$ [m/s]', u => state(u).vA, C.v, st.vA],
+    [bereik(u => state(u).aA), '$a_A$ [m/s²]', u => state(u).aA, C.a, st.aA]
   ];
   reeks.forEach(([yr, yl, f, k, val], i) => {
     F[i] = frame(G[i], [0, T], yr, '$t$ [s]', yl);
