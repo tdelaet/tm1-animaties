@@ -189,14 +189,15 @@ function drawScene() {
   }
   // snelheden in B
   const tip = (Q, v) => ({ x: Q.x - v.x * KV * S, y: Q.y - v.y * KV * S });   // x naar links
-  if (show.E) {
-    const t1 = tip(B, st.vE1), t2 = tip(t1, st.vE2);
-    if (arrow(ctx, B.x, B.y, t1.x, t1.y, KE1, { w: 2.4, dash: [7, 4], head: 10 })) tipLabel(ctx, B.x, B.y, t1.x, t1.y, 'v', 'B/E1', KE1);
-    if (arrow(ctx, t1.x, t1.y, t2.x, t2.y, KE2, { w: 2.4, dash: [7, 4], head: 10 })) tipLabel(ctx, t1.x, t1.y, t2.x, t2.y, 'v', 'B/E2', KE2);
-  }
-  if (show.A) {
-    const t3 = tip(B, st.vBA);
-    if (arrow(ctx, B.x, B.y, t3.x, t3.y, KBA, { w: 3, head: 12 })) tipLabel(ctx, B.x, B.y, t3.x, t3.y, 'v', 'B/A', KBA);
+  {
+    // labels buiten de snelheidsdriehoek (B, t1, t2), naast het midden van elke pijl, zodat ze niet overlappen
+    const t1 = tip(B, st.vE1), t2 = tip(t1, st.vE2), t3 = tip(B, st.vBA);
+    if (show.E) {
+      if (arrow(ctx, B.x, B.y, t1.x, t1.y, KE1, { w: 2.4, dash: [7, 4], head: 10 })) labelNaast(ctx, [B, t1, t2], B, t1, 'B/E1', KE1);
+      if (arrow(ctx, t1.x, t1.y, t2.x, t2.y, KE2, { w: 2.4, dash: [7, 4], head: 10 })) labelNaast(ctx, [B, t1, t2], t1, t2, 'B/E2', KE2);
+    }
+    if (show.A && arrow(ctx, B.x, B.y, t3.x, t3.y, KBA, { w: 3, head: 12 }))
+      show.E ? labelNaast(ctx, [B, t1, t2], B, t3, 'B/A', KBA) : tipLabel(ctx, B.x, B.y, t3.x, t3.y, 'v', 'B/A', KBA);
   }
   for (const [q, n, dx, dy] of [[A, 'A', 8, 4], [B, 'B', 8, 16], [E, 'E', 8, 16], [P({ x: 1, y: 0 }), 'O', -14, 16]]) {
     ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
@@ -208,6 +209,16 @@ function drawScene() {
   arrow(ctx, ax.x, ax.y, ax.x - 40, ax.y, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'x', '', ax.x - 50, ax.y + 14, '#6b737d', { vec: false, size: 14 });
   arrow(ctx, ax.x, ax.y, ax.x, ax.y - 40, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'y', '', ax.x + 4, ax.y - 42, '#6b737d', { vec: false, size: 14 });
   TM1.schaalLegende(ctx, H, [[0.1 * KV * S, KBA, '0.1 m/s']], { rechtsboven: { w: W, y: 40 } });
+}
+
+// label v_sub naast het midden van de pijl a→b, aan de kant weg van het zwaartepunt van de driehoek drie (zo overlappen
+// de drie labels van een snelheidsdriehoek niet en vallen ze er niet in)
+function labelNaast(ctx, drie, a, b, sub, kleur, afst = 18) {
+  const zw = { x: (drie[0].x + drie[1].x + drie[2].x) / 3, y: (drie[0].y + drie[1].y + drie[2].y) / 3 };
+  const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  let dx = m.x - zw.x, dy = m.y - zw.y; const l = Math.hypot(dx, dy);
+  if (l < 1e-6) { const ux = b.x - a.x, uy = b.y - a.y, lu = Math.hypot(ux, uy) || 1; dx = uy / lu; dy = -ux / lu; } else { dx /= l; dy /= l; }
+  label(ctx, 'v', sub, m.x + dx * afst, m.y + dy * afst + 5, kleur, { align: 'center' });
 }
 
 // ---------- snelheidsdriehoek ----------
@@ -226,12 +237,10 @@ function drawDriehoek() {
   const { k, Pp } = TM1.vasteSchaal(G1, vak, 50, 40);
   TM1.driehoekLegende(G1, k, KBA);
   const q0 = Pp(p0), q1 = Pp(p1), q2 = Pp(p2), q3 = Pp(p3);
-  if (arrow(ctx, q0.x, q0.y, q1.x, q1.y, KE1, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, q0.x, q0.y, q1.x, q1.y, 'v', 'B/E1', KE1);
-  if (arrow(ctx, q1.x, q1.y, q2.x, q2.y, KE2, { w: 2.4, dash: [7, 4], head: 11 })) tipLabel(ctx, q1.x, q1.y, q2.x, q2.y, 'v', 'B/E2', KE2);
-  if (arrow(ctx, q0.x, q0.y, q3.x, q3.y, KBA, { w: 3, head: 13 })) {
-    const n = eenheid(q0, q3);
-    label(ctx, 'v', 'B/A', (q0.x + q3.x) / 2 + n.y * 20, (q0.y + q3.y) / 2 - n.x * 20 + 5, KBA, { align: 'center' });
-  }
+  // labels buiten de driehoek, naast het midden van elke zijde
+  if (arrow(ctx, q0.x, q0.y, q1.x, q1.y, KE1, { w: 2.4, dash: [7, 4], head: 11 })) labelNaast(ctx, [q0, q1, q2], q0, q1, 'B/E1', KE1);
+  if (arrow(ctx, q1.x, q1.y, q2.x, q2.y, KE2, { w: 2.4, dash: [7, 4], head: 11 })) labelNaast(ctx, [q0, q1, q2], q1, q2, 'B/E2', KE2);
+  if (arrow(ctx, q0.x, q0.y, q3.x, q3.y, KBA, { w: 3, head: 13 })) labelNaast(ctx, [q0, q1, q2], q0, q3, 'B/A', KBA);
   ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(q0.x, q0.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
   label(ctx, 'B', '', q0.x + 8, q0.y + 14, C.ink, { vec: false, size: 13 });
 }
