@@ -73,7 +73,7 @@
   // keuze tussen de voorbeelden uit het handboek en de oefeningen van de oefenzittingen (onthouden, of via #oefenzittingen)
   const INTRO = {
     handboek: 'Per hoofdstuk vind je hier de voorbeelden uit het handboek als interactieve animatie, van vectoren en meetkunde over krachten en evenwicht tot de beweging van punten en lichamen. Je verkent de vectoren, de verbindingen met hun reactiekrachten en hoe alles samenhangt. De nummering volgt het handboek.',
-    oefenzittingen: 'Oefeningen uit de oefeningenbundel bij het vak. De applets tonen de beweging (kinematica) of laten je de verbindingen bestuderen (statica) en geven tips per stap, maar geen uitgewerkte oplossingen: die zoek je zelf. Je kunt wel je eigen antwoord laten controleren.'
+    oefenzittingen: 'Oefeningen uit de oefeningenbundel bij het vak. Per oefening vind je de opgave met een animatie die de beweging (kinematica) of de verbindingen (statica) toont. Er staan geen uitgewerkte oplossingen bij: die zoek je zelf.'
   };
   let bron = location.hash === '#oefenzittingen' ? 'oefenzittingen' : 'handboek';
   try { if (!location.hash && localStorage.getItem('tm1-bron') === 'oefenzittingen') bron = 'oefenzittingen'; } catch (e) {}

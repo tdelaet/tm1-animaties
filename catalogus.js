@@ -177,12 +177,15 @@ TM1.catalogus = [
 ];
 
 /* Oefenzittingen: oefeningen uit de oefeningenbundel bij het vak. Zelfde opbouw als de catalogus van het handboek;
-   deze pagina's tonen de beweging of de verbindingen en geven tips, maar geen uitgewerkte oplossingen. */
+   voorlopig tonen deze pagina's enkel de opgave en de animatie (pad). De versies met stappenplan, tips en controle van
+   het antwoord blijven bewaard voor later (padMetTips), maar staan niet in het overzicht. */
 TM1.oefenzittingen = [
   { deel: '', titel: 'Oefeningenbundel', hoofdstukken: [
     { nr: 3, titel: 'Kinematica van een puntmassa', map: 'oefenzittingen', items: [
-      { id: '3.3', soort: 'oef', titel: 'Pin in twee gleuven', status: 'klaar', pad: 'oefenzittingen/oef3-3-pin-in-twee-gleuven.html' },
-      { id: '3.5', soort: 'oef', titel: 'Pin in een sinusvormige gleuf', status: 'klaar', pad: 'oefenzittingen/oef3-5-pin-in-een-sinusvormige-gleuf.html' }]}
+      { id: '3.3', soort: 'oef', titel: 'Pin in twee gleuven', status: 'klaar', pad: 'oefenzittingen/oef3-3-pin-in-twee-gleuven-animatie.html',
+        padMetTips: 'oefenzittingen/oef3-3-pin-in-twee-gleuven.html' },
+      { id: '3.5', soort: 'oef', titel: 'Pin in een sinusvormige gleuf', status: 'klaar', pad: 'oefenzittingen/oef3-5-pin-in-een-sinusvormige-gleuf-animatie.html',
+        padMetTips: 'oefenzittingen/oef3-5-pin-in-een-sinusvormige-gleuf.html' }]}
   ]}
 ];
 
