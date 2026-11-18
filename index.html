@@ -70,13 +70,15 @@
   enkel.checked = true;
   try { if (localStorage.getItem('tm1-enkelKlaar') === '0') enkel.checked = false; } catch (e) {}
 
-  // keuze tussen de voorbeelden uit het handboek en de oefeningen van de oefenzittingen (onthouden, of via #oefenzittingen)
+  // keuze tussen de voorbeelden uit het handboek en de oefeningen van de oefenzittingen
+  // (onthouden, of vast via de link #handboek of #oefenzittingen)
   const INTRO = {
     handboek: 'Per hoofdstuk vind je hier de voorbeelden uit het handboek als interactieve animatie, van vectoren en meetkunde over krachten en evenwicht tot de beweging van punten en lichamen. Je verkent de vectoren, de verbindingen met hun reactiekrachten en hoe alles samenhangt. De nummering volgt het handboek.',
     oefenzittingen: 'Oefeningen uit de oefeningenbundel bij het vak. Per oefening vind je de opgave met een animatie die de beweging (kinematica) of de verbindingen (statica) toont. Er staan geen uitgewerkte oplossingen bij: die zoek je zelf.'
   };
-  let bron = location.hash === '#oefenzittingen' ? 'oefenzittingen' : 'handboek';
-  try { if (!location.hash && localStorage.getItem('tm1-bron') === 'oefenzittingen') bron = 'oefenzittingen'; } catch (e) {}
+  const uitHash = () => ({ '#handboek': 'handboek', '#oefenzittingen': 'oefenzittingen' }[location.hash]);
+  let bron = uitHash() || 'handboek';
+  try { if (!uitHash() && localStorage.getItem('tm1-bron') === 'oefenzittingen') bron = 'oefenzittingen'; } catch (e) {}
   const lijstVan = () => (bron === 'oefenzittingen' ? TM1.oefenzittingen : TM1.catalogus);
   function bovenkant() {
     document.querySelectorAll('#bron button').forEach(b => b.classList.toggle('actief', b.dataset.b === bron));
@@ -88,7 +90,13 @@
   }
   document.querySelectorAll('#bron button').forEach(b => b.onclick = () => {
     bron = b.dataset.b; try { localStorage.setItem('tm1-bron', bron); } catch (e) {}
-    history.replaceState(null, '', bron === 'oefenzittingen' ? '#oefenzittingen' : location.pathname);
+    history.replaceState(null, '', '#' + bron);
+    bovenkant(); render();
+  });
+  // een link met #handboek of #oefenzittingen werkt ook als de pagina al open staat
+  window.addEventListener('hashchange', () => {
+    const b = uitHash(); if (!b || b === bron) return;
+    bron = b; try { localStorage.setItem('tm1-bron', bron); } catch (e) {}
     bovenkant(); render();
   });
 
