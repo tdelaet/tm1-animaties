@@ -92,7 +92,7 @@ TM1.catalogus = [
       { id: '13.9', titel: 'Plooiladder', status: 'klaar' }]},
     { nr: 14, titel: 'Kinematica van een lichaam', map: 'h14-kinematica-lichaam', items: [
       { id: '14.1', titel: 'Reuzenrad: translatie van de gondel', status: 'klaar' },
-      { id: '14.2', titel: 'Rotor van een helikopter' },
+      { id: '14.2', titel: 'Rotor van een helikopter', status: 'klaar', opmerking: 'uitwerking: pure rotatie t.o.v. de piloot en translatie + rotatie t.o.v. de wereld' },
       { id: '14.3', titel: 'Wasmachine' },
       { id: '14.4', titel: 'Ronddraaiende cilinder', status: 'klaar', opmerking: 'voorstel van uitwerking (niet in het handboek)' }]},
     { nr: 15, titel: 'Meetkundige analyses voor snelheden', map: 'h15-snelheden-meetkundig', items: [

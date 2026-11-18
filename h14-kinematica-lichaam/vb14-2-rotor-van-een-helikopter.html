@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 14.2 – Rotor van een helikopter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  :root{--cw:#c2185b;--cvm:#6a3fb0}            /* snelheid van de helikopter (piloot) en van B t.o.v. de wereld */
+  .k-vm{color:var(--cvm)} .k-w{color:var(--cw)}
+  .scene canvas{height:auto;aspect-ratio:16/10;max-height:600px;cursor:grab}
+  .scene canvas:active{cursor:grabbing}
+  .methode{display:none} .methode.actief{display:block}
+  .modus.stap{display:grid;grid-template-columns:1fr;gap:6px}
+  .modus.stap button{text-align:left}
+  .opgave{padding:10px 16px;margin:0 0 14px}
+  .opgave p{margin:0 0 8px;font-size:14px}
+  .opgave ol{margin:0 0 10px;padding-left:22px;font-size:14px} .opgave li{margin:2px 0}
+  .opgave .label{font:600 11.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .bediening .groep.kader{align-self:stretch;flex-basis:auto;flex-direction:column;align-items:stretch;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .bediening .groep.kader .slider{flex:0 0 auto}
+  .bediening .groep.rotorgroep{flex:1 1 300px}
+  .bediening .groep.aanzichtgroep{flex:0 1 240px}
+  .aanzichtgroep .btnrow{flex-direction:column;align-items:stretch}
+  .deelkop{font:600 15px/1.3 Inter,sans-serif;margin:16px 0 6px}
+  .geo svg{width:100%;max-width:480px;height:auto;display:block;margin:2px 0 6px}
+  .geo ul{margin:4px 0 6px;padding-left:18px} .geo li{margin:3px 0}
+  .geo .hulp line{stroke:#9aa1aa;stroke-width:1.2;stroke-dasharray:5 4}
+  .geo .vlak{stroke:#4f5862;stroke-width:1.3;stroke-dasharray:2 4}
+  .geo .as{stroke:var(--cm);stroke-width:2}
+  .geo .blad{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+  .geo .boog{fill:none;stroke:#6b737d;stroke-width:1.3} .geo .boog.b1{stroke:var(--accent);stroke-width:2}
+  .geo .pt{fill:var(--ink)}
+  .geo-optie{display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer;margin:2px 0 4px}
+  .geo .loodlijn{stroke:#7a828c;stroke-width:1.4;stroke-dasharray:5 4} .geo .haak{fill:none;stroke:#7a828c;stroke-width:1.2}
+  .geo .rvec{stroke:var(--cr);stroke-width:2.2} .geo .rkop{fill:var(--cr)}
+  .geo text.rnm{font:italic 600 15px "Source Serif 4",Georgia,serif;fill:var(--cr)} .geo .rnm-pijl{fill:none;stroke:var(--cr);stroke-width:1.2}
+  .geo .assen line,.geo .assen circle{stroke:#4f5862;stroke-width:1.4;fill:none} .geo .assen .vol{fill:#4f5862;stroke:none}
+  .geo text.as-nm{font:italic 14px "Source Serif 4",Georgia,serif;fill:#4f5862}
+  .geo text{font:13px Inter,sans-serif;fill:#6b737d}
+  .geo .hk{font-weight:600;fill:var(--ink)} .geo .nm{font:italic 600 16px "Source Serif 4",Georgia,serif;fill:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#handboek">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 14.2 — Rotor van een helikopter</h1>
+    <span class="kicker">Kinematica van een lichaam · snelheid van de rotortip <i>B</i> ten opzichte van de piloot en ten opzichte van de wereld</span>
+  </header>
+
+  <div class="opgave card">
+    <span class="label">Opgave</span>
+    <p>Een helikopter vliegt horizontaal naar links met een snelheid van 60 m/s. De rotor draait met 384 omwentelingen per minuut; elk rotorblad is <i>L</i> = 5 m lang. De rotoras helt 4° naar voren ten opzichte van de verticale en de bladen maken een hoek van 85° met de as. Bepaal voor de bestudeerde stand (<i>t</i> = <i>t</i>₁) de snelheid van de rotortip <i>B</i>:</p>
+    <ol type="a">
+      <li>ten opzichte van de piloot;</li>
+      <li>ten opzichte van de wereld.</li>
+    </ol>
+    <div class="stappen modus" id="delen">
+      <button data-d="a"><span class="nr">a.</span>t.o.v. de piloot: pure rotatie</button>
+      <button data-d="b"><span class="nr">b.</span>t.o.v. de wereld: translatie én rotatie</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Helikopter met een rotor waarvan de as 4° naar voren helt en de bladen 85° met de as maken; de tip B, de hoeksnelheid en de snelheden"></canvas>
+      <div class="hint">Sleep om het aanzicht te draaien</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="note" id="modusUitleg"></div>
+        <!-- twee onafhankelijke instellingen: de stand van de rotor (tijd) en het aanzicht (camera) -->
+        <div class="groep kader rotorgroep">
+          <span class="groeptitel">Rotorstand</span>
+          <div class="btnrow">
+            <button class="primary" id="play">⏸ Pauze</button>
+            <button id="reset">↺ bestudeerde stand (t = t₁)</button>
+          </div>
+          <div class="slider">
+            <div class="lab"><span><span class="i">φ</span> = <span class="i">ω</span>(<span class="i">t</span> − <span class="i">t</span>₁)</span><b id="fval"></b></div>
+            <input type="range" id="fslider" min="0" max="3600" value="0">
+          </div>
+        </div>
+        <div class="groep kader aanzichtgroep">
+          <span class="groeptitel">Aanzicht</span>
+          <div class="btnrow modus" id="aanzicht">
+            <button id="zij">zijaanzicht (zoals in de opgave)</button>
+            <button id="loodrecht">loodrecht op de rotor</button>
+          </div>
+        </div>
+        <div class="note">De animatie is sterk vertraagd: de rotor maakt in werkelijkheid 6.4 omwentelingen per seconde.</div>
+      </div>
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_w"> <span class="sw" style="background:var(--cm)"></span><span>hoeksnelheid <span class="v">ω</span></span></label>
+          <label><input type="checkbox" id="t_r"> <span class="sw" style="background:var(--cr)"></span><span>positievector <span class="k-r"><span class="v">r</span><sub>B/A</sub></span></span></label>
+          <label><input type="checkbox" id="t_v"> <span class="sw" style="background:var(--cv)"></span><span>snelheden</span></label>
+          <label><input type="checkbox" id="t_hoek"> <span>hoeken in de bestudeerde stand</span></label>
+          <label><input type="checkbox" id="t_baan"> <span>baan van <i>B</i></span></label>
+          <label><input type="checkbox" id="t_romp"> <span>romp van de helikopter</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3 id="gtitel"></h3>
+      <div class="legend"><span><span class="sw" style="background:var(--cvx)"></span><span class="i">v<sub>x</sub></span></span><span><span class="sw" style="background:var(--cvy)"></span><span class="i">v<sub>y</sub></span></span><span><span class="sw" style="background:#c08a2e"></span><span class="i">v<sub>z</sub></span></span></div>
+      <canvas id="g1"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Oplossing</h2>
+      <div class="tex">L = 5.00\ \text{m}, \qquad \omega = 384\ \text{omw/min} = 384\cdot\frac{2\pi}{60}\ \text{rad/s} = 40.2\ \text{rad/s}, \qquad \|\vec v_{P/W}\| = 60.0\ \text{m/s}</div>
+
+      <h3 class="deelkop">Geometrie</h3>
+      <div class="geo">
+        <label class="geo-optie"><input type="checkbox" id="geoR"> toon <span class="k-r"><span class="v">r</span><sub>B/A</sub></span> en de loodlijn van <i>B</i> op de as</label>
+        <svg viewBox="0 0 520 290" role="img" aria-label="Zijaanzicht van de rotor in de bestudeerde stand: de as helt 4° naar voren ten opzichte van de verticale, het blad AB maakt 85° met de as en dus 1° met de horizontale; het rotorvlak ligt 5° onder het blad">
+          <!-- hoeken uitvergroot: 4° → 14°, 5° → 20° (85° → 70°), 1° → 6°; A = (380, 185) -->
+          <g class="hulp">
+            <line x1="380" y1="235" x2="380" y2="40"/>                 <!-- verticale -->
+            <line x1="420" y1="185" x2="40" y2="185"/>                 <!-- horizontale -->
+          </g>
+          <line class="vlak" x1="487" y1="158" x2="85" y2="259"/>      <!-- rotorvlak (⊥ as), 14° -->
+          <line class="as" x1="390" y1="224" x2="345" y2="40"/>        <!-- as, 14° voorover -->
+          <line class="blad" x1="380" y1="185" x2="80" y2="153.5"/>    <!-- blad AB, 6° boven de horizontale -->
+          <!-- hoekbogen -->
+          <path class="boog" d="M380 75 A110 110 0 0 0 353.4 78.3"/>               <!-- verticale → as: 4° -->
+          <path class="boog" d="M369.1 141.3 A45 45 0 0 0 335.2 180.3"/>          <!-- as → blad: 85° -->
+          <path class="boog b1" d="M181.1 164.1 A200 200 0 0 0 180 185"/>           <!-- blad → horizontale: 1° -->
+          <path class="boog b5" d="M250.7 171.4 A130 130 0 0 0 253.9 216.4"/>       <!-- blad → rotorvlak: 5° -->
+          <text x="361" y="98" class="hk">4°</text>
+          <text x="327" y="140" class="hk">85°</text>
+          <text x="186" y="181" class="hk">1°</text>
+          <text x="226" y="202" class="hk">5°</text>
+          <!-- optioneel: r_B/A en de loodlijn van B op de as (voetpunt F = (355.1, 85.0), haaksymbool naar A toe) -->
+          <g id="geoExtra" style="display:none">
+            <defs><marker id="geoPijlR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 1 L10 5 L0 9 z" class="rkop"/></marker></defs>
+            <line class="loodlijn" x1="80" y1="153.5" x2="355.1" y2="85"/>
+            <polyline class="haak" points="343.4,87.9 346.3,99.5 358,96.6"/>
+            <line class="rvec" x1="380" y1="185" x2="86" y2="154.1" marker-end="url(#geoPijlR)"/>
+            <text x="222" y="160" class="rnm">r<tspan dy="4" font-size="11">B/A</tspan></text>
+            <path class="rnm-pijl" d="M222 144 h10 M229 141.5 l3 2.5 l-3 2.5"/>
+          </g>
+          <circle cx="380" cy="185" r="4" class="pt"/><circle cx="80" cy="153.5" r="4" class="pt"/>
+          <text x="388" y="203" class="nm">A</text><text x="62" y="148" class="nm">B</text>
+          <text x="384" y="52" class="tk">verticale</text>
+          <text x="330" y="52" class="tk" text-anchor="end">as</text>
+          <text x="44" y="200" class="tk">horizontale</text>
+          <text x="96" y="276" class="tk">rotorvlak (⊥ as)</text>
+          <text x="40" y="24" class="tk">← neus (vliegrichting)</text>
+          <!-- assenstelsel: x naar de staart, y omhoog, z naar de kijker (⊙) -->
+          <defs><marker id="geoPijl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L10 5 L0 9 z" fill="#4f5862"/></marker></defs>
+          <g class="assen">
+            <line x1="452" y1="254" x2="497" y2="254" marker-end="url(#geoPijl)"/>
+            <line x1="452" y1="254" x2="452" y2="209" marker-end="url(#geoPijl)"/>
+            <circle cx="452" cy="254" r="5.5"/><circle cx="452" cy="254" r="1.6" class="vol"/>
+            <text x="500" y="268" class="as-nm">x</text>
+            <text x="459" y="214" class="as-nm">y</text>
+            <text x="434" y="272" class="as-nm">z</text>
+          </g>
+        </svg>
+        <div>
+          <p class="fn" style="margin-top:0">Zijaanzicht in de bestudeerde stand: blad <i>AB</i> ligt in het <i>xy</i>-vlak, naar de neus van de helikopter.</p>
+          <ul class="fn">
+            <li>De as helt 4° naar voren ten opzichte van de verticale.</li>
+            <li>Het blad maakt 85° met de as, aan de kant van de neus. Met de verticale maakt het dus 4° + 85° = 89°, en met de horizontale 90° − 89° = <b>1°</b> (naar boven).</li>
+            <li>Het rotorvlak staat loodrecht op de as: het helt eveneens 4° (vooraan omlaag). Het blad ligt 90° − 85° = 5° boven het rotorvlak, dus 5° − 4° = 1° boven de horizontale.</li>
+          </ul>
+          <div class="tex">\kr{\vec r_B}(t_1)-\kr{\vec r_A}(t_1) = L\begin{Bmatrix}-\cos 1^\circ\\ \sin 1^\circ\\ 0\end{Bmatrix}</div>
+          <p class="fn">De hoeken zijn in de figuur uitvergroot, anders zijn ze niet te onderscheiden.</p>
+        </div>
+      </div>
+
+      <div id="aanpakKeuze">
+        <h3 class="deelkop">a. T.o.v. de piloot — via inzicht in de beweging: pure rotatie (stelling 14.3)</h3>
+      </div>
+
+      <div class="methode" data-m="1">
+        <p class="fn" style="margin-top:0">Ten opzichte van de piloot draait de rotor rond een vaste as door <i>A</i>: een pure rotatie.</p>
+        <div class="tex">\kv{\vec v_{B/P}}(t_1) = \kM{\vec\omega}(t_1)\times\big(\kr{\vec r_B}(t_1)-\kr{\vec r_A}(t_1)\big)</div>
+        <div class="tex">\kM{\vec\omega}(t_1) = \omega\begin{Bmatrix}-\sin 4^\circ\\ \cos 4^\circ\\ 0\end{Bmatrix}, \qquad \kr{\vec r_B}(t_1)-\kr{\vec r_A}(t_1) = L\begin{Bmatrix}-\cos 1^\circ\\ \sin 1^\circ\\ 0\end{Bmatrix}\quad\text{(zie geometrie)}</div>
+        <div class="tex">\kv{\vec v_{B/P}}(t_1) = \begin{vmatrix}\vec e_x & \vec e_y & \vec e_z\\ -\omega\sin 4^\circ & \omega\cos 4^\circ & 0\\ -L\cos 1^\circ & L\sin 1^\circ & 0\end{vmatrix} = \begin{Bmatrix}0\\ 0\\ -L\omega\sin 4^\circ\sin 1^\circ + L\omega\cos 4^\circ\cos 1^\circ\end{Bmatrix} = \begin{Bmatrix}0\\ 0\\ L\omega\cos 5^\circ\end{Bmatrix}</div>
+        <div class="tex">\kv{\vec v_{B/P}}(t_1) = \begin{Bmatrix}0\\ 0\\ 5.00\ \text{m}\cdot\cos 5^\circ\cdot 40.2\ \text{rad/s}\end{Bmatrix} = \begin{Bmatrix}0\\ 0\\ 200\ \text{m/s}\end{Bmatrix}</div>
+        <p class="fn"><i>L</i> cos 5° = 4.98 m is de afstand van <i>B</i> tot de rotatie-as: de straal <i>R</i> van de cirkel die <i>B</i> beschrijft. De snelheid staat loodrecht op het vlak van de figuur (volgens <span class="tex inline">\vec e_z</span>).</p>
+      </div>
+
+
+      <div class="methode" data-m="3">
+        <h2 style="margin-top:14px">b. T.o.v. de wereld — translatie én rotatie</h2>
+        <p class="fn" style="margin-top:0">De helikopter (met de piloot) transleert met 60 m/s naar links; ten opzichte van de helikopter draait de rotor zoals in deel a. De snelheden tellen op:</p>
+        <div class="tex">\kvm{\vec v_{B/W}}(t_1) = \kv{\vec v_{B/P}}(t_1) + \kw{\vec v_{P/W}}(t_1)</div>
+        <div class="tex">\kv{\vec v_{B/P}}(t_1) = \begin{Bmatrix}0\\ 0\\ 200\ \text{m/s}\end{Bmatrix}, \qquad \kw{\vec v_{P/W}}(t_1) = \begin{Bmatrix}-60.0\ \text{m/s}\\ 0\\ 0\end{Bmatrix} \qquad\Rightarrow\qquad \kvm{\vec v_{B/W}}(t_1) = \begin{Bmatrix}-60.0\ \text{m/s}\\ 0\\ 200\ \text{m/s}\end{Bmatrix}</div>
+        <p class="fn">Zet de baan van <i>B</i> aan: ten opzichte van de wereld beschrijft de tip geen cirkel meer, maar een kromme die met de helikopter mee naar links schuift.</p>
+      </div>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Kies het zijaanzicht. Waarom zie je <span class="k-v"><span class="v">v</span><sub>B/P</sub></span> daar enkel als een punt (⊙)?</li>
+        <li>Kies het aanzicht loodrecht op de rotor (je kijkt dan langs de as). Staat <span class="k-v"><span class="v">v</span><sub>B/P</sub></span> rakend aan de cirkel die <i>B</i> beschrijft?</li>
+        <li>Waarom is de straal van die cirkel <i>L</i> cos 5° en niet <i>L</i>? Speelt de helling van 4° van de as een rol in de grootte van de snelheid?</li>
+        <li>Volg de grafiek bij deel a: in welke standen is <span class="k-v"><span class="v">v</span><sub>B/P</sub></span> volledig horizontaal? Wanneer heeft ze een verticale component?</li>
+        <li>Bij deel b: in welke stand van het blad is ‖<span class="k-vm"><span class="v">v</span><sub>B/W</sub></span>‖ het grootst? En het kleinst?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const KW = '#c2185b', KVM = '#6a3fb0', CZ = '#c08a2e', KE = '#4f5862';
+
+// ---------- gegevens en beweging (assen: x naar de staart, y omhoog, z naar de kijker) ----------
+const L = 5, TILT = rad(4), KON = rad(5);              // bladlengte, helling van de as, bladen 85° met de as (5° boven het rotorvlak)
+const OMW = 384 / 60, W = 2 * Math.PI * OMW;           // 384 omw/min → 40.2 rad/s
+const T = 1 / OMW, VH = 60;                            // periode [s], snelheid van de helikopter [m/s]
+const VERTRAAG = 50;                                   // de animatie loopt 50 keer trager dan in werkelijkheid
+const eN = [-Math.sin(TILT), Math.cos(TILT), 0], eT1 = [-Math.cos(TILT), -Math.sin(TILT), 0], eT2 = [0, 0, 1];
+const vPW = [-VH, 0, 0];
+const A = [0, 0, 0], PIL = [-2.9, -1.2, 0.35];         // naaf A, plaats van de piloot (schematisch)
+const KV = 0.017;                                      // vectorschaal [m per m/s]
+
+const add = (...v) => v.reduce((s, q) => s.map((x, i) => x + q[i]), [0, 0, 0]);
+const mul = (k, v) => v.map(x => k * x);
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const norm = v => Math.hypot(...v);
+
+let t = 0, playing = true, modus = 1;
+// eerst enkel de beweging: vectoren, baan en hoeken zet de student zelf aan
+const show = { w: false, r: false, v: false, hoek: false, baan: false, romp: true };
+
+function stand(tt, extra = 0) {
+  const ph = W * tt + extra, c = Math.cos(ph), s = Math.sin(ph);
+  const rel = add(mul(L * Math.cos(KON) * c, eT1), mul(L * Math.cos(KON) * s, eT2), mul(L * Math.sin(KON), eN));
+  const v = add(mul(-L * Math.cos(KON) * W * s, eT1), mul(L * Math.cos(KON) * W * c, eT2));
+  return { ph, rel, v, vW: add(v, vPW) };
+}
+
+// ---------- projectie (orthografisch): yaw rond de y-as, pitch omhoog ----------
+// zijaanzicht zoals in de opgave; loodrecht op de rotor = langs de as e_n, met een rol van het beeld
+// zodat de neus van de helikopter naar links wijst (vliegrichting horizontaal, zoals in het zijaanzicht)
+const ZIJ = { yaw: 0, pitch: 0, rol: 0 }, ROTOR = { yaw: rad(90), pitch: rad(94), rol: rad(-90) };
+let zicht = { ...ZIJ };                                // start in het zijaanzicht, zoals in de opgave
+const sc = setup(document.getElementById('scene'));
+function projector() {
+  const w_ = sc.w, h_ = sc.h, cy = Math.cos(zicht.yaw), sy = Math.sin(zicht.yaw), cp = Math.cos(zicht.pitch), sp = Math.sin(zicht.pitch);
+  const R0 = [cy, 0, -sy], U0 = [-sy * sp, cp, -cy * sp], D = [sy * cp, sp, cy * cp];   // rechts, omhoog, naar de kijker
+  const cr = Math.cos(zicht.rol), sr = Math.sin(zicht.rol);
+  const R = add(mul(cr, R0), mul(sr, U0)), U = add(mul(-sr, R0), mul(cr, U0));
+  // van boven gezien (langs de as) is de rotorcirkel volledig zichtbaar: iets kleiner en meer gecentreerd
+  const k = sp * sp, S = Math.min(w_ / 16.5, h_ / 10.2) * (1 - 0.14 * k), ox = w_ * 0.43, oy = h_ * (0.43 + 0.08 * k);
+  const P = p => ({ x: ox + dot3(p, R) * S, y: oy - dot3(p, U) * S, d: dot3(p, D) });
+  P.S = S; P.R = R; P.U = U; P.ox = ox; P.oy = oy; return P;
+}
+function lijn(ctx, P, a, b, kleur, w = 1.2, dash) {
+  const p = P(a), q = P(b); ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore();
+}
+function polylijn(ctx, P, pts, kleur, w = 1.2, dash, vul) {
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash); ctx.beginPath();
+  pts.forEach((p, i) => { const q = P(p); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
+  if (vul) { ctx.closePath(); ctx.fillStyle = vul; ctx.fill(); }
+  ctx.stroke(); ctx.restore();
+}
+// pijl in 3D; staat ze (bijna) loodrecht op het scherm, dan een ⊙ (naar de kijker) of ⊗ (van de kijker weg)
+function pijl3(ctx, P, a, b, kleur, opt, naam, sub, lab = 'tip') {
+  const p = P(a), q = P(b), len = Math.hypot(q.x - p.x, q.y - p.y);
+  if (len < 14 && norm(add(b, mul(-1, a))) * P.S > 20) {
+    const naar = q.d > p.d;
+    ctx.save(); ctx.strokeStyle = kleur; ctx.fillStyle = kleur; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 2 * Math.PI); ctx.stroke();
+    if (naar) { ctx.beginPath(); ctx.arc(p.x, p.y, 2.6, 0, 2 * Math.PI); ctx.fill(); }
+    else { ctx.beginPath(); ctx.moveTo(p.x - 6, p.y - 6); ctx.lineTo(p.x + 6, p.y + 6); ctx.moveTo(p.x + 6, p.y - 6); ctx.lineTo(p.x - 6, p.y + 6); ctx.stroke(); }
+    ctx.restore();
+    if (naam) label(ctx, naam, sub, p.x + (lab.dx ?? 12), p.y + (lab.dy ?? -12), kleur, { size: 15 });
+    return;
+  }
+  if (!arrow(ctx, p.x, p.y, q.x, q.y, kleur, opt) || !naam) return;
+  if (lab === 'tip') TM1.tipLabel(ctx, p.x, p.y, q.x, q.y, naam, sub, kleur);
+  else label(ctx, naam, sub, q.x + (lab.dx ?? 0), q.y + (lab.dy ?? 0), kleur, { size: 15, align: lab.align ?? 'left' });
+}
+function punt(ctx, P, p, naam, dx, dy, kleur = C.ink) {
+  const q = P(p); ctx.save(); ctx.fillStyle = kleur; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  if (naam) label(ctx, naam, '', q.x + dx, q.y + dy, kleur, { vec: false, size: 15 });
+}
+// cirkelboog in het vlak (u, w) rond midden m
+function boog(ctx, P, m, u, w, r, a0, a1, kleur, lw = 1.2, dash) {
+  const pts = []; for (let i = 0; i <= 48; i++) { const s = a0 + (a1 - a0) * i / 48; pts.push(add(m, mul(r * Math.cos(s), u), mul(r * Math.sin(s), w))); }
+  polylijn(ctx, P, pts, kleur, lw, dash);
+}
+
+// schematische romp: dwarsdoorsneden (ellipsen in het yz-vlak) en langslijnen
+const STAT = [[-4.3, -1.95, 0.06, 0.06], [-3.8, -1.9, 0.55, 0.55], [-2.8, -1.65, 0.95, 0.85], [-1.2, -1.5, 1.05, 0.95],
+              [0.9, -1.5, 1.05, 0.95], [2.1, -1.3, 0.72, 0.62], [3.2, -1.0, 0.3, 0.26], [7.4, -0.75, 0.12, 0.1]];
+function drawRomp(ctx, P) {
+  const rand = (st, a) => [st[0], st[1] + st[2] * Math.sin(a), st[3] * Math.cos(a)];
+  // silhouet (lichte vulling) van boven-/onderkant en van beide zijkanten
+  polylijn(ctx, P, [...STAT.map(s => rand(s, Math.PI / 2)), ...STAT.slice().reverse().map(s => rand(s, -Math.PI / 2))], '#5b6168', 1.4, null, 'rgba(226,230,235,0.55)');
+  polylijn(ctx, P, [...STAT.map(s => rand(s, 0)), ...STAT.slice().reverse().map(s => rand(s, Math.PI))], '#9aa1aa', 1, null, 'rgba(226,230,235,0.35)');
+  for (const st of STAT.slice(1, -1)) { const pts = []; for (let i = 0; i <= 32; i++) pts.push(rand(st, 2 * Math.PI * i / 32)); polylijn(ctx, P, pts, '#c3c8ce', 0.9); }
+  // ruit van de cockpit (zijkant, naar de kijker)
+  polylijn(ctx, P, [[-3.75, -1.7, 0.5], [-3.0, -1.0, 0.72], [-2.0, -0.85, 0.8], [-2.0, -1.55, 0.92], [-3.3, -1.85, 0.75]], '#7a828c', 1, null, 'rgba(190,205,220,0.5)');
+  // staartvin en staartrotor
+  polylijn(ctx, P, [[6.9, -0.8, 0], [7.5, 0.5, 0], [8.0, 0.5, 0], [7.75, -0.88, 0]], '#5b6168', 1.3, null, 'rgba(226,230,235,0.7)');
+  boog(ctx, P, [7.55, -0.2, 0.25], [1, 0, 0], [0, 1, 0], 0.75, 0, 2 * Math.PI, '#9aa1aa', 1, [4, 3]);
+  // ski's met steunen
+  for (const z of [-0.95, 0.95]) {
+    polylijn(ctx, P, [[-2.9, -2.75, z], [-2.5, -2.95, z], [1.6, -2.95, z]], '#5b6168', 1.6);
+    for (const x of [-1.6, 0.6]) lijn(ctx, P, [x, -2.35, z * 0.7], [x, -2.95, z], '#5b6168', 1.3);
+  }
+  // mast volgens de rotoras
+  lijn(ctx, P, add(A, mul(-0.5, eN)), A, '#3d454f', 3);
+}
+
+function drawScene() {
+  const ctx = sc.ctx, w_ = sc.w, h_ = sc.h; ctx.clearRect(0, 0, w_, h_);
+  // P0: vaste camera (waarnemer op de grond); P: tekent de helikopter. In deel b schuift de helikopter door het
+  // beeld naar links. Ze start rechts buiten beeld (t = 0), komt aangevlogen, staat op t = t1 = 2T in het midden
+  // en vliegt links uit beeld; na 4 omwentelingen (4·VH·T = 37.5 m) begint ze opnieuw rechts.
+  const P0 = projector(), grond = modus === 3;
+  const XB = 2 * VH * T, xh = grond ? XB - (((VH * t) % (2 * XB)) + 2 * XB) % (2 * XB) : 0;
+  const P = p => P0([p[0] + xh, p[1], p[2]]); P.S = P0.S;
+  const st = stand(t), st2 = stand(t, Math.PI), B = add(A, st.rel), Cc = add(A, mul(L * Math.sin(KON), eN));
+  const R = L * Math.cos(KON);
+
+  if (modus === 3) {
+    // van boven gezien (aanzicht loodrecht op de rotor) ligt de grond onder de romp: dan laten we ze wegvallen
+    const kb = Math.sin(zicht.pitch) ** 2, zg = kb < 0.6 ? 1 : Math.max(0, (0.9 - kb) / 0.3);
+    const yg = -4.6;
+    ctx.save(); ctx.globalAlpha = zg;
+    if (grond) {
+      // de grond staat stil, met een waarnemer erop
+      lijn(ctx, P0, [-8, yg, 0], [11, yg, 0], '#9aa1aa', 1.2);
+      for (let x = -8; x <= 11; x += 2) lijn(ctx, P0, [x, yg, -0.6], [x - 0.5, yg - 0.35, 0.6], '#b5bac1', 1);
+      const w0 = [-3.2, yg, 0.4], hd = P0(add(w0, [0, 1.75, 0])), k = '#3d454f';
+      polylijn(ctx, P0, [add(w0, [-0.3, 0, 0]), add(w0, [0, 0.85, 0]), add(w0, [0.3, 0, 0])], k, 1.6);
+      polylijn(ctx, P0, [add(w0, [0, 0.85, 0]), add(w0, [0, 1.5, 0])], k, 1.6);
+      polylijn(ctx, P0, [add(w0, [-0.35, 1.05, 0]), add(w0, [0, 1.35, 0]), add(w0, [0.35, 1.05, 0])], k, 1.6);
+      ctx.save(); ctx.strokeStyle = k; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(hd.x, hd.y, 0.22 * P0.S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; const q = P0(w0); ctx.fillText('waarnemer', q.x, q.y + 18); ctx.restore();
+    }
+    ctx.restore();
+    // snelheid van de helikopter (elk punt van de romp, ook de piloot, heeft die snelheid): getekend onder de staartboom
+    { const s0 = [6.2, -1.8, 3.2 * Math.max(0, (kb - 0.6) / 0.4)]; if (show.v) pijl3(ctx, P, s0, add(s0, mul(KV, vPW)), KW, { w: 3, head: 11 }, 'v', 'P/W', { dx: -10, dy: 6, align: 'right' }); }
+  }
+  // assenkruis linksonder (vast in beeld)
+  { const O = add(mul((46 - P0.ox) / P0.S, P0.R), mul((P0.oy - (sc.h - 40)) / P0.S, P0.U));   // steeds in de hoek linksonder
+    for (const [e, n] of [[[1, 0, 0], 'x'], [[0, 1, 0], 'y'], [[0, 0, 1], 'z']]) {
+      pijl3(ctx, P0, O, add(O, mul(0.9, e)), '#7a828c', { w: 1.3, head: 7 });
+      const q = P0(add(O, mul(1.05, e))), p0 = P0(O);
+      if (Math.hypot(q.x - p0.x, q.y - p0.y) > 10) label(ctx, n, '', q.x + 3, q.y + 5, '#6b737d', { vec: false, size: 13 });
+      else label(ctx, n, '', p0.x - 24, p0.y + 5, '#6b737d', { vec: false, size: 13 });   // ⊙/⊗: naam links ervan
+    }
+    // kijk je langs de rotoras, dan lijkt y loodrecht op het scherm te staan (⊙), maar de as helt 4° t.o.v. y
+    const R_ = P0.R, U_ = P0.U, D_ = [R_[1] * U_[2] - R_[2] * U_[1], R_[2] * U_[0] - R_[0] * U_[2], R_[0] * U_[1] - R_[1] * U_[0]];
+    if (dot3(D_, eN) > Math.cos(rad(1.5))) {
+      const p0 = P0(O);
+      ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = '#6b737d';
+      const nx = p0.x + 1.05 * P0.S + 22;
+      ['Je kijkt langs de rotoras, niet langs y:', 'de as helt 4° t.o.v. de y-as, dus y staat', 'niet loodrecht op het scherm.'].forEach((r, i) => ctx.fillText(r, nx, p0.y - 12 + 15 * i));
+      ctx.restore();
+    } }
+
+  if (show.romp) drawRomp(ctx, P);
+  else lijn(ctx, P, add(A, mul(-0.5, eN)), A, '#3d454f', 3);
+
+  // baan van B: cirkel t.o.v. de piloot, of t.o.v. de wereld (in het assenstelsel dat met de helikopter meeschuift)
+  if (show.baan) {
+    if (modus === 3) {
+      const pts = []; for (let i = 0; i <= 160; i++) { const s = t - T * 1.1 * i / 160; pts.push(add(A, stand(s).rel, mul(s - t, vPW))); }
+      polylijn(ctx, P, pts, KVM, 1.4, [4, 3]);
+    } else boog(ctx, P, Cc, eT1, eT2, R, 0, 2 * Math.PI, '#2f7d3a', 1.3, [4, 4]);
+  }
+
+  // rotoras (stippellijn) en hoeksnelheid
+  lijn(ctx, P, add(A, mul(-2.6, eN)), add(A, mul(1.2, eN)), '#9aa1aa', 1, [6, 4]);
+  if (modus !== 3 && show.w) {
+    const top = add(A, mul(1.2, eN)), tip = add(A, mul(2.6, eN));
+    pijl3(ctx, P, top, tip, C.M, { w: 2.6, head: 11 }, 'ω', '', { dx: 8, dy: 4 });
+  }
+  // hoeken in de bestudeerde stand (enkel als blad AB in het xy-vlak ligt)
+  const inStand = Math.abs(Math.sin(st.ph)) < 0.01 && Math.cos(st.ph) > 0;
+  if (show.hoek && inStand) {
+    const k = '#2f7d3a';
+    lijn(ctx, P, A, [0, 2.2, 0], '#7a828c', 1, [2, 3]);                          // verticale door A
+    boog(ctx, P, A, [0, 1, 0], [-1, 0, 0], 1.9, 0, TILT, C.M, 1.3);
+    { const q = P(add(A, [-0.35, 2.15, 0])); TM1.formule(ctx, '4°', q.x - 4, q.y, { color: C.M, size: 13, align: 'right' }); }
+    boog(ctx, P, A, eN, mul(-1, [Math.cos(TILT), Math.sin(TILT), 0]), 1.25, 0, rad(85), k, 1.3);
+    { const q = P(add(A, mul(1.45, [-Math.sin(TILT + rad(42)), Math.cos(TILT + rad(42)), 0]))); TM1.formule(ctx, '85°', q.x - 4, q.y, { color: k, size: 13, align: 'right' }); }
+    lijn(ctx, P, A, [-4.6, 0, 0], '#7a828c', 1, [2, 3]);                         // horizontale door A
+    boog(ctx, P, A, [-1, 0, 0], [0, 1, 0], 3.2, 0, rad(1), '#7a828c', 1.2);
+    { const q = P([-3.3, -0.05, 0]); TM1.formule(ctx, '1°', q.x, q.y + 16, { color: '#6b737d', size: 13, align: 'center' }); }
+  }
+
+  // rotorbladen (B vooraan in de bestudeerde stand)
+  for (const [s, dik] of [[st2, 4], [st, 4.5]]) lijn(ctx, P, A, add(A, s.rel), '#2b3138', dik);
+  punt(ctx, P, A, 'A', 9, -8, C.ink);
+
+  // loodlijn van B op de rotoras (straal R = L cos 5° van de cirkel), met haaksymbool bij het voetpunt op de as
+  if (modus !== 3 && show.r && show.baan) {
+    const u = add(mul(Math.cos(st.ph), eT1), mul(Math.sin(st.ph), eT2)), s = 0.32, grijs = '#7a828c';
+    lijn(ctx, P, Cc, B, grijs, 1.3, [4, 3]);
+    polylijn(ctx, P, [add(Cc, mul(s, u)), add(Cc, mul(s, u), mul(s, eN)), add(Cc, mul(s, eN))], grijs, 1.2);
+  }
+  // relatieve positie r_B − r_A
+  if (modus !== 3 && show.r) {
+    const m = P(add(A, mul(0.55, st.rel)));
+    lijn(ctx, P, A, B, C.r, 2.2, [6, 4]);
+    pijl3(ctx, P, add(A, mul(0.9, st.rel)), B, C.r, { w: 2.2, head: 10 });
+    label(ctx, 'r', 'B/A', m.x - 6, m.y - 12, C.r, { size: 14 });
+  }
+
+  // snelheden in B
+  const vB = add(B, mul(KV, st.v));
+  if (!show.v) { /* enkel de beweging */ }
+  else if (modus === 3) {
+    const vW = add(B, mul(KV, st.vW));
+    pijl3(ctx, P, B, add(B, mul(KV, vPW)), KW, { w: 2.2, head: 10, dash: [6, 4] });
+    pijl3(ctx, P, add(B, mul(KV, vPW)), vW, C.v, { w: 2.2, head: 10, dash: [6, 4] });
+    pijl3(ctx, P, B, vB, C.v, { w: 2.4, head: 11, alpha: 0.5 }, 'v', 'B/P', { dx: 12, dy: -14 });
+    pijl3(ctx, P, B, vW, KVM, { w: 3.2, head: 13 }, 'v', 'B/W', { dx: -70, dy: -12 });
+  } else pijl3(ctx, P, B, vB, C.v, { w: 3.2, head: 13 }, 'v', 'B/P', { dx: 12, dy: -14 });
+  punt(ctx, P, B, 'B', -20, -6, C.ink);
+  if (show.romp) punt(ctx, P, PIL, 'P', -18, 18, KW);
+
+  if (show.v) TM1.schaalLegende(ctx, h_, [[50 * KV * P.S, C.v, '50 m/s']], { rechtsboven: { w: w_, y: 40 } });
+  if (inStand) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.fillText('bestudeerde stand (t = t₁)', 12, 20); ctx.restore(); }
+}
+// aanzicht draaien door te slepen
+{
+  let sleep = null;
+  sc.c.addEventListener('pointerdown', e => { sleep = { x: e.clientX, y: e.clientY, ...zicht }; sc.c.setPointerCapture(e.pointerId); });
+  sc.c.addEventListener('pointermove', e => {
+    if (!sleep) return;
+    // sleepbeweging terugrekenen naar het niet-gerolde beeld
+    const dx = e.clientX - sleep.x, dy = e.clientY - sleep.y, cr = Math.cos(zicht.rol), sr = Math.sin(zicht.rol);
+    zicht.yaw = sleep.yaw - (cr * dx + sr * dy) * 0.01;
+    zicht.pitch = Math.max(rad(-80), Math.min(rad(95), sleep.pitch + (cr * dy - sr * dx) * 0.01));
+    document.querySelectorAll('#aanzicht button').forEach(b => b.classList.remove('actief'));
+    render();
+  });
+  const stop = () => { sleep = null; };
+  sc.c.addEventListener('pointerup', stop); sc.c.addEventListener('pointercancel', stop);
+}
+
+// ---------- grafiek: componenten van de snelheid van B tijdens één omwenteling ----------
+const G1 = setup(document.getElementById('g1'));
+let F1;
+function drawGraph() {
+  const wereld = modus === 3, f = s => (wereld ? s.vW : s.v);
+  document.getElementById('gtitel').innerHTML = wereld
+    ? 'Componenten van <span class="k-vm"><span class="v">v</span><sub>B/W</sub></span> tijdens één omwenteling'
+    : 'Componenten van <span class="k-v"><span class="v">v</span><sub>B/P</sub></span> tijdens één omwenteling';
+  if (!show.v) {   // eerst enkel de beweging: de grafiek verschijnt pas met de snelheden
+    const c = G1.ctx; c.clearRect(0, 0, G1.w, G1.h); c.save(); c.font = '13px Inter, sans-serif'; c.fillStyle = C.muted; c.textAlign = 'center';
+    c.fillText('Zet "snelheden" aan om de componenten te zien.', G1.w / 2, G1.h / 2); c.restore(); F1 = null; return;
+  }
+  const F = frame(G1, [0, 1000 * T], wereld ? [-270, 210] : [-210, 210], '$t - t_1$ [ms]', wereld ? '$v_{B/W}$ [m/s]' : '$v_{B/P}$ [m/s]');
+  [[0, C.vx], [1, C.vy], [2, CZ]].forEach(([i, k]) => curve(G1.ctx, F, 200, 0, T, u => 1000 * u, u => f(stand(u))[i], k, 2.2));
+  const tt = ((t % T) + T) % T, q = f(stand(tt));
+  TM1.cursor(G1.ctx, F, 1000 * tt);
+  [[0, C.vx], [1, C.vy], [2, CZ]].forEach(([i, k]) => dot(G1.ctx, F.X(1000 * tt), F.Y(q[i]), k));
+  F1 = F;
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const v3 = (v, d, e) => `(${v.map(x => fmt(x, d)).join(', ')}) ${e}`;
+function drawReadout() {
+  const s = stand(t), cel = [
+    ['t − t₁', `${fmt(1000 * (((t % T) + T) % T), 1)} ms`],
+    ['φ', `${fmt(deg(((s.ph % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)), 1)}°`],
+    ['<span class="k-r"><span class="v">r</span><sub>B/A</sub></span>', v3(s.rel, 3, 'm'), true],
+    ['<span class="k-v"><span class="v">v</span><sub>B/P</sub></span>', v3(s.v, 1, 'm/s'), true],
+    ['‖<span class="k-v"><span class="v">v</span><sub>B/P</sub></span>‖', `${fmt(norm(s.v), 1)} m/s`]];
+  if (modus === 3) cel.push(['<span class="k-vm"><span class="v">v</span><sub>B/W</sub></span>', v3(s.vW, 1, 'm/s'), true], ['‖<span class="k-vm"><span class="v">v</span><sub>B/W</sub></span>‖', `${fmt(norm(s.vW), 1)} m/s`]);
+  TM1.uitlezing(ro, cel);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), fsl = $('fslider');
+const UITLEG = {
+  1: 'Ten opzichte van de piloot draait de rotor rond een vaste as: een pure rotatie. Dan volgt de snelheid van B rechtstreeks uit de hoeksnelheid en de relatieve positie.',
+  3: 'Ten opzichte van de wereld transleert de helikopter bovendien met 60 m/s naar links, terwijl de rotor ten opzichte van de helikopter blijft draaien zoals in deel a.',
+  grond: ' Gezien door een waarnemer op de grond: de camera staat stil en de helikopter vliegt door het beeld. Zet de baan van B aan om te zien welke kromme de tip in de wereld beschrijft.'
+};
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() { const ph = ((W * t) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI); $('fval').textContent = `${deg(ph).toFixed(0)}°`; fsl.value = Math.round(deg(ph) * 10) % 3600; }
+// deel a (t.o.v. de piloot) is modus 1; deel b (t.o.v. de wereld) is modus 3
+let laatsteA = 1;
+// tijdstip van de bestudeerde stand: in deel b na twee omwentelingen, zodat de helikopter dan in het midden staat
+const T0 = () => (modus === 3 ? 2 * T : 0);
+function zetModus(m) {
+  modus = m; if (m !== 3) laatsteA = m;
+  // deel b: de helikopter komt rechts aangevlogen (bij afspelen) of staat in de bestudeerde stand (bij pauze)
+  if (m === 3) t = playing ? 0 : T0(); else t = ((t % T) + T) % T;
+  const deel = m === 3 ? 'b' : 'a';
+  document.querySelectorAll('#delen button').forEach(b => b.classList.toggle('actief', b.dataset.d === deel));
+  document.querySelectorAll('#modus button').forEach(b => b.classList.toggle('actief', +b.dataset.m === m));
+  $('aanpakKeuze').style.display = deel === 'a' ? '' : 'none';
+  document.querySelectorAll('.methode').forEach(d => d.classList.toggle('actief', +d.dataset.m === m));
+  $('modusUitleg').textContent = UITLEG[m] + (m === 3 ? UITLEG.grond : '');
+  render();
+}
+document.querySelectorAll('#delen button').forEach(b => b.onclick = () => zetModus(b.dataset.d === 'b' ? 3 : laatsteA));
+function render() { drawScene(); drawGraph(); drawReadout(); syncLabels(); }
+
+document.querySelectorAll('#modus button').forEach(b => b.onclick = () => zetModus(+b.dataset.m));
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { setPlaying(false); t = T0(); render(); };
+// actieve knop van het aanzicht; na slepen is geen van beide actief
+function zetZicht(z, knop) { if (z) zicht = { ...z }; document.querySelectorAll('#aanzicht button').forEach(b => b.classList.toggle('actief', b.id === knop)); render(); }
+$('zij').onclick = () => zetZicht(ZIJ, 'zij');
+$('loodrecht').onclick = () => zetZicht(ROTOR, 'loodrecht');
+fsl.oninput = () => { setPlaying(false); t = T0() + rad(fsl.value / 10) / W; render(); };
+for (const k of Object.keys(show)) { const el = $('t_' + k); el.checked = show[k]; el.onchange = () => { show[k] = el.checked; render(); }; }
+TM1.scrub(G1, () => F1, x => { t = T0() + x / 1000; setPlaying(false); render(); });
+
+TM1.bijGrootte([sc, G1], render);
+TM1.lus(dt => { t += dt / VERTRAAG; render(); }, () => playing);
+zetModus(1);
+// geometriefiguur: r_B/A en de loodlijn van B op de as tonen
+$('geoR').onchange = () => { $('geoExtra').style.display = $('geoR').checked ? '' : 'none'; };
+$('zij').classList.add('actief');
+})();
+</script>
+</body>
+</html>

@@ -66,7 +66,7 @@
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_deel"> <span class="sw d" style="color:var(--cvl)"></span><span>deelsnelheden in A, B, M</span></label>
           <label><input type="checkbox" id="t_vM"> <span class="sw" style="background:var(--cv)"></span><span><span class="k-v"><span class="v">v</span><sub>M/O</sub></span></span></label>
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-A-B-M</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>positievectoren <span class="k-r"><span class="v">r</span><sub>A/O</sub></span>, <span class="k-r"><span class="v">r</span><sub>B/A</sub></span>, <span class="k-r"><span class="v">r</span><sub>M/B</sub></span> en hun som <span class="k-r"><span class="v">r</span><sub>M/O</sub></span></span></label>
         </div>
         <div class="note">Elke deelsnelheid staat loodrecht op de verbindingslijn van haar ketting: <span class="k-vl"><span class="v">v</span><sub>A/O</sub></span> ⊥ OA, <span class="k-w"><span class="v">v</span><sub>B/A</sub></span> ⊥ AB, <span class="k-vm"><span class="v">v</span><sub>M/B</sub></span> ⊥ BM.</div>
       </div>
@@ -119,7 +119,7 @@ const TEMPO = 0.5, THMAX = rad(75);
 const XMIN = -1.5, XMAX = 13, YMIN = -1, YMAX = 8;   // vaste schaal [m]
 const KV = 2;                                       // vectorschaal: m per (m/s), vast
 let th = 0, w = 0.3, L = 6, b = 2, h = 1.4, playing = true;
-const show = { deel: true, vM: true, ket: true };   // rechte hoeken worden altijd getekend
+const show = { deel: false, vM: true, ket: false };   // standaard enkel v_M/O; rechte hoeken worden altijd getekend
 
 // ketting O-A-B-M: m = richting van de mast, p = loodrecht erop (naar rechts)
 function state(t_ = th) {
@@ -182,6 +182,11 @@ function drawScene() {
       label(ctx, 'r', 'A/O', (O.x + A.x) / 2 - 30, (O.y + A.y) / 2, C.r, { size: 13, align: 'right' });
     if (b > 0.05 && arrow(ctx, A.x, A.y, B.x, B.y, C.r, { w: 1.6, dash: [5, 3], head: 8 })) label(ctx, 'r', 'B/A', (A.x + B.x) / 2, (A.y + B.y) / 2 - 8, C.r, { size: 13, align: 'center' });
     if (h > 0.05 && arrow(ctx, B.x, B.y, M.x, M.y, C.r, { w: 1.6, dash: [5, 3], head: 8 })) label(ctx, 'r', 'M/B', (B.x + M.x) / 2 + 8, (B.y + M.y) / 2 + 4, C.r, { size: 13 });
+    // de som van de ketting: r_M/O = r_A/O + r_B/A + r_M/B (volle lijn)
+    if (arrow(ctx, O.x, O.y, M.x, M.y, C.r, { w: 2.2, head: 10 })) {
+      const e = eenheid(O, M);
+      label(ctx, 'r', 'M/O', (O.x + M.x) / 2 - 14 * e.y + 4, (O.y + M.y) / 2 + 14 * e.x + 4, C.r, { size: 14 });
+    }
   }
 
   // deelsnelheden in hun eigen punt, en de totale snelheid in M
@@ -199,6 +204,9 @@ function drawScene() {
   }
   if (show.vM) {
     const t4 = tip(M, st.vMO);
+    // verbindingslijn O–M: v_M/O staat er loodrecht op (de vlaggenmast met de vlag draait rond O)
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(M.x, M.y); ctx.stroke(); ctx.restore();
     if (arrow(ctx, M.x, M.y, t4.x, t4.y, C.v, { w: 3.2, head: 13 })) tipLabel(ctx, M.x, M.y, t4.x, t4.y, 'v', 'M/O', C.v);
     if (w > 0) haak(ctx, M, eenheid(M, O), eenheid(M, t4));
   }
