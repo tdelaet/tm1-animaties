@@ -60,7 +60,7 @@
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_vA"> <span class="sw" style="background:var(--cvl)"></span><span><span class="k-vl"><span class="v">v</span><sub>A</sub></span></span></label>
           <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:var(--cvm)"></span><span>componenten volgens en loodrecht op AB</span></label>
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>kettingen O-A en O-B-A</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>positievectoren <span class="k-r"><span class="v">r</span><sub>B/O</sub></span>, <span class="k-r"><span class="v">r</span><sub>A/B</sub></span> en hun som <span class="k-r"><span class="v">r</span><sub>A/O</sub></span></span></label>
           <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoeken</span></label>
         </div>
         <div class="note"><span class="k-vm">groen</span>: d|<span class="i">AB</span>|/d<span class="i">t</span>, A glijdt in de sleuf. <span class="k-w">rood</span>: |<span class="i">AB</span>|<span class="i">ω</span><sub>2</sub>, de snelheid van het punt van de aangedreven staaf dat op dat ogenblik in A ligt.</div>
@@ -119,7 +119,7 @@ const LL = 2, XB = LL * Math.SQRT2 / 2, LBC = 3.6, W1 = 1;   // |OA|, x_B, lengt
 const XMIN = -2.6, XMAX = 5.2, YMIN = -3.8, YMAX = 3.8;
 const KV = 0.6;                                               // vectorschaal: m per (m/s), vast
 let th1 = rad(90), playing = true;
-const show = { vA: true, comp: true, ket: false, hoek: true };
+const show = { vA: true, comp: false, ket: false, hoek: true };
 const wrap = t => ((t % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 
 function state(t1 = th1) {
@@ -171,7 +171,12 @@ function drawScene() {
   if (show.ket) {
     if (arrow(ctx, O.x, O.y, B.x, B.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'B/O', (O.x + B.x) / 2 - 12, O.y + (st.A.y >= 0 ? 24 : -10), C.r, { size: 13 });
     if (arrow(ctx, B.x, B.y, A.x, A.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'A/B', (A.x + B.x) / 2 + 10, (A.y + B.y) / 2 + 4, C.r, { size: 13 });
-    arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 2.2, head: 10 });
+    if (arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 2.2, head: 10 })) {
+      const n = Math.hypot(A.x - O.x, A.y - O.y) || 1, e = { x: (A.x - O.x) / n, y: (A.y - O.y) / n };
+      // aan de kant weg van B, zodat het label niet bij r_A/B valt
+      const s = -Math.sign((B.x - O.x) * e.y - (B.y - O.y) * e.x) || 1;
+      label(ctx, 'r', 'A/O', (O.x + A.x) / 2 + s * 16 * e.y - 8, (O.y + A.y) / 2 - s * 16 * e.x + 5, C.r, { size: 13 });
+    }
   }
   // een echte breuk (teller boven, noemer onder een breukstreep) op het canvas; x = linkerrand, y = hoogte van de streep
   // (de differentiaal d staat recht, zie TM1.breuk)

@@ -105,7 +105,7 @@ TM1.catalogus = [
       { id: '15.7', titel: 'Plooiladder', status: 'klaar' },
       { id: '15.8', titel: 'Kubus duwt tegen zware plaat', status: 'klaar' },
       { id: '15.9', titel: 'Van rotatie naar rotatie', status: 'klaar' },
-      { id: '15.10', titel: 'Windturbine' }]}
+      { id: '15.10', titel: 'Windturbine', status: 'klaar' }]}
   ]},
   { deel: 'V', titel: 'Kinematica via bewegende assenstelsels', hoofdstukken: [
     { nr: 16, titel: 'Inleiding', map: 'h16-inleiding-bewegende-assen', items: [] },

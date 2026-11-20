@@ -119,7 +119,7 @@ const TEMPO = 0.5, THMAX = rad(75);
 const XMIN = -1.5, XMAX = 13, YMIN = -1, YMAX = 8;   // vaste schaal [m]
 const KV = 2;                                       // vectorschaal: m per (m/s), vast
 let th = 0, w = 0.3, L = 6, b = 2, h = 1.4, playing = true;
-const show = { deel: false, vM: true, ket: false };   // standaard enkel v_M/O; rechte hoeken worden altijd getekend
+const show = { deel: false, vM: false, ket: false };   // standaard alles uit; rechte hoeken worden altijd getekend
 
 // ketting O-A-B-M: m = richting van de mast, p = loodrecht erop (naar rechts)
 function state(t_ = th) {

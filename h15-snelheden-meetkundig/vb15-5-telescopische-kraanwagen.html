@@ -53,7 +53,7 @@
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_E"> <span class="sw d" style="color:var(--cvm)"></span><span>via E-B: <span class="k-vm"><span class="v">v</span><sub>B/E1</sub></span>, <span class="k-w"><span class="v">v</span><sub>B/E2</sub></span></span></label>
           <label><input type="checkbox" id="t_A"> <span class="sw" style="background:var(--cvl)"></span><span>via E-A-B: <span class="k-vl"><span class="v">v</span><sub>B/A</sub></span></span></label>
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>kettingen E-B en E-A-B</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>positievectoren <span class="k-r"><span class="v">r</span><sub>A/E</sub></span>, <span class="k-r"><span class="v">r</span><sub>B/A</sub></span> en hun som <span class="k-r"><span class="v">r</span><sub>B/E</sub></span></span></label>
           <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#e8a35a"></span><span>hoeken <span class="i">α</span> en <span class="i">β</span></span></label>
         </div>
         <div class="note"><span class="k-vm"><span class="v">v</span><sub>B/E1</sub></span>: verandering van de lengte van de zuiger. <span class="k-w"><span class="v">v</span><sub>B/E2</sub></span>: verandering van de oriëntatie van de zuiger. <span class="k-vl"><span class="v">v</span><sub>B/A</sub></span>: rotatie van B rond A, de absolute snelheid van B.</div>
@@ -112,7 +112,7 @@ const XMIN = -4.2, XMAX = 6.6, YMIN = -2.3, YMAX = 6.6;  // vaste schaal [m]; x 
 const KV = 8;                                          // vectorschaal: m per (m/s), vast
 const ALMAX = rad(45);
 let al = rad(13), playing = true;
-const show = { E: true, A: true, ket: true, hoek: true };
+const show = { E: false, A: true, ket: false, hoek: true };
 
 // |BE|² = 21 − 16 cos α + 8 sin α  ⇔  α uit |BE|
 const lenBE = a => Math.hypot(AE.x + AB * Math.cos(a), AE.y + AB * Math.sin(a));
@@ -185,7 +185,9 @@ function drawScene() {
   // kettingen
   if (show.ket) {
     const k = (a, c, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, c.x, c.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) label(ctx, 'r', sub, (a.x + c.x) / 2 + dx, (a.y + c.y) / 2 + dy, C.r, { size: 12 }); };
-    k(E, A, 'A/E', -10, 18); k(A, B, 'B/A', 6, 22); k(E, B, 'B/E', -40, 0);
+    k(E, A, 'A/E', -10, 18); k(A, B, 'B/A', 6, 22);
+    // de som r_B/E = r_A/E + r_B/A (volle lijn)
+    if (arrow(ctx, E.x, E.y, B.x, B.y, C.r, { w: 2.2, head: 10 })) label(ctx, 'r', 'B/E', (E.x + B.x) / 2 - 40, (E.y + B.y) / 2, C.r, { size: 12 });
   }
   // snelheden in B
   const tip = (Q, v) => ({ x: Q.x - v.x * KV * S, y: Q.y - v.y * KV * S });   // x naar links

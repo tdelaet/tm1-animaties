@@ -16,6 +16,7 @@
   .k-vl{color:var(--cvl)} .k-w{color:var(--cw)} .k-vm{color:var(--cvm)}
   /* vaste schaal: x van −1 tot 7.5 m, y van −0.9 tot 5.6 m */
   .scene canvas{height:auto;aspect-ratio:85/65;max-height:520px}
+  .methode{display:none} .methode.actief{display:block}
   .vervolg{background:var(--accent-soft);border:1px solid #c9d9ec;border-radius:10px;padding:9px 14px;font-size:14px;margin:0 0 14px}
 </style>
 </head>
@@ -24,7 +25,7 @@
   <a class="terug" href="../index.html">← Alle animaties</a>
   <header>
     <h1>Voorbeeld 15.8 — Kubus duwt tegen zware plaat</h1>
-    <span class="kicker">Meetkundige analyses voor snelheden · de hoeksnelheid <span class="i">ω</span> van de plaat door de vectoriële ketting A-E-H af te leiden naar de tijd</span>
+    <span class="kicker">Meetkundige analyses voor snelheden · de hoeksnelheid <span class="i">ω</span> van de plaat, door de vectoriële ketting A-E-H af te leiden naar de tijd of via driehoeksmeetkunde in driehoek AHE</span>
   </header>
   <div class="vervolg">Op positieniveau: <a href="../h02-meetkundige-analyse/vb2-11-kubus-duwt-tegen-zware-plaat.html">Voorbeeld 2.11</a>.</div>
 
@@ -38,6 +39,13 @@
     <div class="side">
       <div class="card panel">
         <h2>Bediening</h2>
+        <div class="groep">
+          <span class="groeptitel">Methode</span>
+          <div class="btnrow modus" id="methode">
+            <button data-m="ketting">afleiden van de vectoriële ketting</button>
+            <button data-m="drie">afleiden van de driehoeksmeetkunde</button>
+          </div>
+        </div>
         <div class="btnrow">
           <button class="primary" id="play">⏸ Pauze</button>
           <button id="reset">⟲ Opnieuw</button>
@@ -52,13 +60,14 @@
 
       <div class="card panel">
         <h2>Tonen</h2>
-        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
+        <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
           <label><input type="checkbox" id="t_vH"> <span class="sw" style="background:var(--cvl)"></span><span><span class="k-vl"><span class="v">v</span><sub>H</sub></span> (snelheid van de kubus)</span></label>
           <label><input type="checkbox" id="t_comp"> <span class="sw d" style="color:var(--cvm)"></span><span>componenten volgens en loodrecht op AH</span></label>
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting A-E-H</span></label>
-          <label><input type="checkbox" id="t_hoek"> <span class="sw" style="background:#4f5862"></span><span>hoek <span class="i">θ</span></span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>positievectoren <span class="k-r"><span class="v">r</span><sub>E/A</sub></span>, <span class="k-r"><span class="v">r</span><sub>H/E</sub></span> en hun som <span class="k-r"><span class="v">r</span><sub>H/A</sub></span></span></label>
+          <label><input type="checkbox" id="t_drie"> <span class="sw" style="background:#e8c46a"></span><span>driehoek <i>AHE</i> opvullen</span></label>
+          <label><input type="checkbox" id="t_om"> <span class="sw" style="background:var(--cm)"></span><span>hoeksnelheid <span class="i">ω</span> van de plaat</span></label>
         </div>
-        <div class="note"><span class="k-vm">groen</span>: d|<span class="i">AH</span>|/d<span class="i">t</span>, het punt H van de kubus schuift langs de plaat. <span class="k-w">rood</span>: |<span class="i">AH</span>|<span class="i">ω</span>, de snelheid van het punt van de plaat dat op dat ogenblik in H ligt.</div>
+        <div class="note" id="noteKetting"><span class="k-vm">groen</span>: d|<span class="i">AH</span>|/d<span class="i">t</span>, het punt H van de kubus schuift langs de plaat. <span class="k-w">rood</span>: |<span class="i">AH</span>|<span class="i">ω</span>, de snelheid van het punt van de plaat dat op dat ogenblik in H ligt.</div>
       </div>
     </div>
   </div>
@@ -77,7 +86,8 @@
   <div class="bottom">
     <div class="card formulas">
       <h2>Uitdrukkingen uit het handboek</h2>
-      <p class="fn"><b>1. Afleiden van de vectoriële ketting</b> uit Voorbeeld 2.11:</p>
+      <div class="methode" data-m="ketting">
+      <p class="fn"><b>1. Afleiden van de vectoriële ketting</b> A-E-H uit Voorbeeld 2.11:</p>
       <div class="tex">|AH(t)|\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix} = \begin{Bmatrix}x_E(t)\\ 0\end{Bmatrix} + \begin{Bmatrix}0\\ b\end{Bmatrix}</div>
       <div class="tex">\ubvm{\frac{\mathrm{d}|AH(t)|}{\mathrm{d}t}\begin{Bmatrix}\cos\theta(t)\\ \sin\theta(t)\end{Bmatrix}}{} + \ubw{|AH(t)|\,\omega\begin{Bmatrix}-\sin\theta(t)\\ \cos\theta(t)\end{Bmatrix}}{} = \ubvl{\begin{Bmatrix}\dot x_E(t)\\ 0\end{Bmatrix}}{\kvl{\vec v_H}}</div>
       <div class="tex">\omega = -\frac{\sin\theta(t)}{|AH|}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t},</div>
@@ -85,10 +95,14 @@
       <div class="tex">\omega(t) = -\frac{b}{b^2 + x_E^2(t)}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t}, \qquad \frac{\mathrm{d}x_E}{\mathrm{d}t} = -\|\vec v\|</div>
       <div class="tex">\omega(t) = \frac{b}{b^2 + x_E^2(t)}\,v</div>
       <div class="tex">\omega(t) = \frac{b}{b^2 + \big(x_E(0) - v\,t\big)^2}\,v</div>
-      <p class="fn"><b>2. Afleiden van de driehoeksmeetkunde:</b></p>
-      <div class="tex">\theta(t) = \operatorname{atan}\frac{b}{x_E(t)}</div>
+      </div>
+      <div class="methode" data-m="drie">
+      <p class="fn"><b>2. Afleiden van de driehoeksmeetkunde</b> in de rechthoekige driehoek <i>AHE</i> (rechte hoek in <i>E</i>): de overstaande zijde van <i>θ</i> is |<i>EH</i>| = <i>b</i>, de aanliggende zijde |<i>AE</i>| = <i>x<sub>E</sub></i>(<i>t</i>).</p>
+      <div class="tex">\tan\theta(t) = \frac{|EH|}{|AE|} = \frac{b}{x_E(t)} \qquad\Rightarrow\qquad \theta(t) = \operatorname{atan}\frac{b}{x_E(t)}</div>
+      <p class="fn">De hoeksnelheid van de plaat is de afgeleide van die hoek, <span class="tex inline">\omega = \mathrm{d}\theta/\mathrm{d}t</span>:</p>
       <div class="tex">\frac{\mathrm{d}\theta(t)}{\mathrm{d}t} = \frac{-b}{b^2 + x_E^2(t)}\,\frac{\mathrm{d}x_E(t)}{\mathrm{d}t}</div>
       <div class="tex">\phantom{\frac{\mathrm{d}\theta(t)}{\mathrm{d}t}} = \frac{b}{b^2 + x_E^2(t)}\,v</div>
+      </div>
       <p class="fn">De grafieken volgen de opgave: de kubus start bij <span class="i">x<sub>E</sub></span> = 4.58 m en <span class="i">ω</span> loopt op van <span class="i">b</span><span class="i">v</span>/<span class="i">l</span>² = 0.040 rad/s tot <span class="i">v</span>/<span class="i">b</span> = 0.25 rad/s als de plaat verticaal staat. (De grafieken in het handboek gebruiken een ruimer bereik voor <span class="i">x<sub>E</sub></span> en <span class="i">t</span>.)</p>
     </div>
     <details class="card" open>
@@ -111,10 +125,11 @@ const C = TM1.kleuren();
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const K1 = css('--cvm'), K2 = css('--cw'), KH = css('--cvl');
 const L = 5, B = 2, V = 0.5, X0 = Math.sqrt(L * L - B * B), TEND = X0 / V;
-const XMIN = -1, XMAX = 7.5, YMIN = -0.9, YMAX = 5.6;
+const XMIN = -1, XMAX = 8.4, YMIN = -0.9, YMAX = 5.6;
 const KV = 3;                                           // vectorschaal: m per (m/s), vast
 let xE = X0, playing = true;
-const show = { vH: true, comp: true, ket: false, hoek: true };
+const show = { vH: false, comp: false, ket: false, om: false, drie: false };   // de hoek θ wordt altijd getekend
+let methode = 'ketting';                               // 'ketting' (afleiden van de vectoriële ketting) of 'drie' (driehoeksmeetkunde)
 
 function state(x = xE) {
   const th = Math.atan2(B, x), AH = Math.hypot(x, B);
@@ -138,6 +153,18 @@ function drawScene() {
   ctx.strokeStyle = '#b9bec5'; ctx.lineWidth = 1;
   for (let x = -0.5; x < XMAX; x += 0.25) { ctx.beginPath(); ctx.moveTo(X(x), Y(0)); ctx.lineTo(X(x) - 6, Y(0) + 8); ctx.stroke(); }
   ctx.restore();
+  // driehoek AHE (rechte hoek in E), enkel bij driehoeksmeetkunde
+  if (methode === 'drie') {
+    if (show.drie) {
+      ctx.save(); ctx.fillStyle = 'rgba(232,196,106,0.38)'; ctx.strokeStyle = '#c9a13a'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(H.x, H.y); ctx.lineTo(E.x, E.y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+    // rechte hoek in E en de zijden b en x_E
+    const s = 12; ctx.save(); ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(E.x - s, E.y); ctx.lineTo(E.x - s, E.y - s); ctx.lineTo(E.x, E.y - s); ctx.stroke(); ctx.restore();
+    label(ctx, 'b', '', E.x - 16, (E.y + H.y) / 2 + 5, C.ink, { vec: false, size: 15, align: 'right' });
+    if (E.x - A.x > 40) label(ctx, 'x', 'E', (A.x + E.x) / 2 - 8, A.y + 24, C.ink, { vec: false, size: 15 });
+  }
   // kubus
   ctx.save(); ctx.fillStyle = 'rgba(220,232,243,0.85)'; ctx.strokeStyle = '#4c5560'; ctx.lineWidth = 1.8;
   ctx.fillRect(E.x, H.y, F.x - E.x, E.y - H.y); ctx.strokeRect(E.x, H.y, F.x - E.x, E.y - H.y); ctx.restore();
@@ -148,11 +175,21 @@ function drawScene() {
   ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(A.x - 11, A.y + 18); ctx.lineTo(A.x + 11, A.y + 18); ctx.closePath(); ctx.fill();
   ctx.restore();
-  if (show.hoek) {
+  {   // hoek θ: altijd zichtbaar
     ctx.save(); ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(A.x, A.y, 0.75 * S, 0, -th, true); ctx.stroke(); ctx.restore();
     label(ctx, 'θ', '', A.x + 0.9 * S * Math.cos(th / 2) - 2, A.y - 0.9 * S * Math.sin(th / 2) + 6, '#4f5862', { vec: false, size: 15 });
   }
-  if (show.ket) {
+  // hoeksnelheid van de plaat: gebogen pijl rond A over de plaat heen, in tegenwijzerzin (θ neemt toe)
+  if (show.om) {
+    const R = 2.6 * S, a0 = Math.max(th - 0.32, 0.04), a1 = th + 0.32, Q = a => ({ x: A.x + R * Math.cos(a), y: A.y - R * Math.sin(a) });
+    ctx.save(); ctx.strokeStyle = C.M; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(A.x, A.y, R, -a0, -a1, true); ctx.stroke(); ctx.restore();
+    const e = Q(a1), tx = -Math.sin(a1), ty = -Math.cos(a1);
+    arrow(ctx, e.x - 10 * tx, e.y - 10 * ty, e.x + 2 * tx, e.y + 2 * ty, C.M, { w: 2.4, head: 11 });
+    // label voorbij de pijlpunt, iets buiten de boog
+    const k = 1 + 6 / R, m = Q(a1 + 0.05);
+    label(ctx, 'ω', '', A.x + (m.x - A.x) * k - 6, A.y + (m.y - A.y) * k + 2, C.M, { size: 16 });
+  }
+  if (methode === 'ketting' && show.ket) {
     if (arrow(ctx, A.x, A.y, E.x, E.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'E/A', (A.x + E.x) / 2 - 10, A.y + 22, C.r, { size: 13 });
     if (arrow(ctx, E.x, E.y, H.x, H.y, C.r, { w: 1.9, dash: [5, 3], head: 9 })) label(ctx, 'r', 'H/E', E.x + 8, (E.y + H.y) / 2 + 4, C.r, { size: 13 });
     if (arrow(ctx, A.x, A.y, H.x, H.y, C.r, { w: 2.2, head: 10 })) label(ctx, 'r', 'H/A', A.x + 0.55 * (H.x - A.x) - 14, A.y + 0.55 * (H.y - A.y) - 16, C.r, { size: 13 });
@@ -169,17 +206,18 @@ function drawScene() {
     const l = Math.hypot(dx, dy); if (l < 1e-6) { dx = 0; dy = -1; } else { dx /= l; dy /= l; }
     return { x: m.x + dx * afst, y: m.y + dy * afst };
   };
-  if (show.comp) {
+  if (methode === 'ketting' && show.comp) {
     if (arrow(ctx, H.x, H.y, t1.x, t1.y, K1, { w: 2.4, dash: [7, 4], head: 10 })) { const q = naast(H, t1, 22); breuk(ctx, 'd|AH|', 'dt', q.x + 17, q.y, K1, 13); }
     if (arrow(ctx, t1.x, t1.y, t2.x, t2.y, K2, { w: 2.4, dash: [7, 4], head: 10 })) { const q = naast(t1, t2, 20); TM1.formule(ctx, '$|AH|\\omega$', q.x, q.y + 4, { align: 'center', color: K2, size: 12 }); }
   }
   if (show.vH) {
     const t3 = tipv(H, { x: -V, y: 0 });
-    if (arrow(ctx, H.x, H.y, t3.x, t3.y, KH, { w: 3, head: 12 })) { const q = show.comp ? naast(H, t3, 18) : { x: t3.x - 4, y: t3.y - 14 }; label(ctx, 'v', 'H', q.x - 6, q.y + 5, KH, { size: 14 }); }
+    if (arrow(ctx, H.x, H.y, t3.x, t3.y, KH, { w: 3, head: 12 })) { const q = methode === 'ketting' && show.comp ? naast(H, t3, 18) : { x: t3.x - 4, y: t3.y - 14 }; label(ctx, 'v', 'H', q.x - 6, q.y + 5, KH, { size: 14 }); }
   }
   // snelheid van de kubus (rechts)
-  arrow(ctx, G.x + 0.9 * S, (G.y + F.y) / 2, G.x + 0.15 * S, (G.y + F.y) / 2, KH, { w: 2.4, head: 10 });
-  label(ctx, 'v', '', G.x + 0.55 * S, (G.y + F.y) / 2 - 10, KH, { size: 14 });
+  // zelfde vectorschaal als v_H: 0.5 m/s
+  arrow(ctx, G.x + 0.15 * S + V * KV * S, (G.y + F.y) / 2, G.x + 0.15 * S, (G.y + F.y) / 2, KH, { w: 3, head: 12 });
+  label(ctx, 'v', '', G.x + 0.15 * S + 0.5 * V * KV * S - 4, (G.y + F.y) / 2 - 12, KH, { size: 14 });
   for (const [q, nm, dx, dy] of [[A, 'A', -18, 4], [E, 'E', -4, 22], [H, 'H', 8, 16], [F, 'F', 6, 18], [G, 'G', 6, -6], [p2, 'B', 6, -4]]) {
     if (nm !== 'B') { ctx.save(); ctx.fillStyle = C.ink; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore(); }
     label(ctx, nm, '', q.x + dx, q.y + dy, C.ink, { vec: false, size: 13 });
@@ -227,6 +265,17 @@ const playBtn = $('play');
 function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
 function syncLabels() { $('xval').textContent = `${xE.toFixed(2)} m`; $('x').value = xE; }
 function render() { drawScene(); drawGraphs(); drawReadout(); syncLabels(); }
+// methode: afleiden van de vectoriële ketting of van de driehoeksmeetkunde; enkel de relevante vinkjes en uitwerking tonen
+const ENKEL = { comp: 'ketting', ket: 'ketting', drie: 'drie' };
+function zetMethode(m) {
+  methode = m;
+  document.querySelectorAll('#methode button').forEach(b => b.classList.toggle('actief', b.dataset.m === m));
+  document.querySelectorAll('.methode').forEach(d => d.classList.toggle('actief', d.dataset.m === m));
+  for (const [k, mm] of Object.entries(ENKEL)) { const el = $('t_' + k); if (el) el.closest('label').style.display = mm === m ? '' : 'none'; }
+  const nt = $('noteKetting'); if (nt) nt.style.display = m === 'ketting' ? '' : 'none';
+  render();
+}
+document.querySelectorAll('#methode button').forEach(b => b.onclick = () => zetMethode(b.dataset.m));
 const naar = x => { setPlaying(false); xE = Math.min(Math.max(x, 0), X0); render(); };
 
 playBtn.onclick = () => { if (!playing && xE <= 0) xE = X0; setPlaying(!playing); };
@@ -242,6 +291,7 @@ TM1.scrub(G1, () => F1, naar);
 TM1.scrub(G2, () => F2, s => naar(X0 - V * Math.min(Math.max(s, 0), TEND)));
 
 TM1.bijGrootte([sc, G1, G2], render);
+zetMethode('ketting');
 TM1.lus(dt => { xE -= V * dt; if (xE <= 0) { xE = 0; setPlaying(false); } render(); }, () => playing);
 })();
 </script>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 15.10 – Windturbine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  :root{--cw:#c2185b;--cvm:#6a3fb0}            /* windsnelheid en relatieve snelheid van de wind t.o.v. de wiek */
+  .k-vm{color:var(--cvm)} .k-w{color:var(--cw)}
+  .scene canvas{height:auto;aspect-ratio:16/11;max-height:640px;cursor:grab}
+  .scene canvas:active{cursor:grabbing}
+  .opgave{padding:10px 16px;margin:0 0 14px}
+  .opgave p{margin:0 0 8px;font-size:14px}
+  .opgave ol{margin:0 0 10px;padding-left:22px;font-size:14px} .opgave li{margin:2px 0}
+  .opgave ol ol{margin:2px 0 4px}
+  .opgave .label{font:600 11.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .bediening .groep.kader{align-self:stretch;flex-basis:auto;flex-direction:column;align-items:stretch;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .bediening .groep.kader .slider{flex:0 0 auto}
+  .bediening .groep.standgroep{flex:1 1 260px}
+  .bediening .groep.aanzichtgroep{flex:0 1 230px}
+  .aanzichtgroep .btnrow{flex-direction:column;align-items:stretch}
+  .deelkop{font:600 15px/1.3 Inter,sans-serif;margin:16px 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#handboek">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 15.10 — Windturbine</h1>
+    <span class="kicker">Meetkundige analyse voor snelheden · relatieve snelheid van de wind ten opzichte van een draaiende wiek</span>
+  </header>
+
+  <div class="opgave card">
+    <span class="label">Opgave</span>
+    <p>Een windturbine heeft een rotor met 3 wieken (diameter 100 m) op een toren van 80 m. De rotoras helt 4° ten opzichte van de horizontale, de wieken hellen 5° tegen de wind in, en de rotor draait met 12 omwentelingen per minuut. De windsnelheid is horizontaal en neemt lineair toe met de hoogte: 8 m/s aan de grond, 14.5 m/s op 130 m. De <i>x</i>-as wijst volgens de rotoras in de windrichting, de <i>y</i>-as horizontaal aan de kant waar de wiek naar boven draait, de <i>z</i>-as naar boven. De stand <i>θ</i> van de wiek wordt gemeten vanaf de bovenste stand.</p>
+    <ol>
+      <li>Geef de absolute snelheid van een punt <i>A</i> op de wiek, op afstand <i>r</i> van de as, in een stand <i>θ</i>.</li>
+      <li>Geef de relatieve snelheid van de wind ten opzichte van dat punt.</li>
+      <li>Bereken en schets de windsnelheid, de snelheid van de wiek en de relatieve snelheid:
+        <ol type="a">
+          <li>aan de tip van de wiek in de stand <i>θ</i> = 90° (horizontaal, neerwaarts draaiend);</li>
+          <li>in het midden van de wiek in de stand <i>θ</i> = 180° (verticaal neerwaarts);</li>
+          <li>beschrijf het verloop van de relatieve snelheid aan de tip tijdens een volledige omwenteling.</li>
+        </ol></li>
+      <li>Bereken de grootte van de versnelling van de tip in de standen <i>θ</i> = 0° en <i>θ</i> = 270°.</li>
+    </ol>
+    <div class="stappen modus" id="delen">
+      <button data-d="3a"><span class="nr">3a.</span>tip, <i>θ</i> = 90°</button>
+      <button data-d="3b"><span class="nr">3b.</span>midden, <i>θ</i> = 180°</button>
+      <button data-d="3c"><span class="nr">3c.</span>tip, volledige omwenteling</button>
+      <button data-d="4"><span class="nr">4.</span>versnelling van de tip</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Windturbine met drie wieken; in punt A op de wiek de windsnelheid, de snelheid van de wiek en de relatieve snelheid van de wind ten opzichte van de wiek"></canvas>
+      <div class="hint">Sleep om het aanzicht te draaien</div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="note" id="deelUitleg"></div>
+        <!-- de stand van de wiek en de plaats van A, los van het aanzicht (camera) -->
+        <div class="groep kader standgroep">
+          <span class="groeptitel">Wiek en punt <i>A</i></span>
+          <div class="btnrow">
+            <button class="primary" id="play">▶ Afspelen</button>
+            <button id="reset">↺ stand uit de opgave</button>
+          </div>
+          <div class="slider">
+            <div class="lab"><span>stand <span class="i">θ</span></span><b id="thval"></b></div>
+            <input type="range" id="thslider" min="0" max="3600" value="900">
+          </div>
+          <div class="slider">
+            <div class="lab"><span>afstand <span class="i">r</span> tot de as</span><b id="rval"></b></div>
+            <input type="range" id="rslider" min="0" max="50" step="0.5" value="50">
+          </div>
+        </div>
+        <div class="groep kader aanzichtgroep">
+          <span class="groeptitel">Aanzicht</span>
+          <div class="btnrow modus" id="aanzicht">
+            <button id="schuin">schuin (zoals in de oplossing)</button>
+            <button id="voor">vooraanzicht (zoals in de opgave)</button>
+            <button id="zij">zijaanzicht (zoals in de opgave)</button>
+          </div>
+        </div>
+        <div class="note">De animatie loopt op ware snelheid: één omwenteling duurt 5 s.</div>
+        <div class="note">De wieken hellen 5° tegen de wind in. Daardoor ligt <i>A</i> iets voor het vlak door de naaf loodrecht op de as; dat verschuift <i>A</i> enkel volgens de as en verandert de snelheid van <i>A</i> niet. Daarom rekent het handboek met <i>r</i>, gemeten loodrecht op de as, in het <i>yz</i>-vlak.</div>
+      </div>
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_wind"> <span class="sw" style="background:var(--cw)"></span><span>windsnelheid <span class="k-w"><span class="v">v</span><sub>wind</sub></span></span></label>
+          <label><input type="checkbox" id="t_vA"> <span class="sw" style="background:var(--cv)"></span><span>snelheid van de wiek <span class="k-v"><span class="v">v</span><sub>A</sub></span></span></label>
+          <label><input type="checkbox" id="t_rel"> <span class="sw" style="background:var(--cvm)"></span><span>relatieve snelheid <span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span></span></label>
+          <label><input type="checkbox" id="t_kop"> <span class="sw d" style="color:var(--cv)"></span><span>constructie <span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span> = <span class="k-w"><span class="v">v</span><sub>wind</sub></span> + (−<span class="k-v"><span class="v">v</span><sub>A</sub></span>)</span></label>
+          <label><input type="checkbox" id="t_a"> <span class="sw" style="background:var(--ca)"></span><span>versnelling <span class="k-a"><span class="v">a</span><sub>A</sub></span></span></label>
+          <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van <i>A</i></span></label>
+          <label><input type="checkbox" id="t_hoek"> <span>hoek <span class="i">θ</span></span></label>
+          <label><input type="checkbox" id="t_profiel"> <span>windprofiel (in het zijaanzicht)</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph">
+      <h3 id="gtitel"></h3>
+      <canvas id="g1"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="card formulas">
+      <h2>Oplossing</h2>
+      <div class="tex">\omega = 12.0\ \text{omw/min} = 12.0\cdot\frac{2\pi}{60}\ \text{rad/s} = 1.26\ \text{rad/s}, \qquad \kM{\vec\omega} = 1.26\ \text{rad/s}\ \vec e_x</div>
+      <p class="fn">De oorsprong ligt op de rotoras (in de naaf). De coördinaten <i>r</i>, <i>θ</i> worden gemeten in het vlak van de rotor, het <i>yz</i>-vlak: <span class="tex inline">\kr{\vec r_A} = r\,\{0,\ -\sin\theta,\ \cos\theta\}</span>.</p>
+
+      <h3 class="deelkop">1. Absolute snelheid van punt <i>A</i> op de wiek</h3>
+      <p class="fn" style="margin-top:0">Punt <i>A</i> beschrijft een cirkel rond de as door <i>O</i>:</p>
+      <div class="tex">\kv{\vec v_A} = \kM{\vec\omega}\times(\kr{\vec r_A}-\kr{\vec r_O}) = \kM{\vec\omega}\times\kr{\vec r_A} = \begin{vmatrix}\vec e_x & \vec e_y & \vec e_z\\ \omega & 0 & 0\\ 0 & -r\sin\theta & r\cos\theta\end{vmatrix} = \omega r\begin{Bmatrix}0\\ -\cos\theta\\ -\sin\theta\end{Bmatrix}</div>
+
+      <h3 class="deelkop">2. Relatieve snelheid van de wind ten opzichte van de wiek</h3>
+      <p class="fn" style="margin-top:0">De windsnelheid neemt lineair toe met de hoogte <i>h</i> = 80.0 m + <i>r</i> cos <i>θ</i> cos 4.00°:</p>
+      <div class="tex">v_\text{wind} = 8.00\ \text{m/s} + \frac{(14.5-8.00)\ \text{m/s}}{130\ \text{m}}\,h = 12.0\ \text{m/s} + 0.05\ \text{s}^{-1}\, r\cos\theta\cos 4.00^\circ</div>
+      <p class="fn">De wind is horizontaal; in het assenstelsel, dat 4° gekanteld is, heeft hij componenten volgens <i>x</i> en <i>z</i>:</p>
+      <div class="tex">\kw{\vec v_\text{wind}} = v_\text{wind}\begin{Bmatrix}\cos 4.00^\circ\\ 0\\ \sin 4.00^\circ\end{Bmatrix}, \qquad \kvm{\vec v_{\text{wind}/A}} = \kw{\vec v_\text{wind}} - \kv{\vec v_A} = \begin{Bmatrix}v_\text{wind}\cos 4.00^\circ\\ \omega r\cos\theta\\ v_\text{wind}\sin 4.00^\circ + \omega r\sin\theta\end{Bmatrix}</div>
+
+      <h3 class="deelkop">3a. Tip van de wiek, <i>θ</i> = 90° (horizontaal, neerwaarts draaiend)</h3>
+      <p class="fn" style="margin-top:0">Met <i>r</i> = 50.0 m en <i>θ</i> = 90.0°: <i>v</i><sub>wind</sub> = 12.0 m/s en <i>v<sub>A</sub></i> = <i>ωr</i> = 62.8 m/s.</p>
+      <div class="tex">\kvm{\vec v_{\text{wind}/A}} = \kw{\begin{Bmatrix}12.0\\ 0\\ 0.840\end{Bmatrix}}\ \text{m/s} - \kv{\begin{Bmatrix}0\\ 0\\ -62.8\end{Bmatrix}}\ \text{m/s} = \kvm{\begin{Bmatrix}12.0\\ 0.00\\ 63.7\end{Bmatrix}}\ \text{m/s}</div>
+
+      <h3 class="deelkop">3b. Midden van de wiek, <i>θ</i> = 180° (verticaal neerwaarts)</h3>
+      <p class="fn" style="margin-top:0">Met <i>r</i> = 25.0 m en <i>θ</i> = 180°: <i>v</i><sub>wind</sub> = 10.75 m/s en <i>v<sub>A</sub></i> = 31.4 m/s.</p>
+      <div class="tex">\kvm{\vec v_{\text{wind}/A}} = \kw{\begin{Bmatrix}10.7\\ 0\\ 0.750\end{Bmatrix}}\ \text{m/s} - \kv{\begin{Bmatrix}0\\ 31.4\\ 0\end{Bmatrix}}\ \text{m/s} = \kvm{\begin{Bmatrix}10.7\\ -31.4\\ 0.750\end{Bmatrix}}\ \text{m/s}</div>
+
+      <h3 class="deelkop">3c. Verloop aan de tip tijdens één omwenteling</h3>
+      <p class="fn" style="margin-top:0">De omtreksnelheid <i>ωr</i> = 62.8 m/s is constant en overheerst; de grootte van de relatieve snelheid varieert daarom weinig. Twee effecten spelen mee:</p>
+      <ul class="fn">
+        <li>de windsnelheid neemt toe met de hoogte: het grootst als de wiek bovenaan staat, het kleinst onderaan;</li>
+        <li>door de helling van 4° beweegt de wiek in de neergaande beweging tegen de wind in (de relatieve snelheid is dan groter) en in de opgaande beweging met de wind mee (kleiner).</li>
+      </ul>
+      <p class="fn">Samen: het maximum ‖<span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span>‖ = 65.0 m/s bij <i>θ</i> = 55°, het minimum 63.1 m/s bij <i>θ</i> = 250° (zie de grafiek).</p>
+
+      <h3 class="deelkop">4. Versnelling van de tip</h3>
+      <p class="fn" style="margin-top:0">De tip beschrijft een cirkel met constante hoeksnelheid: de versnelling heeft enkel een normale component, naar de as gericht, in elke stand (dus ook bij <i>θ</i> = 0° en <i>θ</i> = 270°) even groot:</p>
+      <div class="tex">\|\ka{\vec a}\| = a_n = \frac{v^2}{r} = \omega^2 r = (1.26\ \text{rad/s})^2\cdot 50.0\ \text{m} = 79.0\ \text{m/s}^2</div>
+    </div>
+    <details class="card" open>
+      <summary>Denkvragen bij de animatie</summary>
+      <ol>
+        <li>Kies het vooraanzicht. Waarom zie je de windsnelheid daar (bijna) als een ⊗, terwijl de snelheid van de wiek volledig in het vlak van de figuur ligt?</li>
+        <li>Waarom verandert de grootte van <span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span> aan de tip zo weinig tijdens een omwenteling? Welke snelheid overheerst?</li>
+        <li>Vergelijk <i>θ</i> = 90° en <i>θ</i> = 270° in het zijaanzicht: in welke stand beweegt de wiek tegen de wind in? Wat betekent dat voor ‖<span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span>‖?</li>
+        <li>Schuif <i>A</i> naar de naaf (<i>r</i> kleiner). Hoe verandert de richting van <span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span> ten opzichte van de rotoras?</li>
+        <li>Zet de versnelling aan en speel af. Verandert <span class="k-a"><span class="v">a</span><sub>A</sub></span> van grootte? En van richting?</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, fmt, deg, rad } = TM1;
+const C = TM1.kleuren();
+const KW = '#c2185b', KVM = '#6a3fb0';
+
+// ---------- gegevens ----------
+// wereld: X horizontaal in de windrichting, Y horizontaal, Z verticaal omhoog; de naaf O ligt op 80 m hoogte.
+// assenstelsel van het handboek: x volgens de rotoras (4° gekanteld, in de windrichting), y = Y, z ⊥ x in het verticale vlak
+const TILT = rad(4), KON = rad(5), RMAX = 50, HNAAF = 80;
+const W = 12 * 2 * Math.PI / 60;                       // 12 omw/min → 1.26 rad/s
+const T = 2 * Math.PI / W;                             // 5 s per omwenteling
+const ex = [Math.cos(TILT), 0, -Math.sin(TILT)], ey = [0, 1, 0], ez = [Math.sin(TILT), 0, Math.cos(TILT)];
+const O = [0, 0, HNAAF];
+const KV = 0.75;                                       // vectorschaal [m per m/s]
+const KA = 0.3;                                        // versnellingsschaal [m per m/s²]
+const vWindH = h => 8 + (14.5 - 8) / 130 * h;          // windprofiel [m/s]
+
+const add = (...v) => v.reduce((s, q) => s.map((x, i) => x + q[i]), [0, 0, 0]);
+const mul = (k, v) => v.map(x => k * x);
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const norm = v => Math.hypot(...v);
+const naarW = c => add(mul(c[0], ex), mul(c[1], ey), mul(c[2], ez));   // xyz-componenten → wereld
+
+let th = rad(90), r = 50, playing = false, deel = '3a';
+const show = { wind: true, vA: true, rel: true, kop: false, a: false, baan: true, hoek: true, profiel: true };
+
+// toestand van punt A (componenten in het xyz-assenstelsel van het handboek)
+function toestand(theta, rr) {
+  const c = Math.cos(theta), s = Math.sin(theta);
+  const vw = 12 + 0.05 * rr * c * Math.cos(TILT);                 // zoals in het handboek: h = 80 m + r cos θ cos 4°
+  const vWind = [vw * Math.cos(TILT), 0, vw * Math.sin(TILT)];
+  const vA = [0, -W * rr * c, -W * rr * s];
+  const rel = add(vWind, mul(-1, vA));
+  const a = [0, W * W * rr * s, -W * W * rr * c];                  // −ω² r_A: naar de as
+  return { vw, vWind, vA, rel, a, rA: [0, -rr * s, rr * c] };
+}
+// plaats op wiek k (k = 0: de bestudeerde wiek) op afstand rr van de as: de wieken hellen 5° tegen de wind in
+const radiaal = theta => [0, -Math.sin(theta), Math.cos(theta)];
+const opWiek = (theta, rr) => add(O, naarW(add(mul(rr, radiaal(theta)), [-rr * Math.tan(KON), 0, 0])));
+
+// ---------- projectie (orthografisch): azimut rond de verticale, elevatie ----------
+const SCHUIN = { az: rad(-138), el: rad(-12) }, VOOR = { az: rad(180), el: 0 }, ZIJ = { az: rad(-90), el: 0 };
+let zicht = { ...SCHUIN };
+const sc = setup(document.getElementById('scene'));
+const MIDDEN = [8, 0, 70];
+function projector() {
+  const w_ = sc.w, h_ = sc.h, ca = Math.cos(zicht.az), sa = Math.sin(zicht.az), ce = Math.cos(zicht.el), se = Math.sin(zicht.el);
+  const R = [-sa, ca, 0], U = [-se * ca, -se * sa, ce], D = [ce * ca, ce * sa, se];   // rechts, omhoog, naar de kijker
+  const S = Math.min(w_ / 172, h_ / 162), ox = w_ * 0.46, oy = h_ * 0.5;
+  const P = p => { const q = add(p, mul(-1, MIDDEN)); return { x: ox + dot3(q, R) * S, y: oy - dot3(q, U) * S, d: dot3(q, D) }; };
+  P.S = S; P.R = R; P.U = U; P.D = D; P.ox = ox; P.oy = oy; return P;
+}
+function lijn(ctx, P, a, b, kleur, w = 1.2, dash) {
+  const p = P(a), q = P(b); ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore();
+}
+function polylijn(ctx, P, pts, kleur, w = 1.2, dash, vul) {
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash); ctx.beginPath();
+  pts.forEach((p, i) => { const q = P(p); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
+  if (vul) { ctx.closePath(); ctx.fillStyle = vul; ctx.fill(); }
+  ctx.stroke(); ctx.restore();
+}
+// pijl in 3D; staat ze (bijna) loodrecht op het scherm, dan een ⊙ (naar de kijker) of ⊗ (van de kijker weg)
+function pijl3(ctx, P, a, b, kleur, opt, naam, sub, lab = 'tip') {
+  const p = P(a), q = P(b), len = Math.hypot(q.x - p.x, q.y - p.y);
+  const l3 = norm(add(b, mul(-1, a))) * P.S;
+  if (len < 14 && len < 0.35 * l3 && l3 > 8) {   // enkel als de pijl echt (bijna) loodrecht op het scherm staat
+    const naar = q.d > p.d;
+    ctx.save(); ctx.strokeStyle = kleur; ctx.fillStyle = kleur; ctx.lineWidth = 2; if (opt && opt.dash) ctx.setLineDash([3, 2]);
+    ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    if (naar) { ctx.beginPath(); ctx.arc(p.x, p.y, 2.6, 0, 2 * Math.PI); ctx.fill(); }
+    else { ctx.beginPath(); ctx.moveTo(p.x - 6, p.y - 6); ctx.lineTo(p.x + 6, p.y + 6); ctx.moveTo(p.x + 6, p.y - 6); ctx.lineTo(p.x - 6, p.y + 6); ctx.stroke(); }
+    ctx.restore();
+    if (naam) label(ctx, naam, sub, p.x + (lab.dx ?? 12), p.y + (lab.dy ?? -12), kleur, { size: 15 });
+    return;
+  }
+  if (!arrow(ctx, p.x, p.y, q.x, q.y, kleur, opt) || !naam) return;
+  if (lab === 'tip') TM1.tipLabel(ctx, p.x, p.y, q.x, q.y, naam, sub, kleur);
+  else label(ctx, naam, sub, q.x + (lab.dx ?? 0), q.y + (lab.dy ?? 0), kleur, { size: 15, align: lab.align ?? 'left' });
+}
+function punt(ctx, P, p, naam, dx, dy, kleur = C.ink) {
+  const q = P(p); ctx.save(); ctx.fillStyle = kleur; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  if (naam) label(ctx, naam, '', q.x + dx, q.y + dy, kleur, { vec: false, size: 15 });
+}
+// cirkelboog in het vlak (u, w) rond midden m
+function boog(ctx, P, m, u, w, rr, a0, a1, kleur, lw = 1.2, dash) {
+  const pts = []; for (let i = 0; i <= 64; i++) { const s = a0 + (a1 - a0) * i / 64; pts.push(add(m, mul(rr * Math.cos(s), u), mul(rr * Math.sin(s), w))); }
+  polylijn(ctx, P, pts, kleur, lw, dash);
+}
+// staaf met een breedte op het scherm (toren, wiek): trapezium tussen a (halve breedte ba) en b (halve breedte bb), in m
+function staaf(ctx, P, a, b, ba, bb, vul, rand) {
+  const p = P(a), q = P(b), L = Math.hypot(q.x - p.x, q.y - p.y) || 1, nx = -(q.y - p.y) / L, ny = (q.x - p.x) / L;
+  ctx.save(); ctx.fillStyle = vul; ctx.strokeStyle = rand; ctx.lineWidth = 1.1; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(p.x + nx * ba * P.S, p.y + ny * ba * P.S); ctx.lineTo(q.x + nx * bb * P.S, q.y + ny * bb * P.S);
+  ctx.lineTo(q.x - nx * bb * P.S, q.y - ny * bb * P.S); ctx.lineTo(p.x - nx * ba * P.S, p.y - ny * ba * P.S); ctx.closePath();
+  ctx.fill(); ctx.stroke(); ctx.restore();
+}
+
+function drawScene() {
+  const ctx = sc.ctx, w_ = sc.w, h_ = sc.h; ctx.clearRect(0, 0, w_, h_);
+  const P = projector(), st = toestand(th, r);
+
+  // grond: twee lijnen door de voet van de toren, met arcering onder de lijn die het meest horizontaal op het scherm ligt
+  const voet = [7, 0, 0];
+  const gl = [[[-45, 0, 0], [60, 0, 0]], [[7, -65, 0], [7, 65, 0]]];
+  let besteL = null, besteH = 0;
+  for (const [a, b] of gl) {
+    const p = P(a), q = P(b), L = Math.hypot(q.x - p.x, q.y - p.y), hor = Math.abs(q.x - p.x);
+    if (L > 30) lijn(ctx, P, a, b, '#9aa1aa', 1.2);
+    if (hor > besteH) { besteH = hor; besteL = [p, q]; }
+  }
+  if (besteL) {
+    const [p, q] = besteL[0].x < besteL[1].x ? besteL : [besteL[1], besteL[0]];
+    ctx.save(); ctx.strokeStyle = '#b5bac1'; ctx.lineWidth = 1;
+    for (let s = 0.03; s < 1; s += 0.035) { const x = p.x + (q.x - p.x) * s, y = p.y + (q.y - p.y) * s; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 7, y + 8); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  // windprofiel: horizontale pijlen op verschillende hoogtes, met de punt op een verticale lijn (zoals in de opgave)
+  if (show.profiel) {
+    const X0 = 48, Y0 = -42, k = '#b07a9a';
+    const as = P([X0, Y0, 0]), as2 = P([X0, Y0, 130]);
+    if (Math.abs(dot3([1, 0, 0], P.R)) > 0.9) {   // enkel (bijna) in het zijaanzicht, zoals in de opgave
+      lijn(ctx, P, [X0, Y0, 0], [X0, Y0, 130], '#7a828c', 1.2);
+      lijn(ctx, P, [X0 - KV * vWindH(0), Y0, 0], [X0 - KV * vWindH(130), Y0, 130], k, 1.2);
+      for (let h = 0; h <= 130; h += 10) pijl3(ctx, P, [X0 - KV * vWindH(h), Y0, h], [X0, Y0, h], k, { w: 1.4, head: 6 });
+      ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted;
+      ctx.fillText('8 m/s', as.x + 6, as.y - 4); ctx.fillText('14.5 m/s', as2.x + 6, as2.y + 4);
+      const m = P([X0, Y0, 65]); ctx.fillText('wind', m.x + 6, m.y); ctx.restore();
+    }
+  }
+
+  // toren en gondel
+  staaf(ctx, P, voet, [7, 0, HNAAF - 2.5], 2.2, 1.3, '#e9ecef', '#7a828c');
+  staaf(ctx, P, add(O, mul(1.5, ex)), add(O, mul(14, ex)), 2.4, 2.0, '#dfe3e8', '#5b6168');
+  // hoogte van de naaf
+  if (w_ > 500 && Math.abs(dot3([0, 0, 1], P.D)) < 0.5) {   // niet op een smal scherm (botst met het assenkruis)
+    const p = P([-20, 60, 0]), q = P([-20, 60, HNAAF]);
+    if (Math.abs(q.y - p.y) > 60 && Math.hypot(q.x - p.x, q.y - p.y) > 60) {
+      lijn(ctx, P, [-20, 60, 0], [-20, 60, HNAAF], '#9aa1aa', 1, [3, 3]);
+      ctx.save(); ctx.translate((p.x + q.x) / 2 - 6, (p.y + q.y) / 2); ctx.rotate(-Math.PI / 2); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.fillText('80 m', 0, 0); ctx.restore();
+    }
+  }
+
+  // rotoras (stippellijn) en hoeksnelheid
+  lijn(ctx, P, add(O, mul(-22, ex)), add(O, mul(26, ex)), '#9aa1aa', 1, [6, 4]);
+
+  // baan van A en de cirkel van de tip
+  const mA = add(O, mul(-r * Math.tan(KON), ex));
+  if (Math.abs(r - RMAX) > 0.5) boog(ctx, P, add(O, mul(-RMAX * Math.tan(KON), ex)), ez, mul(-1, ey), RMAX, 0, 2 * Math.PI, '#c3c8ce', 1, [3, 4]);
+  if (show.baan && r > 0.5) boog(ctx, P, mA, ez, mul(-1, ey), r, 0, 2 * Math.PI, '#7a828c', 1.3, [5, 4]);
+
+  // drie wieken; wiek 0 (met punt A) donkerder
+  for (const k of [1, 2, 0]) {
+    const a = th + k * 2 * Math.PI / 3;
+    staaf(ctx, P, opWiek(a, 2), opWiek(a, RMAX), 1.5, 0.35, k === 0 ? '#aeb6bf' : '#e3e7ec', k === 0 ? '#3d454f' : '#8a929b');
+  }
+  // naaf
+  { const q = P(O); ctx.save(); ctx.fillStyle = '#5b6168'; ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(4, 2.2 * P.S), 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+
+  // hoek θ: vanaf de bovenste stand (z-as), in het vlak van de baan
+  if (show.hoek && Math.abs(dot3(ex, P.D)) > 0.35) {   // niet als je de rotor op de kant ziet (zijaanzicht)
+    const ref = Math.max(r, 30), rb = Math.min(16, 0.4 * ref);
+    lijn(ctx, P, mA, add(mA, mul(ref * 0.75, ez)), '#7a828c', 1, [2, 3]);
+    const tt = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    if (tt > 0.02) {
+      boog(ctx, P, mA, ez, mul(-1, ey), rb, 0, tt, C.ink, 1.3);
+      const q = P(add(mA, mul(rb + 7, add(mul(Math.cos(tt / 2), ez), mul(-Math.sin(tt / 2), ey)))));
+      label(ctx, 'θ', '', q.x - 4, q.y + 5, C.ink, { vec: false, size: 15 });
+    }
+  }
+
+  // punt A en de vectoren
+  const A = opWiek(th, r);
+  const vWind = naarW(st.vWind), vA = naarW(st.vA), rel = naarW(st.rel);
+  const tW = add(A, mul(KV, vWind)), tR = add(A, mul(KV, rel));
+  if (show.a && r > 0.5) pijl3(ctx, P, A, add(A, mul(KA, naarW(st.a))), C.a, { w: 3, head: 12 }, 'a', 'A');
+  if (show.kop) {   // −v_A kop aan staart na v_wind; label naast het midden (de punt valt samen met die van v_wind/A)
+    const e = add(tW, mul(-KV, vA)); pijl3(ctx, P, tW, e, C.v, { w: 2.2, head: 10, dash: [6, 4] });
+    const p = P(tW), q = P(e), L = Math.hypot(q.x - p.x, q.y - p.y);
+    if (L > 30) label(ctx, '−v', 'A', (p.x + q.x) / 2 + 14 * (q.y - p.y) / L, (p.y + q.y) / 2 - 14 * (q.x - p.x) / L + 5, C.v, { size: 14 });
+  }
+  if (show.wind) {   // korte pijl: label naast de punt, aan de kant weg van v_wind/A
+    pijl3(ctx, P, A, tW, KW, { w: 3, head: 12 });
+    const p = P(A), q = P(tW), qr = P(tR), L = Math.hypot(q.x - p.x, q.y - p.y);
+    if (L > 6) {
+      let nx = -(q.y - p.y) / L, ny = (q.x - p.x) / L;
+      // kant kiezen weg van de andere pijlen in A (v_wind/A en v_A)
+      const qa = P(add(A, mul(KV, vA))), kant = (u, aan) => { if (!aan) return 0; const l = Math.hypot(u.x - p.x, u.y - p.y) || 1; return (nx * (u.x - p.x) + ny * (u.y - p.y)) / l; };
+      if (kant(qr, show.rel) + kant(qa, show.vA && r > 0.5) > 0) { nx = -nx; ny = -ny; }
+      const lx = q.x + 16 * nx + 4 * (q.x - p.x) / L, ly = q.y + 16 * ny + 5;
+      label(ctx, 'v', 'wind', lx, ly, KW, { size: 15, align: nx < -0.3 ? 'right' : 'left' });
+    }
+  }
+  if (show.vA && r > 0.5) pijl3(ctx, P, A, add(A, mul(KV, vA)), C.v, { w: 3, head: 12 }, 'v', 'A');
+  if (show.rel) pijl3(ctx, P, A, tR, KVM, { w: 3.2, head: 13 }, 'v', 'wind/A');
+  punt(ctx, P, A, 'A', -18, -8, C.ink);
+  punt(ctx, P, O, 'O', 10, 16, C.ink);
+
+  // assenkruis xyz van het handboek, linksonder (vast in beeld)
+  { const O3 = add(MIDDEN, mul((46 - P.ox) / P.S, P.R), mul((P.oy - (h_ - 40)) / P.S, P.U)), Lx = 34 / P.S;
+    for (const [e, n] of [[ex, 'x'], [ey, 'y'], [ez, 'z']]) {
+      pijl3(ctx, P, O3, add(O3, mul(Lx, e)), '#7a828c', { w: 1.3, head: 7 });
+      const q = P(add(O3, mul(1.25 * Lx, e))), p0 = P(O3);
+      if (Math.hypot(q.x - p0.x, q.y - p0.y) > 10) label(ctx, n, '', q.x - 4, q.y + 5, '#6b737d', { vec: false, size: 13 });
+      else label(ctx, n, '', p0.x + 10, p0.y + 22, '#6b737d', { vec: false, size: 13 });
+    } }
+
+  if (show.wind || show.vA || show.rel || show.kop) TM1.schaalLegende(ctx, h_, [[20 * KV * P.S, C.v, '20 m/s']], { rechtsboven: { w: w_, y: 40 } });
+  if (show.a) TM1.schaalLegende(ctx, h_, [[50 * KA * P.S, C.a, '50 m/s²']], { rechtsboven: { w: w_, y: 84 } });
+  const opg = { '3a': [90, 50], '3b': [180, 25], '4': [0, 50] }[deel];
+  if (opg && Math.abs(deg(normTh()) - opg[0]) < 0.05 && Math.abs(r - opg[1]) < 0.01) {
+    ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right'; ctx.fillText(`stand uit de opgave (θ = ${opg[0]}°, r = ${opg[1]} m)`, w_ - 12, h_ - 12); ctx.restore();
+  }
+}
+const normTh = () => ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+// aanzicht draaien door te slepen
+{
+  let sleep = null;
+  sc.c.addEventListener('pointerdown', e => { sleep = { x: e.clientX, y: e.clientY, ...zicht }; sc.c.setPointerCapture(e.pointerId); });
+  sc.c.addEventListener('pointermove', e => {
+    if (!sleep) return;
+    zicht.az = sleep.az - (e.clientX - sleep.x) * 0.01;
+    zicht.el = Math.max(rad(-80), Math.min(rad(80), sleep.el + (e.clientY - sleep.y) * 0.01));
+    document.querySelectorAll('#aanzicht button').forEach(b => b.classList.remove('actief'));
+    render();
+  });
+  const stop = () => { sleep = null; };
+  sc.c.addEventListener('pointerup', stop); sc.c.addEventListener('pointercancel', stop);
+}
+
+// ---------- grafiek: grootte van de relatieve snelheid tijdens één omwenteling, voor de huidige r ----------
+const G1 = setup(document.getElementById('g1'));
+let F1;
+function drawGraph() {
+  document.getElementById('gtitel').innerHTML = `Grootte van <span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span> tijdens één omwenteling (<span class="i">r</span> = ${fmt(r, 1)} m)`;
+  const f = a => norm(toestand(rad(a), r).rel);
+  let mn = Infinity, mx = -Infinity, amn = 0, amx = 0;
+  for (let a = 0; a <= 360; a += 0.5) { const v = f(a); if (v < mn) { mn = v; amn = a; } if (v > mx) { mx = v; amx = a; } }
+  const pad = Math.max(0.5, 0.15 * (mx - mn));
+  const F = frame(G1, [0, 360], [Math.floor(mn - pad), Math.ceil(mx + pad)], '$\\theta$ [°]', '$v_{wind/A}$ [m/s]');
+  curve(G1.ctx, F, 360, 0, 360, a => a, f, KVM, 2.2);
+  const c = G1.ctx; c.save(); c.font = '11.5px Inter, sans-serif'; c.fillStyle = C.muted;
+  for (const [a, v, tekst, dy] of [[amx, mx, 'max', -8], [amn, mn, 'min', 16]]) {
+    c.beginPath(); c.arc(F.X(a), F.Y(v), 3, 0, 2 * Math.PI); c.fill();
+    c.textAlign = 'center'; c.fillText(`${tekst}: ${v.toFixed(1)} m/s (θ = ${a.toFixed(0)}°)`, Math.min(Math.max(F.X(a), F.m.l + 70), G1.w - 80), F.Y(v) + dy);
+  }
+  c.restore();
+  const tt = deg(normTh());
+  TM1.cursor(c, F, tt); dot(c, F.X(tt), F.Y(f(tt)), KVM);
+  F1 = F;
+}
+
+// ---------- uitlezing ----------
+const ro = document.getElementById('readout');
+const v3 = (v, d, e) => `(${v.map(x => fmt(x, d)).join(', ')}) ${e}`;
+function drawReadout() {
+  const s = toestand(th, r), cel = [
+    ['θ', `${fmt(deg(normTh()), 1)}°`],
+    ['r', `${fmt(r, 1)} m`],
+    ['hoogte van A', `${fmt(HNAAF + r * Math.cos(th) * Math.cos(TILT), 1)} m`],
+    ['<span class="k-w"><span class="v">v</span><sub>wind</sub></span>', v3(s.vWind, 2, 'm/s'), true],
+    ['<span class="k-v"><span class="v">v</span><sub>A</sub></span>', v3(s.vA, 1, 'm/s'), true],
+    ['<span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span>', v3(s.rel, 2, 'm/s'), true],
+    ['‖<span class="k-w"><span class="v">v</span><sub>wind</sub></span>‖', `${fmt(s.vw, 2)} m/s`],
+    ['‖<span class="k-v"><span class="v">v</span><sub>A</sub></span>‖', `${fmt(norm(s.vA), 1)} m/s`],
+    ['‖<span class="k-vm"><span class="v">v</span><sub>wind/A</sub></span>‖', `${fmt(norm(s.rel), 1)} m/s`]];
+  if (show.a) cel.push(['‖<span class="k-a"><span class="v">a</span><sub>A</sub></span>‖', `${fmt(norm(s.a), 1)} m/s²`]);
+  TM1.uitlezing(ro, cel);
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), thsl = $('thslider'), rsl = $('rslider');
+const DELEN = {
+  '3a': { th: 90, r: 50, v: true, uitleg: 'De tip in de stand θ = 90°: de wiek staat horizontaal en draait naar beneden. De snelheid van de wiek is dan verticaal; de relatieve snelheid volgt uit v_wind − v_A.' },
+  '3b': { th: 180, r: 25, v: true, uitleg: 'Het midden van de wiek (r = 25 m) in de stand θ = 180°: de wiek wijst verticaal naar beneden. De wind is daar zwakker en de snelheid van de wiek is horizontaal, volgens −y.' },
+  '3c': { th: 0, r: 50, v: true, speel: true, uitleg: 'De tip tijdens een volledige omwenteling: volg in de grafiek hoe de grootte van de relatieve snelheid verandert.' },
+  '4': { th: 0, r: 50, v: false, a: true, uitleg: 'De tip draait met constante hoeksnelheid: de versnelling is in elke stand naar de as gericht, met grootte ω²r. Versleep θ naar 270° om de tweede stand te bekijken.' }
+};
+function setPlaying(p) { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; }
+function syncLabels() {
+  $('thval').textContent = `${deg(normTh()).toFixed(0)}°`; thsl.value = Math.round(deg(normTh()) * 10) % 3600;
+  $('rval').textContent = `${fmt(r, 1)} m`; rsl.value = r;
+}
+function zetDeel(d) {
+  deel = d; const D = DELEN[d];
+  th = rad(D.th); r = D.r; setPlaying(!!D.speel);
+  // deel 3: de drie snelheden; deel 4: enkel de versnelling
+  for (const k of ['wind', 'vA', 'rel']) { show[k] = D.v; $('t_' + k).checked = D.v; }
+  show.a = !!D.a; $('t_a').checked = show.a;
+  if (!D.v) { show.kop = false; $('t_kop').checked = false; }
+  document.querySelectorAll('#delen button').forEach(b => b.classList.toggle('actief', b.dataset.d === d));
+  $('deelUitleg').textContent = D.uitleg;
+  render();
+}
+function render() { drawScene(); drawGraph(); drawReadout(); syncLabels(); }
+
+document.querySelectorAll('#delen button').forEach(b => b.onclick = () => zetDeel(b.dataset.d));
+playBtn.onclick = () => setPlaying(!playing);
+$('reset').onclick = () => { const D = DELEN[deel]; setPlaying(false); th = rad(D.th); r = D.r; render(); };
+function zetZicht(z, knop) { zicht = { ...z }; document.querySelectorAll('#aanzicht button').forEach(b => b.classList.toggle('actief', b.id === knop)); render(); }
+$('schuin').onclick = () => zetZicht(SCHUIN, 'schuin');
+$('voor').onclick = () => zetZicht(VOOR, 'voor');
+$('zij').onclick = () => zetZicht(ZIJ, 'zij');
+thsl.oninput = () => { setPlaying(false); th = rad(thsl.value / 10); render(); };
+rsl.oninput = () => { r = +rsl.value; render(); };
+for (const k of Object.keys(show)) { const el = $('t_' + k); el.checked = show[k]; el.onchange = () => { show[k] = el.checked; render(); }; }
+TM1.scrub(G1, () => F1, x => { th = rad(Math.max(0, Math.min(360, x))); setPlaying(false); render(); });
+
+TM1.bijGrootte([sc, G1], render);
+TM1.lus(dt => { th += W * dt; render(); }, () => playing);
+$('schuin').classList.add('actief');
+zetDeel('3a');
+})();
+</script>
+</body>
+</html>

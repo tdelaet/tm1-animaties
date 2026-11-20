@@ -70,7 +70,7 @@
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(2,auto)">
           <label><input type="checkbox" id="t_deel"> <span class="sw d" style="color:var(--cvl)"></span><span>deelsnelheden</span></label>
           <label><input type="checkbox" id="t_vP"> <span class="sw" style="background:var(--cv)"></span><span><span class="k-v"><span class="v">v</span><sub>P/O</sub></span></span></label>
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-B-A-C-D-P</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>positievectoren <span class="k-r"><span class="v">r</span><sub>B/O</sub></span>, <span class="k-r"><span class="v">r</span><sub>A/B</sub></span>, <span class="k-r"><span class="v">r</span><sub>C/A</sub></span>, <span class="k-r"><span class="v">r</span><sub>D/C</sub></span>, <span class="k-r"><span class="v">r</span><sub>P/D</sub></span> en hun som <span class="k-r"><span class="v">r</span><sub>P/O</sub></span></span></label>
           <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van P (bij <span class="i">ω</span><sub>2</sub> = 0)</span></label>
         </div>
         <div class="note">C is het scharnier van de gondel aan het rad, D ligt op de as van de gondel op afstand <span class="i">l</span> onder C, P (de persoon) op afstand <span class="i">d</span> naast D.</div>
@@ -125,7 +125,7 @@ const XR = 6, HA = 5.5, RR = 4, LL = 1.2, DD = 0.4;   // x_r, h, r, l, d [m]
 const XMIN = 0, XMAX = 12, YMIN = 0, YMAX = 11;       // vaste schaal [m]
 const KV = 2.5;                                       // vectorschaal: m per (m/s), vast
 let th1 = rad(30), th2 = 0, w1 = 0.2, w2 = 0.16, playing = true;
-const show = { deel: true, vP: true, ket: true, baan: true };
+const show = { deel: false, vP: true, ket: false, baan: true };
 
 function state(t1 = th1, t2 = th2) {
   const W2 = w2;                                          // constante kantelsnelheid
@@ -190,6 +190,12 @@ function drawScene() {
   if (show.ket) {
     const k = (a, b_, sub, dx, dy) => { if (arrow(ctx, a.x, a.y, b_.x, b_.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) label(ctx, 'r', sub, (a.x + b_.x) / 2 + dx, (a.y + b_.y) / 2 + dy, C.r, { size: 12 }); };
     k(O, B, 'B/O', -10, 18); k(B, A, 'A/B', 6, 30); k(A, Cc, 'C/A', -36, -6); k(Cc, D, 'D/C', -34, 0); k(D, P, 'P/D', -6, 16);
+    // de som van de ketting (volle lijn)
+    if (arrow(ctx, O.x, O.y, P.x, P.y, C.r, { w: 2.2, head: 10 })) {
+      const e = eenheid(O, P);
+      // label ver genoeg richting P, zodat het niet bij r_A/B (onder A) valt
+      label(ctx, 'r', 'P/O', O.x + 0.7 * (P.x - O.x) - 16 * e.y + 2, O.y + 0.7 * (P.y - O.y) + 16 * e.x + 8, C.r, { size: 13 });
+    }
   }
 
   // snelheden en rechte hoeken

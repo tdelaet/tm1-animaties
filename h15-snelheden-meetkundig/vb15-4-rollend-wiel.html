@@ -63,7 +63,7 @@
         <div class="toggles" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
           <label><input type="checkbox" id="t_deel"> <span class="sw d" style="color:var(--cvl)"></span><span>deelsnelheden</span></label>
           <label><input type="checkbox" id="t_vA"> <span class="sw" style="background:var(--cv)"></span><span><span class="k-v"><span class="v">v</span><sub>A/O</sub></span></span></label>
-          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>ketting O-M-A</span></label>
+          <label><input type="checkbox" id="t_ket"> <span class="sw d" style="color:var(--cr)"></span><span>positievectoren <span class="k-r"><span class="v">r</span><sub>M/O</sub></span>, <span class="k-r"><span class="v">r</span><sub>A/M</sub></span> en hun som <span class="k-r"><span class="v">r</span><sub>A/O</sub></span></span></label>
           <label><input type="checkbox" id="t_baan"> <span class="sw d" style="color:#7a828c"></span><span>baan van A (cycloïde)</span></label>
           <label><input type="checkbox" id="t_strobe"> <span class="sw" style="background:#9aa3ad"></span><span>stroboscoop</span></label>
         </div>
@@ -117,7 +117,7 @@ const R = 1;                                         // straal [m]
 const XMIN = -1, XMAX = 8, YMIN = -0.3, YMAX = 3.6;  // vaste schaal [m]
 const KV = 0.6;                                      // vectorschaal: m per (m/s), vast
 let th = 0, w = 0.6, playing = true;
-const show = { deel: true, vA: true, ket: true, baan: true, strobe: false };
+const show = { deel: false, vA: true, ket: false, baan: true, strobe: false };
 
 function state(t_ = th) {
   const s = Math.sin(t_), c = Math.cos(t_);
@@ -179,8 +179,15 @@ function drawScene() {
 
   // ketting O-M-A
   if (show.ket) {
-    if (arrow(ctx, O.x, O.y, M.x, M.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) label(ctx, 'r', 'M/O', (O.x + M.x) / 2 - 12, (O.y + M.y) / 2 - 4, C.r, { size: 12, align: 'right' });
+    // labels van r_M/O en r_A/O elk aan de kant weg van de andere pijl, zodat ze niet overlappen
+    const kant = Math.sign((A.x - O.x) * (M.y - O.y) - (A.y - O.y) * (M.x - O.x)) || 1;
+    const naastLijn = (P2, s) => { const e = eenheid(O, P2); return { x: (O.x + P2.x) / 2 + s * 16 * e.y - 6, y: (O.y + P2.y) / 2 - s * 16 * e.x + 5 }; };
+    if (arrow(ctx, O.x, O.y, M.x, M.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) { const q = naastLijn(M, -kant); label(ctx, 'r', 'M/O', q.x, q.y, C.r, { size: 12 }); }
     if (arrow(ctx, M.x, M.y, A.x, A.y, C.r, { w: 1.5, dash: [5, 3], head: 8 })) label(ctx, 'r', 'A/M', (M.x + A.x) / 2 + 6, (M.y + A.y) / 2 - 6, C.r, { size: 12 });
+    // de som van de ketting (volle lijn)
+    if (arrow(ctx, O.x, O.y, A.x, A.y, C.r, { w: 2.2, head: 10 })) {
+      const q = naastLijn(A, kant); label(ctx, 'r', 'A/O', q.x, q.y, C.r, { size: 13 });
+    }
   }
   // snelheden
   const tip = (Q, v) => ({ x: Q.x + v.x * KV * S, y: Q.y - v.y * KV * S });
