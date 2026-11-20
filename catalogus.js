@@ -122,7 +122,7 @@ TM1.catalogus = [
   ]},
   { deel: 'VI', titel: 'Dynamica van enkelvoudige lichamen', hoofdstukken: [
     { nr: 19, titel: 'Dynamica van een puntmassa', map: 'h19-dynamica-puntmassa', items: [
-      { id: '19.1', titel: 'Een slinger beschrijft een kegelbeweging' },
+      { id: '19.1', titel: 'Een slinger beschrijft een kegelbeweging', status: 'klaar', opmerking: 'uitgewerkt naar de video (plan van aanpak 19.5)' },
       { id: '19.2', titel: 'Een blok op een vallend platform' },
       { id: '19.3', titel: 'Een container hangt aan een loopkat' },
       { id: '19.4', titel: 'Een massa aan een ronddraaiende veer' },
