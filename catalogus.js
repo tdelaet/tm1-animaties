@@ -127,7 +127,9 @@ TM1.catalogus = [
       { id: '19.3', titel: 'Een container hangt aan een loopkat', status: 'klaar' },
       { id: '19.4', titel: 'Een massa aan een ronddraaiende veer', status: 'klaar' },
       { id: '19.5', titel: 'Een massa rondgeslingerd in een verticaal vlak', status: 'klaar' },
-      { id: '19.6', titel: 'Tweede postulaat als differentiaalvergelijking', status: 'klaar' }]},
+      { id: '19.6', titel: 'Tweede postulaat als differentiaalvergelijking', status: 'klaar' },
+      { id: '19.7', titel: 'Een pakje glijdt van een transportband', status: 'klaar' },
+      { id: '19.8', titel: 'Een massa in een geleiding met een veer', status: 'klaar' }]},
     { nr: 20, titel: 'Dynamica van star lichaam in vlakke beweging', map: 'h20-dynamica-star-lichaam', items: [
       { id: '20.1', titel: 'Traagheidsmoment van een halter' },
       { id: '20.2', titel: 'Traagheidsmoment van een dunne staaf' },

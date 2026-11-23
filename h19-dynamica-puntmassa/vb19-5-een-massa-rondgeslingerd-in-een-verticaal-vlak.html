@@ -34,7 +34,18 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-</style>
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
+  .stap .eval p{margin:3px 0}
+  .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
+  .evaltag{display:inline-block;font:600 11.5px Inter,sans-serif;color:#5b3fb0;background:#efeafb;border-radius:4px;padding:1px 7px}
+  .stap .eval > :not(.evaltag){display:none}
+  .stap .eval.open > :not(.evaltag){display:block}
+  .stap .eval > .evaltag{cursor:pointer;user-select:none}
+  .stap .eval > .evaltag::before{content:'▸ ';font-size:10px}
+  .stap .eval.open > .evaltag::before{content:'▾ '}
+  .stap .eval > .evaltag:hover{background:#ded3f7}
+  .stap .eval > .evaltag:focus-visible{outline:2px solid #8b6fd6;outline-offset:1px}</style>
 </head>
 <body>
 <div class="wrap">
@@ -81,8 +92,8 @@ const { setup, arrow, label, rad } = TM1;
 const C = TM1.kleuren();
 const KG = '#2f8f46', KS = C.F, KA = C.a, KW = C.M;    // gewicht, touwkracht, versnelling, hoeksnelheid
 const GLOED = 'rgba(255,196,0,';
-const g = 10.0, W0 = 4.0, L0 = 1.0, VERTRAAG = 2;
-let stap = 1, anim = null, licht = null, proeven = {}, om = W0, l = L0, psi = 0, playing = true;   // ψ: hoek vanaf het hoogste punt
+const g = 10.0, W0 = 4.0, L0 = 1.0, VERTRAAG = 2, LMAX = 1.5;   // LMAX: langste touw (slider), past in de figuur
+let stap = 1, anim = null, licht = null, proeven = {}, om = W0, l = L0, psi = 0, playing = true, openEval = -1;   // ψ: hoek vanaf het hoogste punt
 const wmin = () => Math.sqrt(g / l);
 const slap = () => om < wmin() - 1e-9;                  // het touw kan in het hoogste punt niet gespannen blijven
 
@@ -139,9 +150,9 @@ function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
   const H = Hall * 0.5;
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
-  // ----- boven: situatie (schaal volgens de touwlengte, minstens 1 m) -----
+  // ----- boven: situatie (vaste schaal, zodat het langste touw LMAX nog past) -----
   titel('Situatie', 18);
-  const Lm = Math.max(l, 1.0), S = Math.min(W / (2.9 * Lm), (H - 56) / (2.5 * Lm)), O = { x: W / 2, y: 34 + (H - 34) / 2 };
+  const Lm = LMAX, S = Math.min(W / (2.9 * Lm), (H - 56) / (2.5 * Lm))   /* vaste schaal: een langer touw is ook langer in de figuur */, O = { x: W / 2, y: 34 + (H - 34) / 2 };
   const pos = a => ({ x: O.x + Math.sin(a) * l * S, y: O.y - Math.cos(a) * l * S });
   // baan en hoogste punt
   ctx.save(); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1.1; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(O.x, O.y, l * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
@@ -198,7 +209,7 @@ function drawLoep() {
   const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
   if (stap !== 2) return;
   // schuine projectie: x naar rechts, y naar beneden, z het blad in (schuin naar rechtsboven); O ligt onder het blok
-  const S = Math.min(W / 3.0, H / 2.4), cx = W * 0.45, cy = H * 0.34;
+  const S = Math.min(W / 3.0, H / 2.6), cx = W * 0.45, cy = H * 0.42;   // ruimte boven het blok voor de proefpijl naar boven
   const P = p => ({ x: cx + S * (p.x + 0.42 * p.z), y: cy + S * (p.y - 0.3 * p.z) });
   const M0 = V(0, 0, 0), OP = V(0, 4, 0), e = V(0, 1, 0);
   let Mp = M0, zin = 1, boog = null, slapT = 0;
@@ -212,10 +223,10 @@ function drawLoep() {
     const pts = []; for (let i = -12; i <= 12; i++) pts.push(P(rotAx(M0, OP, boog, i / 12 * 0.12)));
     ctx.save(); ctx.strokeStyle = '#2f7d3a'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.restore();
   }
-  const pm = P(Mp), eM = unit(sub(OP, Mp)), top = add(Mp, mul(eM, 1.0)), pt = P(top);
+  const pm = P(Mp), eM = unit(sub(OP, Mp)), top = add(Mp, mul(eM, 0.85)), pt = P(top);
   ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(pm.x, pm.y);
   ctx.quadraticCurveTo((pm.x + pt.x) / 2 + slapT * S * 1.2, (pm.y + pt.y) / 2, pt.x, pt.y); ctx.stroke(); ctx.restore();
-  lijn(ctx, pt, P(add(top, mul(eM, 0.35))), '#3d454f', 1.4, [3, 4]);
+  lijn(ctx, pt, P(add(top, mul(eM, 0.3))), '#3d454f', 1.4, [3, 4]);
   { const q = P(add(top, mul(eM, 0.3))); ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('naar O', q.x + 8, q.y); ctx.restore(); }
   blok(ctx, { x: pm.x, y: pm.y - 0.25 * S }, 0.25 * S);
   { const o2 = { x: W - 40, y: 22 }, Lp = 22;
@@ -225,7 +236,7 @@ function drawLoep() {
   if (anim) {
     const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a';
     let d = b.verh ? mul(e, -1) : b.slap ? e : b.as === 'z' ? V(1, 0, 0) : EZ; d = mul(d, zin);
-    const c0 = V(-0.75, -0.25, 0), p1 = P(add(c0, mul(d, 0.2))), q1 = P(add(c0, mul(d, 0.75))); arrow(ctx, p1.x, p1.y, q1.x, q1.y, kl, { w: 2.2, dash: [5, 3], head: 10 });
+    const c0 = V(-0.75, -0.25, 0), p1 = P(add(c0, mul(d, 0.15))), q1 = P(add(c0, mul(d, 0.6))); arrow(ctx, p1.x, p1.y, q1.x, q1.y, kl, { w: 2.2, dash: [5, 3], head: 10 });
     ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W / 2, H - 10); ctx.restore();
   }
 }
@@ -245,7 +256,7 @@ function vldFormules() {
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
-const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -289,17 +300,42 @@ function stapInhoud() {
       <p>Hoe trager het blok draait, hoe kleiner de touwkracht. De minimale snelheid wordt bereikt als de spankracht in het touw nul wordt (met <span data-tex="${kl(KS, 'S')} \\ge 0"></span>):</p>
       <div class="kader">${v(`${kl(KS, 'S')} = 0 \\;\\Rightarrow\\; \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = l\\,\\omega_\\text{min} = \\sqrt{g\\,l}`)}</div>
       <p class="noot">Met de illustratiewaarde <i>l</i> = 1.00 m: <i>ω</i><sub>min</sub> = √10 = 3.16 rad/s en <i>v</i><sub>min</sub> = 3.16 m/s.</p>`;
-  else h = `<p>De minimale hoeksnelheid neemt af voor toenemende waarden van de lengte van het touw en is onafhankelijk van de massa van het blok.</p>
-      <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="1" max="7" step="0.05" value="${om}"></div>
-      <div class="slider"><div class="lab"><span>Lengte van het touw <span class="i">l</span></span><b id="lval">${l.toFixed(2)} m</b></div><input type="range" id="lsl" min="0.3" max="2" step="0.05" value="${l}"></div>
-      <p id="res5">${res5()}</p>
-      <ul class="noot" style="padding-left:18px">
-        <li>In het hoogste punt wijzen zowel het gewicht als de touwkracht naar O: samen leveren ze de nodige kracht <i>m l ω</i>² voor de cirkelbeweging.</li>
-        <li>Bij <i>ω</i> = <i>ω</i><sub>min</sub> levert het gewicht alleen die kracht: het touw is nog net gespannen.</li>
-        <li>Is het blok trager, dan is het gewicht groter dan de nodige kracht: het blok valt binnen de cirkel en het touw wordt slap.</li>
-      </ul>`;
+  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
+      <div class="kader">${v(`${kl(KS, 'S')} = m\\,(l\\,\\omega^2 - g), \\qquad \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = \\sqrt{g\\,l}`)}</div>
+      <div class="eval"><span class="evaltag">eenheden controleren</span>
+        <p><span data-tex="\\sqrt{\\frac{\\text{m/s}^2}{\\text{m}}} = \\frac{1}{\\text{s}}"></span>, de eenheid van een hoeksnelheid; <span data-tex="\\sqrt{\\text{m/s}^2\\cdot\\text{m}} = \\text{m/s}"></span>, de eenheid van een snelheid. In <i>S</i> hebben <i>lω</i>² en <i>g</i> allebei de eenheid m/s², dus <i>S</i> is in N.</p></div>
+      <div class="eval"><span class="evaltag">teken controleren</span>
+        <p><i>S</i> = <i>m</i>(<i>lω</i>² − <i>g</i>) moet positief zijn (een touw kan enkel trekken): dat kan enkel als <i>lω</i>² ≥ <i>g</i>. Zo vind je precies de voorwaarde <i>ω</i> ≥ <i>ω</i><sub>min</sub>.</p></div>
+      <div class="eval"><span class="evaltag">grootteorde controleren</span>
+        <p>Met <i>l</i> = 1.00 m is <i>ω</i><sub>min</sub> = 3.16 rad/s, ongeveer een halve omwenteling per seconde, en <i>v</i><sub>min</sub> = 3.16 m/s. Dat strookt met de ervaring van een emmer water die je rondslingert: een halve omwenteling per seconde volstaat net.</p></div>
+      <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
+        <p>Verander de hoeksnelheid en de lengte van het touw:</p>
+        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="1" max="7" step="0.05" value="${om}"></div>
+        <div class="slider"><div class="lab"><span>Lengte van het touw <span class="i">l</span></span><b id="lval">${l.toFixed(2)} m</b></div><input type="range" id="lsl" min="0.3" max="${LMAX}" step="0.05" value="${l}"></div>
+        <p id="res5">${res5()}</p>
+        <ul class="fa">
+          <li><b><i>l</i> groter:</b> <i>ω</i><sub>min</sub> kleiner, maar <i>v</i><sub>min</sub> groter: met een langer touw mag het blok trager ronddraaien, maar het moet een grotere snelheid hebben.</li>
+          <li><b><i>ω</i> groter:</b> <i>S</i> groter: het touw moet meer kracht leveren voor de cirkelbeweging.</li>
+          <li><b><i>m</i>:</b> komt niet voor in <i>ω</i><sub>min</sub>: een zwaarder blok vraagt dezelfde minimale hoeksnelheid. <i>S</i> is wel evenredig met <i>m</i>.</li>
+          <li><b><i>g</i> groter:</b> <i>ω</i><sub>min</sub> groter: het gewicht trekt het blok sterker naar binnen.</li>
+        </ul></div>
+      <div class="eval"><span class="evaltag">bijzondere gevallen</span>
+        <p><b><i>ω</i> = <i>ω</i><sub>min</sub>:</b> <i>S</i> = 0: het gewicht alleen levert de nodige kracht <i>mlω</i>² voor de cirkelbeweging. Het touw is nog net gespannen.</p>
+        <p><b><i>ω</i> &lt; <i>ω</i><sub>min</sub>:</b> de formule zou <i>S</i> &lt; 0 geven, wat niet kan: het gewicht is groter dan de nodige kracht, het blok valt binnen de cirkel en het touw wordt slap.</p>
+        <p><b>Zonder zwaartekracht</b> (<i>g</i> → 0): <i>ω</i><sub>min</sub> → 0: elke hoeksnelheid volstaat, het touw levert de volledige kracht.</p></div>`;
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
+  // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
+  const blokken = [...el.querySelectorAll('.eval')];
+  const toon = () => blokken.forEach((o, j) => { o.classList.toggle('open', j === openEval); o.querySelector(':scope > .evaltag')?.setAttribute('aria-expanded', String(j === openEval)); });
+  blokken.forEach((b, i) => {
+    const tag = b.querySelector(':scope > .evaltag'); if (!tag) return;
+    tag.setAttribute('role', 'button'); tag.tabIndex = 0;
+    const wissel = () => { openEval = openEval === i ? -1 : i; toon(); };
+    tag.onclick = wissel; tag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel(); } };
+  });
+  toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
   const upd = () => { $('omval').textContent = `${om.toFixed(2)} rad/s`; $('lval').textContent = `${l.toFixed(2)} m`; $('res5').innerHTML = res5(); drawScene(); };
   const so = $('omsl'); if (so) so.oninput = e => { om = +e.target.value; upd(); };
@@ -307,7 +343,7 @@ function stapInhoud() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 5) { om = W0; l = L0; } render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) { om = W0; l = L0; } render(); });
 }
 function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });

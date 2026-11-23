@@ -34,7 +34,18 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-</style>
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
+  .stap .eval p{margin:3px 0}
+  .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
+  .evaltag{display:inline-block;font:600 11.5px Inter,sans-serif;color:#5b3fb0;background:#efeafb;border-radius:4px;padding:1px 7px}
+  .stap .eval > :not(.evaltag){display:none}
+  .stap .eval.open > :not(.evaltag){display:block}
+  .stap .eval > .evaltag{cursor:pointer;user-select:none}
+  .stap .eval > .evaltag::before{content:'▸ ';font-size:10px}
+  .stap .eval.open > .evaltag::before{content:'▾ '}
+  .stap .eval > .evaltag:hover{background:#ded3f7}
+  .stap .eval > .evaltag:focus-visible{outline:2px solid #8b6fd6;outline-offset:1px}</style>
 </head>
 <body>
 <div class="wrap">
@@ -82,7 +93,7 @@ const C = TM1.kleuren();
 const KG = '#2f8f46', KR = C.F, KA = C.a;              // kleuren: gewicht, verbindingskracht, versnelling
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, A0 = 0.5, VERTRAAG = 3, VAL = 1.25;      // a/g ter illustratie; valhoogte [m] per cyclus
-let stap = 1, anim = null, licht = null, proeven = {}, ag = A0, t = 0, playing = true;
+let stap = 1, anim = null, licht = null, proeven = {}, ag = A0, t = 0, playing = true, openEval = -1;
 
 // ---------- schuine projectie: x naar rechts, y naar beneden, z het blad in (schuin naar rechtsboven getekend) ----------
 const V = (x, y, z) => ({ x, y, z });
@@ -245,7 +256,7 @@ function vldFormules() {
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
-const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -287,22 +298,46 @@ function stapInhoud() {
       ${v(`${kl(KR, 'R_x')} = 0, \\qquad ${kl(KR, 'R_z')} = 0, \\qquad -${kl(KR, 'R')} + mg = ma`)}
       <div class="kader">${v(`${kl(KR, 'R')} = m\\,(g - a)`)}</div>
       <p class="noot">De horizontale componenten zijn nul: de verbindingskracht van het platform op het blok is verticaal, naar boven. Met de illustratiewaarde <i>a</i> = 0.50 <i>g</i> is <i>R</i> = 0.50 <i>mg</i>.</p>`;
-  else h = `<p>Hoe hangt de verbindingskracht af van de versnelling van het platform?</p>
-      <div class="slider"><div class="lab"><span>Versnelling van het platform <span class="i">a</span></span><b id="agval">${ag.toFixed(2)} g</b></div><input type="range" id="agsl" min="0" max="1.5" step="0.05" value="${ag}"></div>
-      <p id="res5">${res5()}</p>
-      <ul class="noot" style="padding-left:18px">
-        <li>Indien <i>a</i> &lt; <i>g</i> is <i>R</i> positief. Een weegschaal tussen het platform en het blok zou dan een contactkracht <i>m</i>(<i>g</i> − <i>a</i>) meten, verschillend van het gewicht van het blok.</li>
-        <li>Indien <i>a</i> = <i>g</i> is er geen reactiekracht en is het blok schijnbaar gewichtloos geworden.</li>
-        <li>Voor <i>a</i> &gt; <i>g</i> komt het blok los van het platform: de voorwaarde <i>R</i> ≥ 0 is dan niet meer voldaan, en de veronderstelling dat het blok de versnelling van het platform volgt, klopt niet meer.</li>
-      </ul>`;
+  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
+      <div class="kader">${v(`${kl(KR, 'R')} = m\\,(g - a)`)}</div>
+      <div class="eval"><span class="evaltag">eenheden controleren</span>
+        <p><i>g</i> en <i>a</i> zijn allebei versnellingen, dus het verschil heeft een eenheid: m/s². Dan heeft <i>R</i> de eenheid kg · m/s² = N, die van een kracht.</p></div>
+      <div class="eval"><span class="evaltag">teken controleren</span>
+        <p>Met <i>a</i> &lt; <i>g</i> (zoals gegeven) is <i>R</i> positief: het platform duwt het blok naar boven, zoals een contactkracht moet (<i>R</i> ≥ 0).</p></div>
+      <div class="eval"><span class="evaltag">grootteorde controleren</span>
+        <p>Met <i>a</i> = 0.50 <i>g</i> is <i>R</i> = 0.50 <i>mg</i>: de helft van het gewicht. Dat klopt met de ervaring in een lift die naar beneden vertrekt: je voelt je lichter.</p></div>
+      <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
+        <p>Verander de versnelling van het platform:</p>
+        <div class="slider"><div class="lab"><span>Versnelling van het platform <span class="i">a</span></span><b id="agval">${ag.toFixed(2)} g</b></div><input type="range" id="agsl" min="0" max="1.5" step="0.05" value="${ag}"></div>
+        <p id="res5">${res5()}</p>
+        <ul class="fa">
+          <li><b><i>a</i> groter:</b> <i>R</i> kleiner: hoe sneller het platform naar beneden versnelt, hoe minder het blok moet tegenhouden. Een weegschaal tussen platform en blok zou een kleinere kracht meten dan het gewicht.</li>
+          <li><b><i>m</i> groter:</b> <i>R</i> evenredig groter.</li>
+          <li><b><i>g</i> groter:</b> <i>R</i> groter.</li>
+        </ul></div>
+      <div class="eval"><span class="evaltag">bijzondere gevallen</span>
+        <p><b>Platform in rust of eenparig bewegend</b> (<i>a</i> = 0): <i>R</i> = <i>mg</i>, zoals in de statica.</p>
+        <p><b><i>a</i> = <i>g</i>:</b> <i>R</i> = 0: er is geen verbindingskracht en het blok is schijnbaar gewichtloos.</p>
+        <p><b><i>a</i> &gt; <i>g</i>:</b> de formule zou <i>R</i> &lt; 0 geven, wat niet kan (<i>R</i> ≥ 0). Het blok komt los van het platform: de veronderstelling dat het blok de versnelling van het platform volgt, klopt dan niet meer.</p></div>`;
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
+  // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
+  const blokken = [...el.querySelectorAll('.eval')];
+  const toon = () => blokken.forEach((o, j) => { o.classList.toggle('open', j === openEval); o.querySelector(':scope > .evaltag')?.setAttribute('aria-expanded', String(j === openEval)); });
+  blokken.forEach((b, i) => {
+    const tag = b.querySelector(':scope > .evaltag'); if (!tag) return;
+    tag.setAttribute('role', 'button'); tag.tabIndex = 0;
+    const wissel = () => { openEval = openEval === i ? -1 : i; toon(); };
+    tag.onclick = wissel; tag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel(); } };
+  });
+  toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
   const s = $('agsl'); if (s) s.oninput = e => { ag = +e.target.value; t = 0; $('agval').textContent = `${ag.toFixed(2)} g`; $('res5').innerHTML = res5(); drawScene(); };
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 5) ag = A0; render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) ag = A0; render(); });
 }
 function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });

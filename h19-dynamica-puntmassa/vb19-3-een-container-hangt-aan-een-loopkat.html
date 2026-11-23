@@ -34,7 +34,18 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-</style>
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
+  .stap .eval p{margin:3px 0}
+  .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
+  .evaltag{display:inline-block;font:600 11.5px Inter,sans-serif;color:#5b3fb0;background:#efeafb;border-radius:4px;padding:1px 7px}
+  .stap .eval > :not(.evaltag){display:none}
+  .stap .eval.open > :not(.evaltag){display:block}
+  .stap .eval > .evaltag{cursor:pointer;user-select:none}
+  .stap .eval > .evaltag::before{content:'▸ ';font-size:10px}
+  .stap .eval.open > .evaltag::before{content:'▾ '}
+  .stap .eval > .evaltag:hover{background:#ded3f7}
+  .stap .eval > .evaltag:focus-visible{outline:2px solid #8b6fd6;outline-offset:1px}</style>
 </head>
 <body>
 <div class="wrap">
@@ -82,7 +93,7 @@ const C = TM1.kleuren();
 const KG = '#2f8f46', KS = C.F, KA = C.a;              // kleuren: gewicht, kabelkracht, versnelling
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, M = 3000, LK = 5.0, A0 = 0.8;          // in de cursus altijd g = 10.0 m/s²
-let stap = 1, anim = null, licht = null, proeven = {}, a = A0, t = 0, playing = true;
+let stap = 1, anim = null, licht = null, proeven = {}, a = A0, t = 0, playing = true, openEval = -1;
 const phi = () => Math.atan(a / g);
 
 // ---------- vectoren: x naar rechts, y omhoog, z naar de kijker ----------
@@ -251,7 +262,7 @@ function vldFormules() {
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
-const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -294,22 +305,47 @@ function stapInhoud() {
       ${v(`\\tan\\phi = \\frac{ma}{mg} = \\frac{0.800\\ \\text{m/s}^2}{10.0\\ \\text{m/s}^2} = 0.0800 \\;\\Rightarrow\\; \\phi = 0.0798\\ \\text{rad} = 4.57^\\circ`)}
       <div class="kader">${v(`${kl(KS, 'S')} = m\\sqrt{a^2 + g^2} = 30.1\\ \\text{kN}, \\qquad ${S_} = 2.40\\ \\text{kN}\\,\\vec e_x + 30.0\\ \\text{kN}\\,\\vec e_y`)}</div>
       <p>De horizontale component van de krachtvector ${tx(S_)} is meteen de kracht die de aandrijving van de loopkat moet opwekken om de last te verplaatsen. Deze kracht bedraagt dus <b>2.40 kN</b>.</p>`;
-  else h = `<p>Merk op dat, in tegenstelling tot de statica, de kracht in de kabel niet gelijk is aan het gewicht van de container: de kabel moet de container ook versnellen. Verander de versnelling:</p>
-      <div class="slider"><div class="lab"><span>Versnelling <span class="i">a</span></span><b id="aval">${a.toFixed(2)} m/s²</b></div><input type="range" id="asl" min="0" max="6" step="0.1" value="${a}"></div>
-      <p id="res5">${res5()}</p>
-      <ul class="noot" style="padding-left:18px">
-        <li>tan <i>ϕ</i> = <i>a</i>/<i>g</i>: de hoek hangt niet af van de massa van de container, noch van de lengte van de kabel.</li>
-        <li>De kabel helt naar achteren (de container hangt achter de loopkat), zodat de horizontale component van <span data-tex="${kl(KS, '\\vec S')}"></span> naar voren wijst, in de zin van de versnelling.</li>
-        <li>Zonder versnelling hangt de kabel verticaal en is <i>S</i> = <i>mg</i>; bij een versnelling is <i>S</i> = <i>m</i>√(<i>a</i>² + <i>g</i>²) &gt; <i>mg</i>.</li>
-      </ul>`;
+  else h = `<p>Merk op dat, in tegenstelling tot de statica, de kracht in de kabel niet gelijk is aan het gewicht van de container: de kabel moet de container ook versnellen.</p>
+      <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
+      <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g}, \\qquad ${kl(KS, 'S')} = m\\sqrt{a^2 + g^2}`)}</div>
+      <div class="eval"><span class="evaltag">eenheden controleren</span>
+        <p><i>a</i>/<i>g</i> is een verhouding van twee versnellingen en heeft geen eenheid, zoals het argument van atan moet. <i>S</i> heeft de eenheid kg · m/s² = N.</p></div>
+      <div class="eval"><span class="evaltag">teken controleren</span>
+        <p><i>ϕ</i> &gt; 0: de kabel helt naar achteren (de container hangt achter de loopkat), zodat de horizontale component van <span data-tex="${kl(KS, '\\vec S')}"></span> naar voren wijst, in de zin van de versnelling. En <i>S</i> &gt; 0: de kabel staat op trek.</p></div>
+      <div class="eval"><span class="evaltag">grootteorde controleren</span>
+        <p><i>a</i> = 0.800 m/s² is klein ten opzichte van <i>g</i>: de hoek is klein (4.57°) en <i>S</i> = 30.1 kN is maar iets groter dan het gewicht <i>mg</i> = 30.0 kN. De aandrijfkracht 2.40 kN is een kleine fractie van het gewicht.</p></div>
+      <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
+        <p>Verander de versnelling:</p>
+        <div class="slider"><div class="lab"><span>Versnelling <span class="i">a</span></span><b id="aval">${a.toFixed(2)} m/s²</b></div><input type="range" id="asl" min="0" max="6" step="0.1" value="${a}"></div>
+        <p id="res5">${res5()}</p>
+        <ul class="fa">
+          <li><b><i>a</i> groter:</b> <i>ϕ</i> groter, <i>S</i> groter en de aandrijfkracht <i>ma</i> groter.</li>
+          <li><b><i>m</i>:</b> komt niet voor in <i>ϕ</i>: een zwaardere container hangt onder dezelfde hoek. <i>S</i> en de aandrijfkracht zijn wel evenredig met <i>m</i>.</li>
+          <li><b>Lengte van de kabel:</b> komt niet voor in <i>ϕ</i> of <i>S</i>.</li>
+          <li><b><i>g</i> groter:</b> <i>ϕ</i> kleiner: het gewicht trekt de container sterker naar beneden.</li>
+        </ul></div>
+      <div class="eval"><span class="evaltag">bijzondere gevallen</span>
+        <p><b>Zonder versnelling</b> (<i>a</i> = 0): <i>ϕ</i> = 0 en <i>S</i> = <i>mg</i>: de kabel hangt verticaal, zoals in de statica.</p>
+        <p><b>Zeer grote versnelling</b> (<i>a</i> ≫ <i>g</i>): <i>ϕ</i> → 90° en <i>S</i> ≈ <i>ma</i>: de kabel komt bijna horizontaal en levert vooral de kracht om de container te versnellen.</p></div>`;
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
+  // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
+  const blokken = [...el.querySelectorAll('.eval')];
+  const toon = () => blokken.forEach((o, j) => { o.classList.toggle('open', j === openEval); o.querySelector(':scope > .evaltag')?.setAttribute('aria-expanded', String(j === openEval)); });
+  blokken.forEach((b, i) => {
+    const tag = b.querySelector(':scope > .evaltag'); if (!tag) return;
+    tag.setAttribute('role', 'button'); tag.tabIndex = 0;
+    const wissel = () => { openEval = openEval === i ? -1 : i; toon(); };
+    tag.onclick = wissel; tag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel(); } };
+  });
+  toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
   const s = $('asl'); if (s) s.oninput = e => { a = +e.target.value; t = 0; $('aval').textContent = `${a.toFixed(2)} m/s²`; $('res5').innerHTML = res5(); drawScene(); };
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 5) a = A0; render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) a = A0; render(); });
 }
 function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });

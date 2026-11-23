@@ -35,6 +35,18 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
+  .stap .eval p{margin:3px 0}
+  .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
+  .evaltag{display:inline-block;font:600 11.5px Inter,sans-serif;color:#5b3fb0;background:#efeafb;border-radius:4px;padding:1px 7px}
+  .stap .eval > :not(.evaltag){display:none}
+  .stap .eval.open > :not(.evaltag){display:block}
+  .stap .eval > .evaltag{cursor:pointer;user-select:none}
+  .stap .eval > .evaltag::before{content:'▸ ';font-size:10px}
+  .stap .eval.open > .evaltag::before{content:'▾ '}
+  .stap .eval > .evaltag:hover{background:#ded3f7}
+  .stap .eval > .evaltag:focus-visible{outline:2px solid #8b6fd6;outline-offset:1px}
   .fasen{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
   .fasen td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
   .fasen td:first-child{width:1%} .fasen td.naam{white-space:nowrap;width:1%}
@@ -90,7 +102,7 @@ const C = TM1.kleuren();
 const KG = '#2f8f46', KR = C.F, KV = '#7b3fb5', KA = C.a;   // gewicht, normaalkracht, veerkracht, versnelling
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, M0 = 2.0, K0 = 50, A = 0.15, L0 = 0.6, VERTRAAG = 2;
-let stap = 1, anim = null, licht = null, proeven = {}, m = M0, k = K0, t = 0, playing = true;
+let stap = 1, anim = null, licht = null, proeven = {}, m = M0, k = K0, t = 0, playing = true, openEval = -1;   // openEval: welke controlestrategie is opengeklapt (−1: geen)
 const om = () => Math.sqrt(k / m);
 const xt = s => A * Math.cos(om() * s), vt = s => -A * om() * Math.sin(om() * s), at = s => -(k / m) * xt(s);
 
@@ -250,17 +262,22 @@ const GX = setup(document.getElementById('gx'));
 let FX = null;
 function drawGrafiek() {
   const zicht = stap >= 4; GX.c.style.display = zicht ? '' : 'none'; if (!zicht || GX.w < 10) return;
-  // breedte van de grafiek: een geheel aantal periodes, zodat de cursor na elke doorgang weer op de kromme valt
+  // breedte van de grafiek: twee periodes, zodat de cursor na elke doorgang weer op de kromme valt
   const T = 2 * Math.PI / om(), tmax = grafiekDuur();
   FX = frame(GX, [0, tmax], [-0.2, 0.2], '$t$ [s]', '$x$ [m]');
   const tt = t % tmax, c = fase(t), ctx = GX.ctx, y0 = FX.m.t, y1 = GX.h - FX.m.b;
-  // achtergrond: elke kwart periode een fase (1–4); de huidige fase sterker gekleurd en met een vet nummer
-  for (let q = 0; q * T / 4 < tmax - 1e-9; q++) {
+  // achtergrond (enkel bij de interpretatie, stap 5): elke kwart periode een fase (1–4); de huidige fase sterker gekleurd en met een vet nummer
+  if (stap === 5) for (let q = 0; q * T / 4 < tmax - 1e-9; q++) {
     const p = q % 4, a = FX.X(q * T / 4), b = FX.X(Math.min((q + 1) * T / 4, tmax));
     const nu = c % 2 === 1 && (c - 1) / 2 === p && tt >= q * T / 4 && tt < (q + 1) * T / 4;
     ctx.save(); ctx.globalAlpha = nu ? 0.95 : 0.45; ctx.fillStyle = FASEKLEUR[p]; ctx.fillRect(a, y0, b - a, y1 - y0); ctx.restore();
     ctx.save(); ctx.font = nu ? '700 13px Inter, sans-serif' : '11px Inter, sans-serif'; ctx.fillStyle = nu ? C.ink : C.muted; ctx.textAlign = 'center';
     if (b - a > 14) ctx.fillText(String(p + 1), (a + b) / 2, y0 + 13); ctx.restore();
+  }
+  // zwarte stippellijn tussen fase 4 en fase 1: het einde van elke periode
+  if (stap === 5) for (let n = 1; n * T < tmax - 1e-9; n++) {
+    const x = FX.X(n * T); ctx.save(); ctx.strokeStyle = '#1c2430'; ctx.lineWidth = 1.4; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); ctx.restore();
   }
   curve(ctx, FX, 300, 0, tmax, s => s, xt, KV, 2.2); TM1.cursor(GX.ctx, FX, tt); dot(GX.ctx, FX.X(tt), FX.Y(xt(tt)), KV);
 }
@@ -281,7 +298,7 @@ function vldFormules() {
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
-const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -329,21 +346,57 @@ function stapInhoud() {
       <h4>x-component</h4>${v(`-k\\,x = m\\,\\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} \\;\\Leftrightarrow\\; \\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} + \\frac{k}{m}\\,x = 0`)}
       <p>Een dergelijke uitdrukking wordt een differentiaalvergelijking genoemd. Een functie van de volgende vorm is een oplossing:</p>
       <div class="kader">${v(`x = A\\sin\\omega\\,(t - t_0) \\qquad \\text{met} \\qquad \\omega = \\sqrt{\\frac{k}{m}}`)}</div>
-      <p>Controle: leid de functie twee keer af naar de tijd en vul in.</p>
+      <p>Controle (<span class="evaltag">oplossing invullen</span>): leid de functie twee keer af naar de tijd en vul in.</p>
       ${v(`\\frac{\\mathrm{d}x}{\\mathrm{d}t} = A\\,\\omega\\cos\\omega\\,(t - t_0), \\qquad \\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} = -A\\,\\omega^2\\sin\\omega\\,(t - t_0) = -\\omega^2\\,x`)}
       ${v(`\\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} + \\frac{k}{m}\\,x = \\Big(-\\omega^2 + \\frac{k}{m}\\Big)\\,x = 0 \\quad \\text{als} \\quad \\omega^2 = \\frac{k}{m}`)}
       <p class="noot">De factor <i>ω</i> is de cirkelfrequentie of pulsatie van de trilling; <i>t</i><sub>0</sub> geeft de beginvoorwaarde weer. Hier wordt de massa op <i>t</i> = 0 vanuit rust losgelaten op <i>x</i> = <i>A</i> = 0.150 m, zodat <i>t</i><sub>0</sub> = −<i>T</i>/4. Met <i>k</i> = 50.0 N/m en <i>m</i> = 2.00 kg is <i>ω</i> = 5.00 rad/s. De grafiek toont <i>x</i>(<i>t</i>).</p>`;
-  else h = `<p>De massa beweegt sneller heen en weer (de cirkelfrequentie is hoger) naarmate de veerstijfheid toeneemt en/of de massa afneemt.</p>
-      <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${k.toFixed(0)} N/m</b></div><input type="range" id="ksl" min="10" max="200" step="5" value="${k}"></div>
-      <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${m.toFixed(2)} kg</b></div><input type="range" id="msl" min="0.5" max="5" step="0.1" value="${m}"></div>
-      <p id="res5">${res5()}</p>
-      <h4>Beweeg zelf over de tijd</h4>
+  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
+      <div class="kader">${v(`x = A\\sin\\omega\\,(t - t_0) \\qquad \\text{met} \\qquad \\omega = \\sqrt{\\frac{k}{m}}`)}</div>
+      <div class="eval"><span class="evaltag">eenheden controleren</span>
+        <p>Het argument van de sinus moet zonder eenheid zijn (een hoek in radialen), dus <i>ω</i> moet de eenheid 1/s hebben: <span data-tex="\\sqrt{\\frac{\\text{N/m}}{\\text{kg}}} = \\sqrt{\\frac{\\text{kg}\\cdot\\text{m/s}^2}{\\text{m}\\cdot\\text{kg}}} = \\frac{1}{\\text{s}}"></span>. De amplitude <i>A</i> heeft dezelfde eenheid als <i>x</i>: meter.</p></div>
+      <div class="eval"><span class="evaltag">teken controleren</span>
+        <p>Het minteken in <span data-tex="${kl(KV, 'F_{v,x}')} = -k\\,x"></span> is essentieel: de veerkracht wijst altijd naar de rustpositie. Daardoor staat er in de differentiaalvergelijking een plusteken (+<i>k</i>/<i>m</i>) en is de oplossing een trilling. Met het andere teken zou de massa steeds verder van de rustpositie weg versnellen.</p>
+        <p>Op <i>t</i> = 0 is <i>x</i> = <i>A</i> &gt; 0 (veer uitgerekt) en is de versnelling <span data-tex="-\\omega^2 A < 0"></span>: de massa vertrekt naar de rustpositie toe, zoals verwacht.</p></div>
+      <div class="eval"><span class="evaltag">grootteorde controleren</span>
+        <p>Met <i>k</i> = 50.0 N/m en <i>m</i> = 2.00 kg is <i>ω</i> = 5.00 rad/s en de periode <i>T</i> = 2π/<i>ω</i> = 1.26 s: een massa van enkele kilogram aan een gewone veer trilt inderdaad ongeveer één keer per seconde heen en weer.</p></div>
+      <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
+        <p>Verander de veerconstante en de massa:</p>
+        <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${k.toFixed(0)} N/m</b></div><input type="range" id="ksl" min="10" max="200" step="5" value="${k}"></div>
+        <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${m.toFixed(2)} kg</b></div><input type="range" id="msl" min="0.5" max="5" step="0.1" value="${m}"></div>
+        <p id="res5">${res5()}</p>
+        <ul class="fa">
+          <li><b><i>k</i> groter:</b> <i>ω</i> groter en <i>T</i> kleiner: een stijvere veer oefent bij dezelfde uitwijking een grotere kracht uit, de massa beweegt sneller heen en weer.</li>
+          <li><b><i>m</i> groter:</b> <i>ω</i> kleiner en <i>T</i> groter: een zwaardere massa krijgt bij dezelfde kracht een kleinere versnelling.</li>
+          <li><b><i>A</i>:</b> de amplitude komt niet voor in <i>ω</i>: de periode hangt niet af van hoe ver je de massa uittrekt. Een grotere uitwijking geeft een grotere kracht, maar ook een langere weg.</li>
+          <li><b><i>g</i>:</b> komt niet voor in <i>ω</i>: de beweging is horizontaal, het gewicht wordt opgenomen door de normaalkracht (<i>R</i> = <i>mg</i>).</li>
+        </ul></div>
+      <div class="eval"><span class="evaltag">bijzondere gevallen</span>
+        <p><b>Geen uitwijking</b> (<i>A</i> = 0): <i>x</i> = 0 op elk ogenblik: de massa blijft in rust in de evenwichtspositie, zoals in de statica.</p>
+        <p><b>Zeer slappe veer</b> (<i>k</i> → 0): <i>ω</i> → 0 en <i>T</i> → ∞: er is (bijna) geen kracht en de massa, losgelaten uit rust, blijft (bijna) liggen.</p>
+        <p><b>Zeer grote massa</b> (<i>m</i> → ∞): <i>ω</i> → 0: de massa komt nauwelijks in beweging.</p></div>
+      <h4>Verloop van de beweging</h4>
       <div class="btnrow" style="margin:0 0 4px"><button class="primary" id="play5">${playing ? '⏸ Pauze' : '▶ Afspelen'}</button></div>
       <div class="slider"><div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval">${tijdTekst()}</b></div><input type="range" id="tsl" min="0" max="1000" step="1" value="${tijdNaarSlider()}"></div>
+      <div id="gxplek"></div>
       <h4>De fasen van de beweging (waar je zit, staat in het vet)</h4>${faseLijst()}
-      <p class="noot">De kleuren komen overeen met de achtergrond van de grafiek: elke fase duurt een kwart periode. Een transitie is een ogenblik tussen twee fasen.</p>`;
+      <p class="noot">De kleuren komen overeen met de achtergrond van de grafiek: elke fase duurt een kwart periode. Een transitie is een ogenblik tussen twee fasen. De zwarte stippellijn markeert het einde van een periode: na fase 4 begint de cyclus opnieuw met fase 1.</p>`;
+  // de grafiek x(t) verhuist: in stap 5 boven de fasetabel, anders onder de stapinhoud
+  // (eerst uit de kaart halen, anders verdwijnt het canvas bij het opnieuw opbouwen)
+  const gx = GX.c; if (el.contains(gx)) el.after(gx);
   el.innerHTML = h;
+  const plek = el.querySelector('#gxplek'); if (plek) plek.appendChild(gx);
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
+  // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
+  const blokken = [...el.querySelectorAll('.eval')];
+  const toon = () => blokken.forEach((o, j) => { o.classList.toggle('open', j === openEval); o.querySelector(':scope > .evaltag')?.setAttribute('aria-expanded', String(j === openEval)); });
+  blokken.forEach((b, i) => {
+    const tag = b.querySelector(':scope > .evaltag'); if (!tag) return;
+    tag.setAttribute('role', 'button'); tag.tabIndex = 0;
+    const wissel = () => { openEval = openEval === i ? -1 : i; toon(); };
+    tag.onclick = wissel; tag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel(); } };
+  });
+  toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
   const upd = () => { t = 0; $('kval').textContent = `${k.toFixed(0)} N/m`; $('mval').textContent = `${m.toFixed(2)} kg`; $('res5').innerHTML = res5(); drawScene(); drawGrafiek(); syncTijd(); };
   const sk = $('ksl'); if (sk) sk.oninput = e => { k = +e.target.value; upd(); };
@@ -352,8 +405,8 @@ function stapInhoud() {
   // tijdslider: zet de beweging stil op het gekozen tijdstip (over de breedte van de grafiek)
   const ts = $('tsl'); if (ts) ts.oninput = e => { zetSpelen(false); t = +e.target.value / 1000 * grafiekDuur(); drawScene(); drawGrafiek(); markeerFase(); $('tval').textContent = tijdTekst(); };
 }
-// tijdas van de grafiek (en van de tijdslider): een geheel aantal periodes
-function grafiekDuur() { const T = 2 * Math.PI / om(); return T * Math.max(2, Math.ceil(2.6 / T)); }
+// tijdas van de grafiek (en van de tijdslider): twee periodes
+function grafiekDuur() { return 2 * (2 * Math.PI / om()); }
 const tijdNaarSlider = () => Math.round((t % grafiekDuur()) / grafiekDuur() * 1000);
 const tijdTekst = () => `${(t % grafiekDuur()).toFixed(2)} s`;
 function syncTijd() { const ts = $('tsl'); if (!ts) return; ts.value = tijdNaarSlider(); $('tval').textContent = tijdTekst(); }
@@ -367,7 +420,7 @@ function markeerFase() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; laatsteFase = 0; if (stap !== 5) { k = K0; m = M0; } render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; laatsteFase = 0; openEval = -1; if (stap !== 5) { k = K0; m = M0; } render(); });
 }
 function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); drawGrafiek(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });

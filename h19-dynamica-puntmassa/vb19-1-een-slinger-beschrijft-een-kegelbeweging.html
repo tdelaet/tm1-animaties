@@ -35,7 +35,18 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-</style>
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
+  .stap .eval p{margin:3px 0}
+  .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
+  .evaltag{display:inline-block;font:600 11.5px Inter,sans-serif;color:#5b3fb0;background:#efeafb;border-radius:4px;padding:1px 7px}
+  .stap .eval > :not(.evaltag){display:none}
+  .stap .eval.open > :not(.evaltag){display:block}
+  .stap .eval > .evaltag{cursor:pointer;user-select:none}
+  .stap .eval > .evaltag::before{content:'▸ ';font-size:10px}
+  .stap .eval.open > .evaltag::before{content:'▾ '}
+  .stap .eval > .evaltag:hover{background:#ded3f7}
+  .stap .eval > .evaltag:focus-visible{outline:2px solid #8b6fd6;outline-offset:1px}</style>
 </head>
 <body>
 <div class="wrap">
@@ -83,7 +94,7 @@ const C = TM1.kleuren();
 const KG = '#2f8f46', KF = C.F, KA = C.a, KW = C.M;    // kleuren: zwaartekracht, kabelkracht, versnelling, hoeksnelheid
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, L = 1.0, W0 = 3.5;                     // ter illustratie
-let stap = 1, anim = null, licht = null, proeven = {}, om = W0, phi = 0, playing = true;
+let stap = 1, anim = null, licht = null, proeven = {}, om = W0, phi = 0, playing = true, openEval = -1;
 const theta = () => (om * om * L > g ? Math.acos(g / (om * om * L)) : 0);
 
 // ---------- vectoren: x horizontaal (in het vlak van de kabel, naar de as), y verticaal omhoog, z horizontaal ----------
@@ -284,7 +295,7 @@ function vldFormules() {
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
-const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -328,18 +339,41 @@ function stapInhoud() {
       <p class="noot">Met de illustratiewaarden (<i>L</i> = 1.00 m, <i>ω</i> = 3.50 rad/s): cos <i>θ</i> = 10.0/(1.00 · 3.50²) = 0.816, dus <i>θ</i> = 35.3° en <i>F</i><sub>kabel</sub> = 1.22 <i>mg</i>.</p>`;
   else {
     const th = theta(), wg = Math.sqrt(g / L);
-    h = `<p>De oplossing ${t('\\cos\\theta = g/(L\\,\\omega^2)')} bestaat enkel als ${t('g/(L\\,\\omega^2) < 1')}:</p>
-      <div class="kader">${v('\\text{enkel als}\\quad \\omega > \\sqrt{g/L}')}</div>
-      <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="1" max="8" step="0.05" value="${om}"></div>
-      <p id="res5">${res5()}</p>
-      <ul class="noot" style="padding-left:18px">
-        <li>Hoe sneller de slinger draait, hoe groter <i>θ</i>: de kabel komt horizontaler, maar wordt nooit helemaal horizontaal (cos <i>θ</i> &gt; 0), want de verticale component van de kabelkracht moet het gewicht dragen.</li>
-        <li>De kabelkracht <i>F</i><sub>kabel</sub> = <i>m ω</i>²<i>L</i> is altijd groter dan het gewicht <i>mg</i>, en positief: de kabel staat inderdaad op trek.</li>
-        <li>De massa <i>m</i> valt weg uit het verband tussen <i>θ</i> en <i>ω</i>.</li>
-      </ul>`;
+    h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
+      <div class="kader">${v(`\\theta = \\operatorname{acos}\\frac{g}{L\\,\\omega^2}, \\qquad ${kl(KF, 'F_\\text{kabel}')} = m\\,\\omega^2 L`)}</div>
+      <div class="eval"><span class="evaltag">eenheden controleren</span>
+        <p>Het argument van acos moet zonder eenheid zijn: ${t('\\frac{g}{L\\,\\omega^2} \\;\\to\\; \\frac{\\text{m/s}^2}{\\text{m}\\cdot(1/\\text{s})^2} = 1')}. De kabelkracht heeft de eenheid van een kracht: ${t('\\text{kg}\\cdot(1/\\text{s})^2\\cdot\\text{m} = \\text{N}')}.</p></div>
+      <div class="eval"><span class="evaltag">teken controleren</span>
+        <p><i>F</i><sub>kabel</sub> = <i>mω</i>²<i>L</i> is positief: de kabel staat op trek, zoals vereist (<i>F</i> ≥ 0). En cos <i>θ</i> = <i>g</i>/(<i>Lω</i>²) is positief, dus <i>θ</i> &lt; 90°: de massa hangt onder het ophangpunt.</p></div>
+      <div class="eval"><span class="evaltag">grootteorde controleren</span>
+        <p>Met <i>L</i> = 1.00 m en <i>ω</i> = 3.50 rad/s (ongeveer een halve omwenteling per seconde) is <i>θ</i> = 35.3° en <i>F</i><sub>kabel</sub> = 1.22 <i>mg</i>: een duidelijke maar geen extreme uitwijking, en een kabelkracht iets groter dan het gewicht.</p></div>
+      <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
+        <p>Verander de hoeksnelheid:</p>
+        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="1" max="8" step="0.05" value="${om}"></div>
+        <p id="res5">${res5()}</p>
+        <ul class="fa">
+          <li><b><i>ω</i> groter:</b> het argument van acos wordt kleiner, dus <i>θ</i> groter: de kabel komt horizontaler. <i>F</i><sub>kabel</sub> neemt toe met <i>ω</i>².</li>
+          <li><b><i>L</i> groter:</b> eveneens een grotere <i>θ</i> en een grotere kabelkracht.</li>
+          <li><b><i>g</i> groter:</b> <i>θ</i> kleiner: het gewicht trekt de massa sterker naar beneden.</li>
+          <li><b><i>m</i>:</b> komt niet voor in <i>θ</i>: zwaardere en lichtere massa's hangen onder dezelfde hoek. De kabelkracht is wel evenredig met <i>m</i>.</li>
+        </ul></div>
+      <div class="eval"><span class="evaltag">bijzondere gevallen</span>
+        <p><b><i>ω</i> = √(<i>g</i>/<i>L</i>)</b> = ${wg.toFixed(2)} rad/s: cos <i>θ</i> = 1, dus <i>θ</i> = 0. Voor kleinere <i>ω</i> zou cos <i>θ</i> &gt; 1 moeten zijn: er is dan geen kegelbeweging mogelijk. Enkel de oplossing sin <i>θ</i> = 0 blijft: de massa hangt verticaal, met <i>F</i><sub>kabel</sub> = <i>mg</i>.</p>
+        <p><b>Zeer snel</b> (<i>ω</i> → ∞): cos <i>θ</i> → 0, dus <i>θ</i> → 90°, en <i>F</i><sub>kabel</sub> → ∞. De kabel wordt nooit helemaal horizontaal: de verticale component van de kabelkracht moet het gewicht blijven dragen.</p></div>`;
   }
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
+  // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
+  const blokken = [...el.querySelectorAll('.eval')];
+  const toon = () => blokken.forEach((o, j) => { o.classList.toggle('open', j === openEval); o.querySelector(':scope > .evaltag')?.setAttribute('aria-expanded', String(j === openEval)); });
+  blokken.forEach((b, i) => {
+    const tag = b.querySelector(':scope > .evaltag'); if (!tag) return;
+    tag.setAttribute('role', 'button'); tag.tabIndex = 0;
+    const wissel = () => { openEval = openEval === i ? -1 : i; toon(); };
+    tag.onclick = wissel; tag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel(); } };
+  });
+  toon();
   // enkel de waarden bijwerken (niet de hele kaart opnieuw opbouwen), zodat de slider bij het slepen niet verspringt
   const os = $('omsl'); if (os) os.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); };
 }
@@ -350,7 +384,7 @@ function res5() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((t, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${t}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 5) om = W0; render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) om = W0; render(); });
 }
 function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); document.querySelectorAll('.instructie [data-tex]').forEach(e => window.katex && render1(e, e.dataset.tex)); });

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 19.8 – Een massa in een geleiding met een veer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer;touch-action:pan-y}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:320px;touch-action:pan-y}
+  #gat{width:100%;height:190px;display:block;margin:6px 0}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .instructie ul{margin:0 0 8px;padding-left:20px;font-size:14px}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 26px;align-items:center;padding:2px 14px 6px;font-size:16px;min-height:52px}
+  .stap{font-size:13.5px}
+  .stap p{margin:4px 0 8px}
+  .stap h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px}
+  .stap .vgl{font-size:16px;margin:4px 0 4px 10px}
+  .stap .noot{font-size:12.5px;color:var(--muted)}
+  .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
+  .stap .slider{margin:6px 0}
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
+  .stap .eval p{margin:3px 0}
+  .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
+  .evaltag{display:inline-block;font:600 11.5px Inter,sans-serif;color:#5b3fb0;background:#efeafb;border-radius:4px;padding:1px 7px}
+  .stap .eval > :not(.evaltag){display:none}
+  .stap .eval.open > :not(.evaltag){display:block}
+  .stap .eval > .evaltag{cursor:pointer;user-select:none}
+  .stap .eval > .evaltag::before{content:'▸ ';font-size:10px}
+  .stap .eval.open > .evaltag::before{content:'▾ '}
+  .stap .eval > .evaltag:hover{background:#ded3f7}
+  .stap .eval > .evaltag:focus-visible{outline:2px solid #8b6fd6;outline-offset:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#handboek">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 19.8 — Een massa in een geleiding met een veer</h1>
+    <span class="kicker">Dynamica van een puntmassa · een massa in een cirkelvormige geleiding in een verticaal vlak, met een veer naar het punt B, wordt uit rust losgelaten; gevraagd: de tangentiële versnelling en de normaalkracht net na het loslaten</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Een massa beweegt wrijvingsloos in een cirkelvormige geleiding met straal <i>r</i>, in een verticaal vlak. Een veer verbindt de massa met het punt B van de geleiding (rechts, op de horizontale door het middelpunt O). Gegevens: <i>m</i> = 0.4 kg, veer met <i>k</i> = 10 N/m en rustlengte <i>ℓ</i><sub>0</sub> = <i>r</i>, <i>r</i> = 0.5 m. De massa wordt in rust losgelaten in het punt A, onder een hoek <i>θ</i> onder de horizontale door O (aan de kant tegenover B).</p>
+    <p><b>Gevraagd: de tangentiële versnelling van de massa en de normaalkracht van de geleiding, net na het loslaten</b>, via een algemene uitdrukking in functie van <i>θ</i> (tussen 0° en 90°); en de waarden voor <i>θ</i> = 30°.</p>
+    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen de geleiding aan de massa verhindert; een verhinderde beweging geeft een kracht, die oplicht in het vrijlichaamsdiagram.</p>
+    <div class="stappen modus" id="stappen"></div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Een cirkelvormige geleiding in een verticaal vlak met een massa die in A, onder 30 graden, uit rust wordt losgelaten, met een veer naar het punt B; eronder het vrijlichaamsdiagram van de massa net na het loslaten"></canvas>
+      <div class="vldformules" id="vldf"></div>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button class="primary" id="play">⏸ Pauze</button><button id="reset">↺ loslaten in A</button></div>
+        <div class="note">De massa wordt in A (<i>θ</i> = 30°) uit rust losgelaten en beweegt dan heen en weer, 2 keer vertraagd. Het vrijlichaamsdiagram toont de massa net na het loslaten, in A.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="210">
+      <h3 id="rtitel"></h3>
+      <div class="btnrow modus" id="verbkeuze" style="margin:0 0 6px"></div>
+      <canvas id="loep"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="stap" id="stap"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot, rad, deg } = TM1;
+const C = TM1.kleuren();
+const KG = '#2f8f46', KN = C.F, KV = '#7b3fb5', KA = C.a;   // gewicht, normaalkracht, veerkracht, versnelling
+const GLOED = 'rgba(255,196,0,';
+const g = 10.0, M0 = 0.4, K0 = 10, R0 = 0.5, TH0 = rad(30), VERTRAAG = 2;
+let M = M0, K = K0, Rg = R0;                             // in stap 5 aanpasbaar (functionele afhankelijkheden)
+let stap = 1, anim = null, licht = null, proeven = {}, th5 = TH0, t = 0, playing = true, openEval = -1;
+
+// ---------- meetkunde en dynamica (O in het middelpunt, x naar rechts, y omhoog) ----------
+// massa in P = (−r cos θ, −r sin θ); veer naar B = (r, 0); lengte 2r cos(θ/2); de veerkracht wijst onder θ/2 naar rechtsboven
+const veerLengte = th => 2 * Rg * Math.cos(th / 2);
+const Fveer = th => K * (veerLengte(th) - Rg);                          // > 0: uitgerekt (trekt naar B)
+const at = th => g * Math.cos(th) + (K * Rg / M) * (2 * Math.cos(th / 2) - 1) * Math.sin(th / 2);   // tangentiële versnelling
+const Nnorm = th => M * g * Math.sin(th) - Fveer(th) * Math.cos(th / 2);   // normaalkracht (positief naar O) net na het loslaten (v = 0)
+// beweging vanuit A (θ = 30°) in rust: r θ'' = a_t(θ)  (RK4, vooraf berekend)
+let baan = null;
+function maakBaan() {
+  const pts = [], dt = 0.001; let th = TH0, w = 0, s = 0;
+  const f = (x) => at(x) / Rg;
+  for (let i = 0; i < 20000; i++) {
+    pts.push({ t: s, th });
+    const k1 = [w, f(th)], k2 = [w + 0.5 * dt * k1[1], f(th + 0.5 * dt * k1[0])], k3 = [w + 0.5 * dt * k2[1], f(th + 0.5 * dt * k2[0])], k4 = [w + dt * k3[1], f(th + dt * k3[0])];
+    th += dt / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]); w += dt / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]); s += dt;
+    if (i > 200 && w < 0 && th < TH0 + 0.002) break;                  // terug in A: één volledige heen-en-weerbeweging
+  }
+  baan = { pts, T: s };
+}
+function stand(tt) { const p = baan.pts, i = Math.min(p.length - 1, Math.max(0, Math.round(tt / 0.001))); return p[i].th; }
+
+// ---------- tekenhulp ----------
+function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
+function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 4) return false;
+  const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, h = 13, s = 4;
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x0 + k * s * nx, y0 + k * s * ny); ctx.lineTo(x1 - ux * h * 0.55 + k * s * nx, y1 - uy * h * 0.55 + k * s * ny); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(x1 - ux * h + nx * h * 0.75, y1 - uy * h + ny * h * 0.75); ctx.lineTo(x1, y1); ctx.lineTo(x1 - ux * h - nx * h * 0.75, y1 - uy * h - ny * h * 0.75); ctx.stroke();
+  ctx.restore(); return true;
+}
+function veer(ctx, p, q, n = 9, amp = 6) {
+  const dx = q.x - p.x, dy = q.y - p.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+  ctx.save(); ctx.strokeStyle = '#4a6fd1'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  for (let i = 1; i < 2 * n; i++) { const s = 0.08 + 0.84 * i / (2 * n); ctx.lineTo(p.x + dx * s + nx * amp * (i % 2 ? 1 : -1), p.y + dy * s + ny * amp * (i % 2 ? 1 : -1)); }
+  ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore();
+}
+// natuurlijke assen in de stand θ: e_t in de zin van de beweging (θ neemt toe), e_n naar het middelpunt O
+function assenTN(ctx, o, th, Lp = 26) {
+  const et = { x: Math.sin(th), y: Math.cos(th) }, en = { x: Math.cos(th), y: -Math.sin(th) };   // scherm (y naar beneden)
+  arrow(ctx, o.x, o.y, o.x + et.x * Lp, o.y + et.y * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'e', 't', o.x + et.x * (Lp + 10) - 4, o.y + et.y * (Lp + 10) + 6, '#6b737d', { size: 13 });
+  arrow(ctx, o.x, o.y, o.x + en.x * Lp, o.y + en.y * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'e', 'n', o.x + en.x * (Lp + 10) - 2, o.y + en.y * (Lp + 10) + 6, '#6b737d', { size: 13 });
+}
+
+// ---------- twee verbindingen, elk apart te bestuderen: de (gladde) geleiding (v: 'g') en de veer (v: 'v') ----------
+let verb = 'g';
+const BEW = [
+  { id: 'in', v: 'g', tekst: 'translatie naar het middelpunt O (tegen de binnenkant van de geleiding)', verh: true },
+  { id: 'uit', v: 'g', tekst: 'translatie weg van O (tegen de buitenkant van de geleiding)', verh: true },
+  { id: 't', v: 'g', tekst: 'translatie langs de geleiding', twee: true, verh: false, uit: 'mogelijk: de geleiding is glad → geen kracht langs de geleiding' },
+  { id: 'vweg', v: 'v', tekst: 'translatie langs de veer, weg van B (de veer rekt verder uit)', verh: false, veer: +1, uit: 'mogelijk, maar de veerkracht neemt toe → kracht volgens de veer, evenredig met de verlenging' },
+  { id: 'vnaar', v: 'v', tekst: 'translatie langs de veer, naar B toe (de veer wordt korter)', verh: false, veer: -1, uit: 'mogelijk, maar de veerkracht neemt af → kracht volgens de veer, evenredig met de verlenging' },
+  { id: 'vlood', v: 'v', tekst: 'translatie loodrecht op de veer', twee: true, verh: false, uit: 'mogelijk: de veer draait rond B → geen kracht loodrecht op de veer' }
+];
+const VERB = { g: 'Verbinding 1: de massa in de geleiding', v: 'Verbinding 2: de veer aan de massa' };
+
+// ---------- figuur: situatie (boven) en vrijlichaamsdiagram bij θ = 30° (onder) ----------
+const sc = setup(document.getElementById('scene'));
+let raak = null;
+function loepCirkel(ctx, q, r) {
+  const aan = stap === 2;
+  ctx.save();
+  if (aan) { ctx.fillStyle = 'rgba(29,92,150,0.16)'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2; ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke(); ctx.restore();
+  raak = { x: q.x, y: q.y, r };
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
+  const H = Hall * 0.5;
+  const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
+  // ----- boven: situatie -----
+  titel('Situatie', 18);
+  const S = Math.min(W / 1.5, (H - 44) / 1.32), O = { x: W / 2, y: 30 + (H - 30) / 2 }, R = R0 * S;   // geleiding zo groot mogelijk (vaste tekenstraal, ook als r in stap 5 verandert)
+  const P = th => ({ x: O.x - R * Math.cos(th), y: O.y + R * Math.sin(th) });
+  // geleiding (ring) en assen
+  ctx.save(); ctx.strokeStyle = '#c9ccd1'; ctx.lineWidth = 0.16 * R; ctx.beginPath(); ctx.arc(O.x, O.y, R + 0.08 * R, 0, 2 * Math.PI); ctx.stroke();
+  ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(O.x, O.y, R, 0, 2 * Math.PI); ctx.arc(O.x, O.y, R + 0.16 * R, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  lijn(ctx, { x: O.x - 1.2 * R, y: O.y }, { x: O.x + 1.2 * R, y: O.y }, '#5b6168', 0.9); lijn(ctx, { x: O.x, y: O.y - 1.2 * R }, { x: O.x, y: O.y + 1.2 * R }, '#5b6168', 0.9);
+  label(ctx, 'B', '', O.x + 1.22 * R + 4, O.y + 5, C.ink, { vec: false, size: 15 });
+  label(ctx, 'O', '', O.x + 6, O.y - 6, C.ink, { vec: false, size: 13 });
+  const th = stand(t), pm = P(th), pB = { x: O.x + R, y: O.y };
+  // het punt A (loslaten in rust), onder de hoek θ onder de horizontale door O
+  { const qA = P(TH0); lijn(ctx, O, qA, '#4a6fd1', 1.1);
+    ctx.save(); ctx.strokeStyle = '#4a6fd1'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(O.x, O.y, 0.3 * R, Math.PI, Math.PI - TH0, true); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '', O.x - 0.42 * R * Math.cos(TH0 / 2) - 4, O.y + 0.42 * R * Math.sin(TH0 / 2) + 6, '#4a6fd1', { vec: false, size: 15 });
+    ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(qA.x, qA.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+    label(ctx, 'A', '', qA.x - 0.2 * R - 12, qA.y + 0.12 * R + 6, C.ink, { vec: false, size: 15 }); }
+  veer(ctx, pB, pm);
+  ctx.save(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(pm.x, pm.y, 0.08 * R, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  if (stap <= 2) loepCirkel(ctx, pm, Math.max(16, 0.2 * R)); else raak = null;
+
+  // ----- onder: vrijlichaamsdiagram in A, net na het loslaten (v = 0) -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
+  titel('Vrijgemaakte massa in A, net na het loslaten', H + 18);
+  const t0 = TH0, S2 = Math.min(W / 3.6, (Hall - H - 40) / 2.6), cx = W * 0.5, cy = H + 34 + (Hall - H - 40) * 0.5, k = 0.95 * S2;   // k: lengte van mg
+  const mg = M * g, uV = { x: Math.cos(t0 / 2), y: -Math.sin(t0 / 2) }, en = { x: Math.cos(t0), y: -Math.sin(t0) }, et = { x: Math.sin(t0), y: Math.cos(t0) };
+  // stukje geleiding (twee bogen) rond de massa, en de sneden
+  { const Rv = 3.2 * S2, c0 = { x: cx + en.x * Rv, y: cy + en.y * Rv }, a0 = Math.atan2(cy - c0.y, cx - c0.x);
+    ctx.save(); ctx.strokeStyle = '#b9bec5'; ctx.lineWidth = 1.2; for (const d of [-9, 9]) { ctx.beginPath(); ctx.arc(c0.x, c0.y, Rv + d, a0 - 0.22, a0 + 0.22); ctx.stroke(); } ctx.restore(); }
+  ctx.save(); ctx.strokeStyle = C.accent; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, 15, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1, gl = stap === 2 && licht && (licht.b === 'in' || licht.b === 'uit') ? puls : 0;
+  const glV = stap === 2 && licht && (licht.b === 'vweg' || licht.b === 'vnaar') ? puls : 0;
+  const kracht = (d, l, kleur, naam, sub, g_, dx, dy) => { const q = { x: cx + d.x * l * k, y: cy + d.y * l * k };
+    if (g_) arrow(ctx, cx, cy, q.x, q.y, GLOED + (0.35 + 0.5 * g_) + ')', { w: 12, head: 22 });
+    arrow(ctx, cx, cy, q.x, q.y, kleur, { w: g_ ? 3.6 : 2.8, head: g_ ? 14 : 12 }); label(ctx, naam, sub, q.x + dx, q.y + dy, kleur, { size: g_ ? 17 : 15 }); };
+  kracht(uV, Fveer(t0) / mg, KV, 'F', 'v', glV, 6, -4);
+  kracht(en, 0.55, KN, 'N', '', gl, 6, -6);                             // normaalkracht: radiaal, zin nog onbekend (hier naar O getekend)
+  kracht({ x: 0, y: 1 }, 1, KG, 'G', '', 0, 8, 4);
+  ctx.save(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  // versnelling (dubbele pijlen) vanuit een eigen punt links van de massa, zodat ze niet over de krachten vallen
+  { const o = { x: cx - 1.35 * k, y: cy - 0.25 * k };
+    ctx.save(); ctx.fillStyle = KA; ctx.beginPath(); ctx.arc(o.x, o.y, 2.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+    const Lt = 0.8 * k; if (dubbelPijl(ctx, o.x, o.y, o.x + et.x * Lt, o.y + et.y * Lt, KA, 2)) label(ctx, 'a', 't', o.x + et.x * Lt + 8, o.y + et.y * Lt + 4, KA, { size: 15 });
+    // net na het loslaten is v = 0, dus a_n = v²/r = 0: geen normaalversnelling
+    ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KA; ctx.fillText('a_n = 0 (v = 0)', o.x - 30, o.y - 12); ctx.restore(); }
+  if (ass === 'xy') {                                   // assen x (horizontaal) en y (verticaal)
+    const o = { x: W - 70, y: Hall - 40 }, Lp = 26;
+    arrow(ctx, o.x, o.y, o.x + Lp, o.y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', o.x + Lp + 4, o.y + 5, '#6b737d', { vec: false, size: 13 });
+    arrow(ctx, o.x, o.y, o.x, o.y - Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', o.x - 13, o.y - Lp + 4, '#6b737d', { vec: false, size: 13 });
+  } else assenTN(ctx, { x: W - 70, y: Hall - 60 }, t0);
+  if (stap === 2 && licht) {
+    const b = BEW.find(q => q.id === licht.b);
+    if (b && !b.verh) { const s = b.uit.replace(/<[^>]+>/g, ''), i = s.indexOf('→'); ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center'; ctx.fillText((i > 0 ? s.slice(0, i) : s).trim(), W / 2, H + 38); ctx.restore(); }
+  }
+}
+
+// ---------- loep op het contact massa–geleiding (stap 2) ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2 || W < 40 || H < 40) return;            // (nog) niet zichtbaar
+  if (verb === 'v') { drawLoepVeer(ctx, W, H); return; }
+  // een stukje geleiding rond de massa, gedraaid zoals in de situatie (bij θ = 30°)
+  const S = Math.min(W / 2.6, H / 1.6), cx = W * 0.5, cy = H * 0.55, t0 = TH0;
+  const en = { x: Math.cos(t0), y: -Math.sin(t0) }, et = { x: Math.sin(t0), y: Math.cos(t0) };
+  let d = 0, s0 = 0, zin = 1;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = b.twee ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u); zin = s < 0 ? -1 : 1;
+    const a = b.verh ? Math.sin(anim.t * 40) * 0.025 * Math.abs(s) + 0.015 * s : 0.35 * s;
+    if (b.id === 'in') d = a; else if (b.id === 'uit') d = -a; else s0 = a;
+  }
+  const Rv = 2.4 * S, c0 = { x: cx + en.x * Rv, y: cy + en.y * Rv }, a0 = Math.atan2(cy - c0.y, cx - c0.x), w = 0.17 * S;
+  ctx.save(); ctx.fillStyle = '#d9dce0'; ctx.beginPath(); ctx.arc(c0.x, c0.y, Rv + w + 10, a0 - 0.5, a0 + 0.5); ctx.arc(c0.x, c0.y, Rv + w, a0 + 0.5, a0 - 0.5, true); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(c0.x, c0.y, Rv - w, a0 - 0.5, a0 + 0.5); ctx.arc(c0.x, c0.y, Rv - w - 10, a0 + 0.5, a0 - 0.5, true); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.4; for (const r_ of [Rv + w, Rv - w]) { ctx.beginPath(); ctx.arc(c0.x, c0.y, r_, a0 - 0.5, a0 + 0.5); ctx.stroke(); } ctx.restore();
+  const ang = a0 + s0 / 2.4, rr = Rv - d * S, q = { x: c0.x + rr * Math.cos(ang), y: c0.y + rr * Math.sin(ang) };
+  ctx.save(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(q.x, q.y, w * 0.95, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('geleiding (glad); de veer is al losgemaakt', 12, H - 10); ctx.restore();
+  { const ctr = { x: cx + en.x * 1.05 * S, y: cy + en.y * 1.05 * S }; ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.fillText('→ naar O', Math.min(W - 40, ctr.x), Math.max(16, ctr.y)); ctx.restore(); }
+  assenTN(ctx, { x: 40, y: 40 }, TH0, 22);
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a', dir = b.id === 'in' ? en : b.id === 'uit' ? { x: -en.x, y: -en.y } : { x: et.x * zin, y: et.y * zin };
+    const st = { x: q.x + dir.x * 0.3 * S, y: q.y + dir.y * 0.3 * S }; arrow(ctx, st.x, st.y, st.x + dir.x * 0.4 * S, st.y + dir.y * 0.4 * S, kl, { w: 2.2, dash: [5, 3], head: 10 });
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W / 2, 18); ctx.restore();
+  }
+}
+
+// loep op de verbinding veer–massa: de massa met het onderste stuk veer, richting B (de geleiding is al losgemaakt)
+function drawLoepVeer(ctx, W, H) {
+  const S = Math.min(W / 3.0, H / 1.6), u = { x: Math.cos(TH0 / 2), y: -Math.sin(TH0 / 2) }, n = { x: -u.y, y: u.x };
+  const m0 = { x: W * 0.3, y: H * 0.62 }, ver = { x: m0.x + u.x * 1.5 * S, y: m0.y + u.y * 1.5 * S };   // ver: punt op de veer, richting B
+  let m = { ...m0 }, zin = 1, dRek = 0, b = null;
+  if (anim) {
+    b = anim.b; const p = Math.min(anim.t / anim.T, 1), s = b.twee ? Math.sin(2 * Math.PI * p) : Math.sin(Math.PI * p); zin = s < 0 ? -1 : 1;
+    if (b.id === 'vweg') { m = { x: m0.x - u.x * 0.35 * S * s, y: m0.y - u.y * 0.35 * S * s }; dRek = 0.35 * s; }
+    else if (b.id === 'vnaar') { m = { x: m0.x + u.x * 0.35 * S * s, y: m0.y + u.y * 0.35 * S * s }; dRek = -0.35 * s; }
+    else { const a = 0.16 * s, dx = m0.x - ver.x, dy = m0.y - ver.y; m = { x: ver.x + dx * Math.cos(a) - dy * Math.sin(a), y: ver.y + dx * Math.sin(a) + dy * Math.cos(a) };   // draaien rond B
+      const pts = []; for (let i = -12; i <= 12; i++) { const a2 = i / 12 * 0.2; pts.push({ x: ver.x + dx * Math.cos(a2) - dy * Math.sin(a2), y: ver.y + dx * Math.sin(a2) + dy * Math.cos(a2) }); }
+      ctx.save(); ctx.strokeStyle = '#2f7d3a'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]); ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); ctx.restore(); }
+  }
+  veer(ctx, m, ver, 8, 7);
+  lijn(ctx, ver, { x: ver.x + u.x * 0.4 * S, y: ver.y + u.y * 0.4 * S }, '#4a6fd1', 1.4, [3, 4]);
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('naar B', ver.x + u.x * 0.45 * S + 4, ver.y + u.y * 0.45 * S); ctx.restore();
+  ctx.save(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(m.x, m.y, 0.12 * S, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  // veerkracht op de massa: volgens de veer, groter als de veer verder uitrekt
+  if (b && b.veer) { const L = 0.55 * S * (1 + 1.6 * dRek); arrow(ctx, m.x, m.y, m.x + u.x * L, m.y + u.y * L, KV, { w: 2.6, head: 11 }); label(ctx, 'F', 'v', m.x + u.x * L + 4, m.y + u.y * L - 8, KV, { size: 15 }); }
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('veer (de geleiding is al losgemaakt)', 12, H - 10); ctx.restore();
+  assenTN(ctx, { x: W - 60, y: 46 }, TH0, 22);
+  if (b) {
+    const kl = '#2f7d3a', d = b.id === 'vweg' ? { x: -u.x, y: -u.y } : b.id === 'vnaar' ? u : { x: n.x * zin, y: n.y * zin };
+    const st = { x: m0.x + d.x * 0.25 * S - n.x * 0.35 * S, y: m0.y + d.y * 0.25 * S - n.y * 0.35 * S }; arrow(ctx, st.x, st.y, st.x + d.x * 0.4 * S, st.y + d.y * 0.4 * S, kl, { w: 2.2, dash: [5, 3], head: 10 });
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center';
+    ctx.fillText('✓ mogelijk' + (b.twee ? ' (in beide zinnen)' : '') + (b.veer ? (b.veer > 0 ? ', maar de veerkracht neemt toe' : ', maar de veerkracht neemt af') : ''), W / 2, 18); ctx.restore();
+  }
+}
+
+// ---------- formules onder het vrijlichaamsdiagram ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function vldFormules() {
+  const el = document.getElementById('vldf'); if (!window.katex) return;
+  if (stap === 1) { el.innerHTML = ''; return; }
+  const mk = (ids, s) => (stap === 2 && licht && ids.includes(licht.b) ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [`${kl(KV, '\\vec F_v')} = ${mk(['vweg', 'vnaar'], kl(KV, 'F_v'))}${kl(KV, '\\begin{Bmatrix}\\sin(\\theta/2)\\\\ \\cos(\\theta/2)\\end{Bmatrix}')}, \\quad ${mk(['vweg', 'vnaar'], `${kl(KV, 'F_v')} = k\\,(\\ell - \\ell_0)`)}`,
+    `${kl(KN, '\\vec N')} = ${mk(['in', 'uit'], kl(KN, 'N'))}${kl(KN, '\\begin{Bmatrix}0\\\\ 1\\end{Bmatrix}')}`,
+    `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}\\cos\\theta\\\\ -\\sin\\theta\\end{Bmatrix}')}`,
+    `${kl(KA, '\\vec a')} = ${kl(KA, '\\begin{Bmatrix}a_t\\\\ a_n\\end{Bmatrix}')}`];
+  el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
+}
+
+// ---------- grafiek a_t(θ) in de interpretatie ----------
+function tekenAt() {
+  const cv = document.getElementById('gat'); if (!cv) return;
+  const r = cv.getBoundingClientRect(); if (r.width < 10) return;
+  const dpr = window.devicePixelRatio || 1; cv.width = r.width * dpr; cv.height = r.height * dpr;
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const G = { c: cv, ctx, w: r.width, h: r.height };
+  const F = frame(G, [0, 90], [0, 17], '$\\theta$ [°]', '$a_t$ [m/s²]');
+  curve(ctx, F, 120, 0, 90, x => x, x => g * Math.cos(rad(x)), KG, 1.6);
+  curve(ctx, F, 120, 0, 90, x => x, x => (K * Rg / M) * (2 * Math.cos(rad(x) / 2) - 1) * Math.sin(rad(x) / 2), KV, 1.6);
+  curve(ctx, F, 120, 0, 90, x => x, x => at(rad(x)), KA, 2.4);
+  TM1.cursor(ctx, F, deg(th5)); dot(ctx, F.X(deg(th5)), F.Y(at(th5)), KA);
+  ctx.save(); ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillStyle = KA; ctx.fillText('a_t (totaal)', G.w - 14, F.m.t + 12); ctx.fillStyle = KG; ctx.fillText('g cos θ (gewicht)', G.w - 14, F.m.t + 26); ctx.fillStyle = KV; ctx.fillText('bijdrage van de veer', G.w - 14, F.m.t + 40); ctx.restore();
+}
+
+// ---------- rechterkaart: inhoud per stap ----------
+const $ = id => document.getElementById(id);
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
+function proefTabel() {
+  if (stap !== 2) { $('proef').innerHTML = ''; return; }
+  $('proef').innerHTML = BEW.filter(b => b.v === verb).map(b => {
+    const uit = !proeven[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.verh ? `<span class="uit verh">✕ verhinderd</span> → <span style="color:${KN}"><span class="i">N</span></span>`
+      : b.veer ? `<span class="uit vrij">✓</span> ${b.uit}: <span style="color:${KV}"><span class="i">F</span><sub>v</sub> = <span class="i">k</span>(<span class="i">ℓ</span> − <span class="i">ℓ</span><sub>0</sub>)</span>`
+      : `<span class="uit vrij">✓</span> ${b.uit}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(kn => kn.onclick = () => {
+    const b = BEW.find(q => q.id === kn.dataset.b); proeven[b.id] = true;
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+  });
+}
+const res5 = () => `Bij <i>θ</i> = 30°: <i>a<sub>t</sub></i> = <span style="color:${KG}">${(g * Math.cos(TH0)).toFixed(2)}</span> + <span style="color:${KV}">${((K * Rg / M) * (2 * Math.cos(TH0 / 2) - 1) * Math.sin(TH0 / 2)).toFixed(2)}</span> = <b>${at(TH0).toFixed(2)} m/s²</b> (bijdrage van het gewicht + bijdrage van de veer).`;
+function stapInhoud() {
+  const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
+  $('rtitel').textContent = stap === 2 ? VERB[verb] : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
+  // de twee verbindingen apart bestuderen: keuzeknoppen boven de loep
+  const vk = $('verbkeuze'); vk.style.display = stap === 2 ? '' : 'none';
+  vk.innerHTML = stap === 2 ? [['g', '1. geleiding'], ['v', '2. veer']].map(([id, t]) => `<button data-v="${id}" class="${verb === id ? 'actief' : ''}">${t}</button>`).join('') : '';
+  vk.querySelectorAll('button').forEach(b => b.onclick = () => { verb = b.dataset.v; anim = null; licht = null; render(); });
+  const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
+  const tx = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const F_ = kl(KV, '\\vec F_v'), N_ = kl(KN, '\\vec N'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a');
+  const COMP = `${kl(KV, '\\begin{Bmatrix}F_v\\sin(\\theta/2)\\\\ F_v\\cos(\\theta/2)\\end{Bmatrix}')} + ${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\cos\\theta\\\\ -mg\\sin\\theta\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_t\\\\ v^2/r\\end{Bmatrix}')}\\quad \\begin{matrix}(t)\\\\ (n)\\end{matrix}`;
+  // bijdrage van het gewicht (groen) en van de veer (paars), in de kleuren van de krachten
+  const AT = `a_t = ${kl(KG, 'g\\cos\\theta')} + ${kl(KV, '\\frac{k\\,r}{m}\\,\\big(2\\cos(\\theta/2) - 1\\big)\\sin(\\theta/2)')}`;
+  let h = '';
+  if (stap === 1) h = `<p>We maken de <b>massa</b> vrij, als een puntmassa <i>m</i>: maak ze los van de veer en van de geleiding. Zo worden de veerkracht en de kracht van de geleiding externe krachten, die voorkomen in de bewegingsvergelijking.</p>
+      <p class="noot">We bestuderen de massa in een willekeurige stand <i>θ</i> (tussen 0° en 90°); het vrijlichaamsdiagram toont de stand <i>θ</i> = 30°. Ga daarna naar stap 2 om de massa vrij te maken.</p>`;
+  else if (stap === 2) h = `<p class="noot">De massa heeft <b>twee verbindingen</b>: de geleiding en de veer. Bestudeer ze elk apart met de knoppen boven de loep.</p>
+      ${verb === 'g'
+        ? `<p class="noot"><b>Verbinding 1: geleiding.</b> In de loep zie je de massa in de geleiding (de veer is al losgemaakt). De geleiding verhindert de translatie naar O én weg van O: dat geeft de normaalkracht ${tx(N_)}, loodrecht op de geleiding, in een zin die nog onbekend is (een geleiding kan in beide zinnen duwen). Omdat de geleiding glad is, is er geen kracht langs de geleiding.</p>`
+        : `<p class="noot"><b>Verbinding 2: veer.</b> In de loep zie je de massa met het onderste stuk veer (de geleiding is al losgemaakt). Een veer verhindert geen enkele beweging, maar verzet zich ertegen: beweegt de massa langs de veer, dan verandert de lengte van de veer en dus de veerkracht. Beweegt de massa loodrecht op de veer, dan draait de veer rond B en verandert de lengte (in eerste benadering) niet. De veer oefent dus een kracht volgens de veer uit, met een grootte die volgt uit de verlenging: ${tx(`${kl(KV, 'F_v')} = k\\,(\\ell - \\ell_0)`)}.</p>
+           <p class="noot">De lengte van de veer is de koorde van P naar B: ${tx('\\ell = 2r\\cos(\\theta/2)')}. De veer is uitgerekt (<i>ℓ</i> &gt; <i>ℓ</i><sub>0</sub> = <i>r</i>) en trekt de massa naar B; de richting maakt een hoek <i>θ</i>/2 met de horizontale.</p>`}
+      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} aan (dubbele pijlen), met natuurlijke componenten: de tangentiële ${tx(kl(KA, 'a_t'))} en de normale ${tx(kl(KA, 'a_n'))} (naar O).</p>`;
+  else if (stap === 3) h = `<h4>Bewegingsvergelijking (massa)</h4>${v(`${F_} + ${N_} + ${G_} = m${A_}`)}
+      <h4>Bijkomende vergelijkingen</h4>
+      <p><b>Veerwet en meetkunde.</b> ${tx(`${kl(KV, 'F_v')} = k\\,(\\ell - \\ell_0) = k\\,\\big(2r\\cos(\\theta/2) - r\\big)`)}</p>
+      <p><b>Kinematica.</b> De massa beweegt over een cirkel met straal <i>r</i> (zie hoofdstuk 13): ${tx(`${kl(KA, '\\vec a')} = ${kl(KA, 'a_t')}\\,\\vec e_t + ${kl(KA, 'a_n')}\\,\\vec e_n`)} met ${tx(`${kl(KA, 'a_n')} = v^2/r`)}, naar O.</p>
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
+      <h4>Bewegingsvergelijking in componenten (e<sub>t</sub>, e<sub>n</sub>)</h4>${v(COMP)}
+      <p class="noot">De (t)-component bevat enkel de onbekende <i>a<sub>t</sub></i>: de normaalkracht en de (onbekende) snelheid komen er niet in voor. Daarmee volstaat de (t)-component voor de gevraagde tangentiële versnelling.</p>`;
+  else if (stap === 4) h = `<h4>(t)-component</h4>${v(`m\\,a_t = ${kl(KV, 'F_v\\sin(\\theta/2)')} + ${kl(KG, 'mg\\cos\\theta')}`)}
+      <div class="kader">${v(AT)}</div>
+      <p>Met de gegevens (<i>m</i> = 0.4 kg, <i>k</i> = 10 N/m, <i>r</i> = 0.5 m) bij <i>θ</i> = 30°:</p>
+      ${v(`a_t = ${kl(KG, '10\\ \\text{m/s}^2\\cdot\\cos 30^\\circ')} + ${kl(KV, '\\frac{10\\ \\text{N/m}\\cdot 0.5\\ \\text{m}}{0.4\\ \\text{kg}}\\,\\big(2\\cos 15^\\circ - 1\\big)\\sin 15^\\circ')} = ${kl(KG, '8.66\\ \\text{m/s}^2')} + ${kl(KV, '3.01\\ \\text{m/s}^2')} = 11.7\\ \\text{m/s}^2`)}
+      <p>De grafiek toont beide bijdragen en hun som in functie van <i>θ</i> (de stand <i>θ</i> = 30° is aangeduid):</p>
+      <canvas id="gat"></canvas>
+      <p class="noot">De (n)-component, ${tx(`${kl(KV, 'F_v')}\\cos(\\theta/2) + ${kl(KN, 'N')} - mg\\sin\\theta = m\\,v^2/r`)}, bevat twee onbekenden (<i>N</i> en <i>v</i>). Om de normaalkracht te bepalen heb je eerst de snelheid nodig, bijvoorbeeld met de energievergelijking (hoofdstuk 23).</p>`;
+  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
+      <div class="kader">${v(AT)}</div>
+      <div class="eval"><span class="evaltag">eenheden controleren</span>
+        <p>Beide termen moeten een versnelling zijn: <i>g</i> cos <i>θ</i> in m/s², en <span data-tex="\\frac{k\\,r}{m} \\;\\to\\; \\frac{\\text{N/m}\\cdot\\text{m}}{\\text{kg}} = \\frac{\\text{kg}\\cdot\\text{m/s}^2}{\\text{kg}} = \\text{m/s}^2"></span>; de factor met cos en sin heeft geen eenheid.</p></div>
+      <div class="eval"><span class="evaltag">teken controleren</span>
+        <p>Voor <i>θ</i> tussen 0° en 90° zijn beide termen positief: het gewicht en de (uitgerekte) veer trekken de massa allebei verder langs de geleiding. De massa versnelt dus in de zin van de beweging, zoals verwacht vlak na het loslaten uit A.</p></div>
+      <div class="eval"><span class="evaltag">grootteorde controleren</span>
+        <p><i>a<sub>t</sub></i> = 11.7 m/s² bij <i>θ</i> = 30°: iets groter dan <i>g</i>, omdat de veer meetrekt. De bijdrage van het gewicht (8.66 m/s²) is wat kleiner dan <i>g</i>, want de geleiding is daar al wat schuin.</p></div>
+      <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
+        <p>Verander de veerconstante, de massa en de straal (bij <i>θ</i> = 30°):</p>
+        <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${K.toFixed(1)} N/m</b></div><input type="range" id="ksl" min="0" max="30" step="0.5" value="${K}"></div>
+        <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${M.toFixed(2)} kg</b></div><input type="range" id="msl" min="0.1" max="1.2" step="0.05" value="${M}"></div>
+        <div class="slider"><div class="lab"><span>Straal <span class="i">r</span></span><b id="rval">${Rg.toFixed(2)} m</b></div><input type="range" id="rsl" min="0.1" max="1.0" step="0.05" value="${Rg}"></div>
+        <p id="res5">${res5()}</p>
+        <ul class="fa">
+          <li><b><i>k</i> groter:</b> de bijdrage van de veer is evenredig met <i>k</i>: een stijvere veer trekt bij dezelfde verlenging harder. De bijdrage van het gewicht verandert niet.</li>
+          <li><b><i>m</i> groter:</b> de bijdrage van de veer is omgekeerd evenredig met <i>m</i>: dezelfde veerkracht op een grotere massa geeft een kleinere versnelling. De bijdrage van het gewicht, <i>g</i> cos <i>θ</i>, hangt niet af van <i>m</i> (gewicht en traagheid zijn allebei evenredig met <i>m</i>).</li>
+          <li><b><i>r</i> groter:</b> de bijdrage van de veer is evenredig met <i>r</i>: in dezelfde stand <i>θ</i> is de veer verder uitgerekt (de verlenging 2<i>r</i> cos(<i>θ</i>/2) − <i>r</i> is evenredig met <i>r</i>). De bijdrage van het gewicht hangt niet af van <i>r</i>.</li>
+        </ul></div>
+      <div class="eval"><span class="evaltag">bijzondere gevallen</span>
+        <p><b>In A</b> (<i>θ</i> = 0): <i>a<sub>t</sub></i> = <i>g</i>. De veer is horizontaal en staat loodrecht op de geleiding (die daar verticaal is): enkel het gewicht versnelt de massa langs de geleiding.</p>
+        <p><b>Onderaan</b> (<i>θ</i> = 90°): <i>g</i> cos 90° = 0: het gewicht staat loodrecht op de geleiding; enkel de veer versnelt de massa nog: <span data-tex="a_t = \\frac{k\\,r}{m}(\\sqrt 2 - 1)\\sin 45^\\circ = 3.66\\ \\text{m/s}^2"></span>.</p>
+        <p><b>Zonder veer</b> (<i>k</i> = 0): <i>a<sub>t</sub></i> = <i>g</i> cos <i>θ</i>, zoals voor een massa die enkel onder haar gewicht in een cirkelvormige geleiding glijdt.</p></div>`;
+  el.innerHTML = h;
+  if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
+  // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
+  const blokken = [...el.querySelectorAll('.eval')];
+  const toon = () => { blokken.forEach((o, j) => { o.classList.toggle('open', j === openEval); o.querySelector(':scope > .evaltag')?.setAttribute('aria-expanded', String(j === openEval)); }); tekenAt(); };
+  blokken.forEach((b, i) => {
+    const tag = b.querySelector(':scope > .evaltag'); if (!tag) return;
+    tag.setAttribute('role', 'button'); tag.tabIndex = 0;
+    const wissel = () => { openEval = openEval === i ? -1 : i; toon(); };
+    tag.onclick = wissel; tag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel(); } };
+  });
+  toon();
+  // sliders voor k, m en r (enkel de waarden bijwerken, zodat de sliders bij het slepen niet verspringen)
+  const upd = () => { $('kval').textContent = `${K.toFixed(1)} N/m`; $('mval').textContent = `${M.toFixed(2)} kg`; $('rval').textContent = `${Rg.toFixed(2)} m`; $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); };
+  [['ksl', x => { K = x; }], ['msl', x => { M = x; }], ['rsl', x => { Rg = x; }]].forEach(([id, zet]) => { const s = $(id); if (s) s.oninput = e => { zet(+e.target.value); upd(); }; });
+}
+function stapKnoppen() {
+  $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; verb = 'g'; if (stap !== 5 && (K !== K0 || M !== M0 || Rg !== R0)) { K = K0; M = M0; Rg = R0; maakBaan(); } render(); });
+}
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
+const playBtn = $('play');
+playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
+$('reset').onclick = () => { t = 0; drawScene(); };
+sc.c.addEventListener('click', e => {
+  if (!raak || stap === 2) return; const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  if (Math.hypot(raak.x - x, raak.y - y) < raak.r * 1.4) { stap = 2; anim = null; licht = null; render(); }
+});
+
+maakBaan();
+TM1.bijGrootte([sc, LP], render);
+TM1.lus(dt => {
+  if (playing) { t += dt / VERTRAAG; if (t >= baan.T) t = 0; }
+  if (anim) { anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); }
+  drawScene();
+}, () => playing || !!anim);
+})();
+</script>
+</body>
+</html>

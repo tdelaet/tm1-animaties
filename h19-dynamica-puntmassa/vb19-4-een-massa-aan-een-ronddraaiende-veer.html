@@ -34,7 +34,18 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-</style>
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
+  .stap .eval p{margin:3px 0}
+  .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
+  .evaltag{display:inline-block;font:600 11.5px Inter,sans-serif;color:#5b3fb0;background:#efeafb;border-radius:4px;padding:1px 7px}
+  .stap .eval > :not(.evaltag){display:none}
+  .stap .eval.open > :not(.evaltag){display:block}
+  .stap .eval > .evaltag{cursor:pointer;user-select:none}
+  .stap .eval > .evaltag::before{content:'▸ ';font-size:10px}
+  .stap .eval.open > .evaltag::before{content:'▾ '}
+  .stap .eval > .evaltag:hover{background:#ded3f7}
+  .stap .eval > .evaltag:focus-visible{outline:2px solid #8b6fd6;outline-offset:1px}</style>
 </head>
 <body>
 <div class="wrap">
@@ -82,7 +93,7 @@ const C = TM1.kleuren();
 const KG = '#2f8f46', KR = C.F, KV = '#7b3fb5', KA = C.a, KW = C.M;   // gewicht, normaalkracht, veerkracht, versnelling, ω
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, M = 2.0, K = 120, L0 = 0.5, W0 = 2.0;
-let stap = 1, anim = null, licht = null, proeven = {}, om = W0, phi = 0, playing = true;
+let stap = 1, anim = null, licht = null, proeven = {}, om = W0, phi = 0, playing = true, openEval = -1;
 const lengte = () => (K - M * om * om > 1e-6 ? K * L0 / (K - M * om * om) : Infinity);
 
 // ---------- vectoren (wereld): X, Z horizontaal, Y verticaal omhoog ----------
@@ -259,7 +270,7 @@ function vldFormules() {
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
-const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -304,22 +315,47 @@ function stapInhoud() {
       <h4>x-component, met de veerwet</h4>${v(`${kl(KV, 'F_v')} = m\\,l\\,\\omega^2 \\;\\Rightarrow\\; k\\,(l - l_0) = m\\,l\\,\\omega^2`)}
       <div class="kader">${v(`l = \\frac{k\\,l_0}{k - m\\,\\omega^2} = \\frac{120\\ \\text{N/m}\\cdot 0.500\\ \\text{m}}{120\\ \\text{N/m} - 2.00\\ \\text{kg}\\cdot(2.00\\ \\text{rad/s})^2} = 0.536\\ \\text{m}`)}</div>
       <p class="noot">De veerkracht is dan ${tx(`${kl(KV, 'F_v')} = k\\,(l - l_0) = 120\\ \\text{N/m}\\cdot 0.0357\\ \\text{m} = 4.29\\ \\text{N}`)}.</p>`;
-  else h = `<p>Hoe hangt de lengte van de veer af van de hoeksnelheid?</p>
-      <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="0" max="8" step="0.05" value="${om}"></div>
-      <p id="res5">${res5()}</p>
-      <ul class="noot" style="padding-left:18px">
-        <li>Hoe sneller de massa draait, hoe groter de nodige normaalversnelling <i>lω</i>², en dus hoe meer de veer moet uitrekken om die kracht te leveren.</li>
-        <li>Een oplossing bestaat enkel als <i>k</i> − <i>mω</i>² &gt; 0, dus als <i>ω</i> &lt; √(<i>k</i>/<i>m</i>) = 7.75 rad/s. Naarmate <i>ω</i> die grens nadert, wordt <i>l</i> onbeperkt groot.</li>
-        <li>De normaalkracht <i>R</i> = <i>mg</i> hangt niet af van <i>ω</i>: de verticale component van de bewegingsvergelijking is dezelfde als in de statica.</li>
-      </ul>`;
+  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
+      <div class="kader">${v(`l = \\frac{k\\,l_0}{k - m\\,\\omega^2}, \\qquad ${kl(KR, 'R')} = mg`)}</div>
+      <div class="eval"><span class="evaltag">eenheden controleren</span>
+        <p>In de noemer moeten <i>k</i> en <i>mω</i>² dezelfde eenheid hebben: kg · (1/s)² = kg/s² = N/m, net als <i>k</i>. Dan heeft <i>l</i> = <i>kl</i><sub>0</sub>/(…) de eenheid van <i>l</i><sub>0</sub>: meter.</p></div>
+      <div class="eval"><span class="evaltag">teken controleren</span>
+        <p>Zolang <i>k</i> &gt; <i>mω</i>² is <i>l</i> positief, en ook groter dan <i>l</i><sub>0</sub>: de veer is uitgerekt en trekt de massa naar O, zoals nodig voor de cirkelbeweging (<i>F<sub>v</sub></i> = <i>k</i>(<i>l</i> − <i>l</i><sub>0</sub>) &gt; 0).</p></div>
+      <div class="eval"><span class="evaltag">grootteorde controleren</span>
+        <p><i>mω</i>² = 8 N/m is klein ten opzichte van <i>k</i> = 120 N/m: de veer rekt maar een beetje uit, van 0.500 m tot 0.536 m (7 %). De veerkracht 4.29 N is klein ten opzichte van het gewicht 20.0 N.</p></div>
+      <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
+        <p>Verander de hoeksnelheid:</p>
+        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="0" max="8" step="0.05" value="${om}"></div>
+        <p id="res5">${res5()}</p>
+        <ul class="fa">
+          <li><b><i>ω</i> groter:</b> de noemer wordt kleiner, dus <i>l</i> groter: hoe sneller de massa draait, hoe groter de nodige normaalversnelling <i>lω</i>², en hoe meer de veer moet uitrekken om die kracht te leveren.</li>
+          <li><b><i>m</i> groter:</b> eveneens een grotere <i>l</i>.</li>
+          <li><b><i>k</i> groter:</b> <i>l</i> kleiner, dichter bij <i>l</i><sub>0</sub>: een stijvere veer rekt minder uit.</li>
+          <li><b><i>g</i>:</b> komt niet voor in <i>l</i>; enkel de normaalkracht <i>R</i> = <i>mg</i> hangt ervan af, en die hangt niet af van <i>ω</i>.</li>
+        </ul></div>
+      <div class="eval"><span class="evaltag">bijzondere gevallen</span>
+        <p><b>Geen rotatie</b> (<i>ω</i> = 0): <i>l</i> = <i>l</i><sub>0</sub>: de veer is onbelast.</p>
+        <p><b><i>ω</i> → √(<i>k</i>/<i>m</i>)</b> = 7.75 rad/s: de noemer gaat naar nul en <i>l</i> wordt onbeperkt groot. Voor nog grotere <i>ω</i> bestaat er geen lengte waarbij de veer de nodige kracht levert.</p>
+        <p><b>Zeer stijve veer</b> (<i>k</i> → ∞): <i>l</i> → <i>l</i><sub>0</sub>: de veer gedraagt zich als een staaf met vaste lengte.</p></div>`;
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
+  // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
+  const blokken = [...el.querySelectorAll('.eval')];
+  const toon = () => blokken.forEach((o, j) => { o.classList.toggle('open', j === openEval); o.querySelector(':scope > .evaltag')?.setAttribute('aria-expanded', String(j === openEval)); });
+  blokken.forEach((b, i) => {
+    const tag = b.querySelector(':scope > .evaltag'); if (!tag) return;
+    tag.setAttribute('role', 'button'); tag.tabIndex = 0;
+    const wissel = () => { openEval = openEval === i ? -1 : i; toon(); };
+    tag.onclick = wissel; tag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel(); } };
+  });
+  toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
   const s = $('omsl'); if (s) s.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); };
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 5) om = W0; render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) om = W0; render(); });
 }
 function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
