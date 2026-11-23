@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 19.5 – Een massa wordt rondgeslingerd in een verticaal vlak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer;touch-action:pan-y}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:320px;touch-action:pan-y}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 26px;align-items:center;padding:2px 14px 6px;font-size:16px;min-height:52px}
+  .stap{font-size:13.5px}
+  .stap p{margin:4px 0 8px}
+  .stap h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px}
+  .stap .vgl{font-size:16px;margin:4px 0 4px 10px}
+  .stap .noot{font-size:12.5px;color:var(--muted)}
+  .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
+  .stap .slider{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#handboek">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 19.5 — Een massa wordt rondgeslingerd in een verticaal vlak</h1>
+    <span class="kicker">Dynamica van een puntmassa · een blok aan een touw draait in een verticaal vlak rond O; gevraagd: de minimale snelheid in het hoogste punt opdat het touw gespannen blijft</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Een blok met massa <i>m</i> wordt aan een touw met lengte <i>l</i> rondgeslingerd in een verticaal vlak rond een horizontale as in het punt O. <b>Gevraagd: bereken de minimale snelheid die het blok in het hoogste punt van de baan moet hebben opdat het touw nog net gespannen zou blijven.</b></p>
+    <p>Doorloop de vijf stappen van het plan van aanpak. We bestuderen het blok in het <b>hoogste punt</b> van de baan. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen het touw aan het blok verhindert; een verhinderde beweging geeft een kracht, die oplicht in het vrijlichaamsdiagram.</p>
+    <div class="stappen modus" id="stappen"></div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Een blok aan een touw dat in een verticaal vlak rond O draait, en eronder het vrijlichaamsdiagram van het blok in het hoogste punt"></canvas>
+      <div class="vldformules" id="vldf"></div>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button class="primary" id="play">⏸ Pauze</button><button id="top">naar het hoogste punt</button></div>
+        <div class="note">Ter illustratie: <i>l</i> = 1.00 m en <i>ω</i> = 4.00 rad/s, 2 keer vertraagd. Zoals in het handboek is de grootte van de snelheid constant verondersteld (in werkelijkheid is het blok bovenaan iets trager). In stap 5 kun je <i>ω</i> en <i>l</i> veranderen.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="210">
+      <h3 id="rtitel"></h3>
+      <canvas id="loep"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="stap" id="stap"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+const KG = '#2f8f46', KS = C.F, KA = C.a, KW = C.M;    // gewicht, touwkracht, versnelling, hoeksnelheid
+const GLOED = 'rgba(255,196,0,';
+const g = 10.0, W0 = 4.0, L0 = 1.0, VERTRAAG = 2;
+let stap = 1, anim = null, licht = null, proeven = {}, om = W0, l = L0, psi = 0, playing = true;   // ψ: hoek vanaf het hoogste punt
+const wmin = () => Math.sqrt(g / l);
+const slap = () => om < wmin() - 1e-9;                  // het touw kan in het hoogste punt niet gespannen blijven
+
+// ---------- vectoren (in het vlak): x naar rechts, y naar beneden (zoals in het handboek), z het blad in ----------
+const V = (x, y, z) => ({ x, y, z });
+const add = (a, b) => V(a.x + b.x, a.y + b.y, a.z + b.z), sub = (a, b) => V(a.x - b.x, a.y - b.y, a.z - b.z);
+const mul = (a, s) => V(a.x * s, a.y * s, a.z * s), dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+const cross = (a, b) => V(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+const unit = a => mul(a, 1 / Math.hypot(a.x, a.y, a.z));
+const EZ = V(0, 0, 1);
+function rotAx(p, c, a, ang) { const r = sub(p, c), cs = Math.cos(ang), sn = Math.sin(ang); return add(c, add(add(mul(r, cs), mul(cross(a, r), sn)), mul(a, dot(a, r) * (1 - cs)))); }
+function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
+function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 4) return false;
+  const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, h = 13, s = 4;
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x0 + k * s * nx, y0 + k * s * ny); ctx.lineTo(x1 - ux * h * 0.55 + k * s * nx, y1 - uy * h * 0.55 + k * s * ny); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(x1 - ux * h + nx * h * 0.75, y1 - uy * h + ny * h * 0.75); ctx.lineTo(x1, y1); ctx.lineTo(x1 - ux * h - nx * h * 0.75, y1 - uy * h - ny * h * 0.75); ctx.stroke();
+  ctx.restore(); return true;
+}
+function assenXYdown(ctx, x, y, Lp = 26) {            // x naar rechts, y naar beneden, z het blad in (⊗)
+  arrow(ctx, x, y, x + Lp, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + Lp + 4, y + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, x, y, x, y + Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 13, y + Lp + 2, '#6b737d', { vec: false, size: 13 });
+  ctx.save(); ctx.strokeStyle = '#6b737d'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x - 4, y - 4); ctx.lineTo(x + 4, y + 4); ctx.moveTo(x + 4, y - 4); ctx.lineTo(x - 4, y + 4); ctx.stroke(); ctx.restore();
+  label(ctx, 'z', '', x - 18, y - 4, '#6b737d', { vec: false, size: 13 });
+}
+function blok(ctx, q, h, ang = 0) {
+  ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(ang); ctx.fillStyle = '#b9c4d0'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4;
+  ctx.fillRect(-h, -h, 2 * h, 2 * h); ctx.strokeRect(-h, -h, 2 * h, 2 * h); ctx.restore();
+}
+
+// ---------- verbinding: het touw aan het blok, en de proefbewegingen ----------
+const BEW = [
+  { id: 'weg', tekst: 'translatie langs het touw, weg van O (het touw verlengt)', verh: true },
+  { id: 'naar', tekst: 'translatie langs het touw, naar O toe', verh: false, slap: true, uit: 'mogelijk: het touw wordt slap → <i>S</i> ≥ 0 (een touw kan enkel trekken)' },
+  { id: 'vlak', tekst: 'translatie loodrecht op het touw, in het vlak van de baan (∥ <i>x</i>)', twee: true, as: 'z', verh: false, uit: 'mogelijk: het blok beweegt over een cirkelboog rond O → geen kracht' },
+  { id: 'uit', tekst: 'translatie volgens <i>z</i> (loodrecht op het vlak van de baan)', twee: true, as: 'x', verh: false, uit: 'mogelijk: het blok beweegt over een cirkelboog rond O → geen kracht' }
+];
+
+// ---------- figuur: situatie (boven) en vrijlichaamsdiagram in het hoogste punt (onder) ----------
+const sc = setup(document.getElementById('scene'));
+let raak = null;
+function loepCirkel(ctx, q, r) {
+  const aan = stap === 2;
+  ctx.save();
+  if (aan) { ctx.fillStyle = 'rgba(29,92,150,0.16)'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2; ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke(); ctx.restore();
+  raak = { x: q.x, y: q.y, r };
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
+  const H = Hall * 0.5;
+  const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
+  // ----- boven: situatie (schaal volgens de touwlengte, minstens 1 m) -----
+  titel('Situatie', 18);
+  const Lm = Math.max(l, 1.0), S = Math.min(W / (2.9 * Lm), (H - 56) / (2.5 * Lm)), O = { x: W / 2, y: 34 + (H - 34) / 2 };
+  const pos = a => ({ x: O.x + Math.sin(a) * l * S, y: O.y - Math.cos(a) * l * S });
+  // baan en hoogste punt
+  ctx.save(); ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1.1; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(O.x, O.y, l * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  { const t = pos(0); ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'left'; ctx.fillText('hoogste punt', t.x + 16, t.y - 14); ctx.restore(); }
+  // horizontale as in O (loodrecht op het vlak) met steun
+  ctx.save(); ctx.fillStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(O.x - 10, O.y + 16); ctx.lineTo(O.x + 10, O.y + 16); ctx.closePath(); ctx.fill(); ctx.restore();
+  const bovenSlap = slap() && Math.cos(psi) > 0.55;      // bovenaan, te traag: het touw kan niet gespannen blijven
+  const B = pos(psi);
+  if (bovenSlap) { ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(O.x, O.y);
+    const mx = (O.x + B.x) / 2 + 0.25 * l * S * Math.cos(psi), my = (O.y + B.y) / 2 + 0.25 * l * S * Math.sin(psi); ctx.quadraticCurveTo(mx, my, B.x, B.y); ctx.stroke(); ctx.restore(); }
+  else lijn(ctx, O, B, '#3d454f', 2);
+  ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(O.x, O.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  label(ctx, 'O', '', O.x + 10, O.y + 18, C.ink, { vec: false, size: 15 });
+  // ω: gebogen pijl rond O (wijzerzin op het scherm, zoals de beweging)
+  { const r = 0.22 * S; ctx.save(); ctx.strokeStyle = KW; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(O.x, O.y, r, rad(150), rad(240)); ctx.stroke(); ctx.restore();
+    const a1 = rad(240), e = { x: O.x + r * Math.cos(a1), y: O.y + r * Math.sin(a1) }, tx = -Math.sin(a1), ty = Math.cos(a1);
+    arrow(ctx, e.x - 10 * tx, e.y - 10 * ty, e.x + 2 * tx, e.y + 2 * ty, KW, { w: 2.2, head: 10 });
+    label(ctx, 'ω', '', O.x - r - 20, O.y - 4, KW, { vec: false, size: 16 }); }
+  // touwlengte l
+  { const m = { x: (O.x + B.x) / 2, y: (O.y + B.y) / 2 }; label(ctx, 'l', '', m.x + 10 * Math.cos(psi) + 4, m.y + 10 * Math.sin(psi) + 4, C.ink, { vec: false, size: 15 }); }
+  blok(ctx, B, 0.07 * S, psi); label(ctx, 'm', '', B.x + 0.1 * S, B.y - 0.1 * S, C.ink, { vec: false, size: 15 });
+  if (stap <= 2) loepCirkel(ctx, B, Math.max(16, 0.18 * S)); else raak = null;
+  if (slap()) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('ω < √(g/l): het touw wordt bovenaan slap', W - 10, 18); ctx.restore(); }
+
+  // ----- onder: vrijlichaamsdiagram van het blok in het hoogste punt -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
+  titel('Vrijgemaakt blok in het hoogste punt: touw doorgesneden', H + 18);
+  const S2 = Math.min(W / 3.6, (Hall - H - 40) / 2.8), cx = W * 0.42, cy = H + 40 + (Hall - H - 40) * 0.3, k = 0.85 * S2;   // k: lengte van mg
+  const Sv = Math.max(0, l * om * om / g - 1), h2 = 0.2 * S2;
+  blok(ctx, { x: cx, y: cy }, h2);
+  lijn(ctx, { x: cx, y: cy }, { x: cx, y: cy + 1.9 * k }, '#b9bec5', 1.2, [3, 4]);   // richting van het touw, naar O
+  { const qo = { x: cx, y: cy + 1.9 * k }; ctx.save(); ctx.fillStyle = '#9aa1aa'; ctx.beginPath(); ctx.arc(qo.x, qo.y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); label(ctx, 'O', '', qo.x + 8, qo.y + 4, C.muted, { vec: false, size: 13 }); }
+  ctx.save(); ctx.strokeStyle = C.accent; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy + h2 + 8, 0.14 * k + 6, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1, gl = stap === 2 && licht && licht.b === 'weg' ? puls : 0;
+  // S en G grijpen aan in het blok (puntmassa) en wijzen allebei naar beneden: naast elkaar getekend
+  const xS = cx - 12, xG = cx + 12;
+  if (Sv > 1e-3) { if (gl) arrow(ctx, xS, cy, xS, cy + Sv * k, GLOED + (0.35 + 0.5 * gl) + ')', { w: 12, head: 22 });
+    arrow(ctx, xS, cy, xS, cy + Sv * k, KS, { w: gl ? 3.6 : 2.8, head: gl ? 14 : 12 }); label(ctx, 'S', '', xS - 22, cy + Sv * k, KS, { size: gl ? 17 : 15 }); }
+  else { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KS; ctx.textAlign = 'right'; ctx.fillText('S = 0', xS - 8, cy + 0.4 * k); ctx.restore(); }
+  arrow(ctx, xG, cy, xG, cy + k, KG, { w: 2.8, head: 12 }); label(ctx, 'G', '', xG + 8, cy + k, KG, { size: 15 });
+  { const la = 0.9 * k; /* versnelling: eigen schaal (andere eenheid dan de krachten) */ if (dubbelPijl(ctx, cx + 0.9 * k, cy - 0.1 * k, cx + 0.9 * k, cy - 0.1 * k + la, KA, 2)) label(ctx, 'a', '', cx + 0.9 * k + 9, cy - 0.1 * k + la, KA, { size: 15 }); }
+  ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  if (stap === 2 && licht) {
+    const b = BEW.find(x => x.id === licht.b);
+    if (b && !b.verh) { const s = b.uit.replace(/<[^>]+>/g, ''); ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center'; ctx.fillText(s.slice(0, s.indexOf('→')).trim(), W / 2, Hall - 10); ctx.restore(); }
+  }
+  assenXYdown(ctx, 30, Hall - 60);
+}
+
+// ---------- loep op de verbinding touw–blok in het hoogste punt (stap 2) ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2) return;
+  // schuine projectie: x naar rechts, y naar beneden, z het blad in (schuin naar rechtsboven); O ligt onder het blok
+  const S = Math.min(W / 3.0, H / 2.4), cx = W * 0.45, cy = H * 0.34;
+  const P = p => ({ x: cx + S * (p.x + 0.42 * p.z), y: cy + S * (p.y - 0.3 * p.z) });
+  const M0 = V(0, 0, 0), OP = V(0, 4, 0), e = V(0, 1, 0);
+  let Mp = M0, zin = 1, boog = null, slapT = 0;
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = b.twee ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u); zin = s < 0 ? -1 : 1;
+    if (b.verh) Mp = add(M0, mul(e, -(Math.sin(anim.t * 40) * 0.03 * Math.abs(s) + 0.02 * s)));
+    else if (b.slap) { Mp = add(M0, mul(e, 0.35 * s)); slapT = 0.35 * s; }
+    else { const as = b.as === 'z' ? EZ : V(1, 0, 0); boog = as; Mp = rotAx(M0, OP, as, 0.11 * s); }
+  }
+  if (boog) {
+    const pts = []; for (let i = -12; i <= 12; i++) pts.push(P(rotAx(M0, OP, boog, i / 12 * 0.12)));
+    ctx.save(); ctx.strokeStyle = '#2f7d3a'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.restore();
+  }
+  const pm = P(Mp), eM = unit(sub(OP, Mp)), top = add(Mp, mul(eM, 1.0)), pt = P(top);
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(pm.x, pm.y);
+  ctx.quadraticCurveTo((pm.x + pt.x) / 2 + slapT * S * 1.2, (pm.y + pt.y) / 2, pt.x, pt.y); ctx.stroke(); ctx.restore();
+  lijn(ctx, pt, P(add(top, mul(eM, 0.35))), '#3d454f', 1.4, [3, 4]);
+  { const q = P(add(top, mul(eM, 0.3))); ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('naar O', q.x + 8, q.y); ctx.restore(); }
+  blok(ctx, { x: pm.x, y: pm.y - 0.25 * S }, 0.25 * S);
+  { const o2 = { x: W - 40, y: 22 }, Lp = 22;
+    arrow(ctx, o2.x, o2.y, o2.x + Lp, o2.y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', o2.x + Lp + 3, o2.y + 5, '#6b737d', { vec: false, size: 13 });
+    arrow(ctx, o2.x, o2.y, o2.x, o2.y + Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', o2.x - 12, o2.y + Lp + 2, '#6b737d', { vec: false, size: 13 });
+    arrow(ctx, o2.x, o2.y, o2.x + 0.42 * Lp, o2.y - 0.3 * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'z', '', o2.x + 0.42 * Lp - 2, o2.y - 0.3 * Lp - 4, '#6b737d', { vec: false, size: 13 }); }
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a';
+    let d = b.verh ? mul(e, -1) : b.slap ? e : b.as === 'z' ? V(1, 0, 0) : EZ; d = mul(d, zin);
+    const c0 = V(-0.75, -0.25, 0), p1 = P(add(c0, mul(d, 0.2))), q1 = P(add(c0, mul(d, 0.75))); arrow(ctx, p1.x, p1.y, q1.x, q1.y, kl, { w: 2.2, dash: [5, 3], head: 10 });
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W / 2, H - 10); ctx.restore();
+  }
+}
+
+// ---------- formules onder het vrijlichaamsdiagram ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function vldFormules() {
+  const el = document.getElementById('vldf'); if (!window.katex) return;
+  if (stap === 1) { el.innerHTML = ''; return; }
+  const mk = (id, s) => (stap === 2 && licht && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [`${kl(KS, '\\vec S')} = ${mk('weg', kl(KS, 'S'))}${kl(KS, '\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`, mk('naar', `${kl(KS, 'S')} \\ge 0`),
+    `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`,
+    `${kl(KA, '\\vec a')} = ${kl(KA, 'a\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`];
+  el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
+}
+
+// ---------- rechterkaart: inhoud per stap ----------
+const $ = id => document.getElementById(id);
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+function proefTabel() {
+  if (stap !== 2) { $('proef').innerHTML = ''; return; }
+  $('proef').innerHTML = BEW.map(b => {
+    const uit = !proeven[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.verh ? `<span class="uit verh">✕ verhinderd</span> → <span style="color:${KS}"><span class="i">S</span></span>`
+      : `<span class="uit vrij">✓</span> ${b.uit}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
+    const b = BEW.find(x => x.id === k.dataset.b); proeven[b.id] = true;
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+  });
+}
+function res5() {
+  const s = l * om * om / g - 1;
+  return `<i>ω</i><sub>min</sub> = √(<i>g</i>/<i>l</i>) = ${wmin().toFixed(2)} rad/s, dus <i>v</i><sub>min</sub> = <i>l ω</i><sub>min</sub> = √(<i>gl</i>) = ${Math.sqrt(g * l).toFixed(2)} m/s. ` +
+    (s >= -1e-9 ? `Bij <i>ω</i> = ${om.toFixed(2)} rad/s is <i>S</i> = <i>m</i>(<i>lω</i>² − <i>g</i>) = ${s.toFixed(2)} <i>mg</i>: het touw is gespannen.`
+      : `Bij <i>ω</i> = ${om.toFixed(2)} rad/s zou <i>S</i> = ${s.toFixed(2)} <i>mg</i> &lt; 0 moeten zijn: dat kan niet. Het touw wordt bovenaan slap en het blok verlaat de cirkelbaan.`);
+}
+function stapInhoud() {
+  const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
+  $('rtitel').textContent = stap === 2 ? 'Verbinding: het touw aan het blok (hoogste punt)' : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
+  const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
+  const tx = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const S_ = kl(KS, '\\vec S'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a');
+  const COMP = `${kl(KS, '\\begin{Bmatrix}0\\\\ S\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ mg\\\\ 0\\end{Bmatrix}')} = ${kl(KA, '\\begin{Bmatrix}0\\\\ m\\,l\\,\\omega^2\\\\ 0\\end{Bmatrix}')}`;
+  let h = '';
+  if (stap === 1) h = `<p>We maken het <b>blok</b> vrij als een puntmassa <i>m</i>, in het hoogste punt van de baan: snijd het touw door aan het blok. Zo wordt de touwkracht een externe kracht, die voorkomt in de bewegingsvergelijking.</p>
+      <p class="noot">Ga daarna naar stap 2 om het blok vrij te maken.</p>`;
+  else if (stap === 2) h = `<p class="noot">In de loep zie je het blok in het hoogste punt, met het onderste stukje touw (O ligt eronder). Enkel de translatie langs het touw, weg van O, is verhinderd: dat geeft de touwkracht ${tx(S_)}, volgens het touw naar O, dus in het hoogste punt naar beneden (positieve <i>y</i>).</p>
+      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}, eveneens naar beneden. Duid ook de versnelling ${tx(A_)} van het blok aan (dubbele pijl), naar O.</p>`;
+  else if (stap === 3) h = `<h4>Bewegingsvergelijking (blok, hoogste punt)</h4>${v(`${S_} + ${G_} = m${A_}`)}
+      <h4>Bijkomende vergelijking: kinematica</h4>
+      <p>Als goede benadering beweegt het blok in de buurt van het hoogste punt met een constante grootte van de snelheid: het heeft dan enkel een normaalversnelling (zie ook hoofdstuk 13), naar het middelpunt O, dus volgens positieve <i>y</i>:</p>
+      ${v(`${kl(C.at, 'a_t')} = 0, \\qquad ${kl(C.an, 'a_n')} = \\frac{v^2}{\\rho} = \\frac{(l\\,\\omega)^2}{l} = l\\,\\omega^2`)}
+      <h4>Voorwaarde uit de verbinding</h4>${v(`${kl(KS, 'S')} \\ge 0`)}
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
+      <h4>Bewegingsvergelijking in componenten</h4>${v(COMP)}
+      <p class="noot">De component volgens <i>y</i>: ${tx(`${kl(KS, 'S')} + mg = m\\,l\\,\\omega^2`)}.</p>`;
+  else if (stap === 4) h = `${v(`${kl(KS, 'S')} + mg = m\\,l\\,\\omega^2 \\;\\Rightarrow\\; ${kl(KS, 'S')} = m\\,(l\\,\\omega^2 - g)`)}
+      <p>Hoe trager het blok draait, hoe kleiner de touwkracht. De minimale snelheid wordt bereikt als de spankracht in het touw nul wordt (met <span data-tex="${kl(KS, 'S')} \\ge 0"></span>):</p>
+      <div class="kader">${v(`${kl(KS, 'S')} = 0 \\;\\Rightarrow\\; \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = l\\,\\omega_\\text{min} = \\sqrt{g\\,l}`)}</div>
+      <p class="noot">Met de illustratiewaarde <i>l</i> = 1.00 m: <i>ω</i><sub>min</sub> = √10 = 3.16 rad/s en <i>v</i><sub>min</sub> = 3.16 m/s.</p>`;
+  else h = `<p>De minimale hoeksnelheid neemt af voor toenemende waarden van de lengte van het touw en is onafhankelijk van de massa van het blok.</p>
+      <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="1" max="7" step="0.05" value="${om}"></div>
+      <div class="slider"><div class="lab"><span>Lengte van het touw <span class="i">l</span></span><b id="lval">${l.toFixed(2)} m</b></div><input type="range" id="lsl" min="0.3" max="2" step="0.05" value="${l}"></div>
+      <p id="res5">${res5()}</p>
+      <ul class="noot" style="padding-left:18px">
+        <li>In het hoogste punt wijzen zowel het gewicht als de touwkracht naar O: samen leveren ze de nodige kracht <i>m l ω</i>² voor de cirkelbeweging.</li>
+        <li>Bij <i>ω</i> = <i>ω</i><sub>min</sub> levert het gewicht alleen die kracht: het touw is nog net gespannen.</li>
+        <li>Is het blok trager, dan is het gewicht groter dan de nodige kracht: het blok valt binnen de cirkel en het touw wordt slap.</li>
+      </ul>`;
+  el.innerHTML = h;
+  if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
+  const upd = () => { $('omval').textContent = `${om.toFixed(2)} rad/s`; $('lval').textContent = `${l.toFixed(2)} m`; $('res5').innerHTML = res5(); drawScene(); };
+  const so = $('omsl'); if (so) so.oninput = e => { om = +e.target.value; upd(); };
+  const sl = $('lsl'); if (sl) sl.oninput = e => { l = +e.target.value; upd(); };
+}
+function stapKnoppen() {
+  $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; if (stap !== 5) { om = W0; l = L0; } render(); });
+}
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
+const playBtn = $('play');
+const zetSpelen = p => { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; };
+playBtn.onclick = () => zetSpelen(!playing);
+$('top').onclick = () => { zetSpelen(false); psi = 0; drawScene(); };
+sc.c.addEventListener('click', e => {
+  if (!raak || stap === 2) return; const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  if (Math.hypot(raak.x - x, raak.y - y) < raak.r * 1.3) { stap = 2; anim = null; licht = null; render(); }
+});
+
+TM1.bijGrootte([sc, LP], render);
+TM1.lus(dt => {
+  if (playing) {
+    // te traag: het blok blijft niet op de cirkel; de animatie stopt dan in het hoogste punt, met een slap touw
+    if (slap()) { const p0 = ((psi % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI), p1 = p0 + om * dt / VERTRAAG; psi = p1 >= 2 * Math.PI ? 0 : p1; if (psi === 0) zetSpelen(false); }
+    else psi += om * dt / VERTRAAG;
+  }
+  if (anim) { anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); }
+  drawScene();
+}, () => playing || !!anim);
+})();
+</script>
+</body>
+</html>

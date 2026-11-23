@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorbeeld 19.6 – Tweede postulaat als differentiaalvergelijking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer;touch-action:pan-y}
+  .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
+  #loep{max-height:320px;touch-action:pan-y}
+  #gx{height:190px;margin-top:8px}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .instructie{padding:10px 16px;margin:0 0 14px}
+  .instructie p{margin:0 0 8px;font-size:14px}
+  .stappen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .stappen button{padding:5px 11px;font-size:13px}
+  .stappen button .nr{font-weight:700;margin-right:4px}
+  .proef{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .proef td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .proef td:first-child{width:1%;white-space:nowrap}
+  .proef button{padding:3px 9px;font-size:12.5px}
+  .proef .uit{font-weight:600}
+  .proef .uit.vrij{color:#2f7d3a} .proef .uit.verh{color:#c0392b} .proef .uit.nog{color:var(--muted);font-weight:400}
+  .vldformules{display:flex;flex-wrap:wrap;gap:4px 26px;align-items:center;padding:2px 14px 6px;font-size:16px;min-height:52px}
+  .stap{font-size:13.5px}
+  .stap p{margin:4px 0 8px}
+  .stap h4{font:600 12px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px}
+  .stap .vgl{font-size:16px;margin:4px 0 4px 10px}
+  .stap .noot{font-size:12.5px;color:var(--muted)}
+  .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
+  .stap .slider{margin:6px 0}
+  .fasen{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+  .fasen td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .fasen td:first-child{width:1%} .fasen td.naam{white-space:nowrap;width:1%}
+  .fasen .vak{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,0.12)}
+  .fasen tr.trans td{color:var(--muted);font-size:12.5px} .fasen tr.trans .vak{border:0}
+  .fasen tr.nu td{font-weight:700;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#handboek">← Alle animaties</a>
+  <header>
+    <h1>Voorbeeld 19.6 — Het tweede postulaat van Newton als differentiaalvergelijking</h1>
+    <span class="kicker">Dynamica van een puntmassa · een massa aan een veer trilt over een glad horizontaal oppervlak; de bewegingsvergelijking wordt een differentiaalvergelijking</span>
+  </header>
+
+  <div class="instructie card">
+    <p>Het tweede postulaat van Newton drukt een verband uit tussen de kracht op een puntmassa en haar versnelling, de tweede afgeleide van de positie. Als de kracht een functie is van de positie, de snelheid en/of de tijd, dan wordt het tweede postulaat een tweede-orde differentiaalvergelijking. Als illustratie: een puntmassa die met een veer (veerconstante <i>k</i>, rustlengte <i>l</i><sub>0</sub>) bevestigd is aan een vast punt O, beweegt zonder wrijving over een horizontaal oppervlak. Ze wordt uit de evenwichtspositie getrokken en vanuit rust losgelaten.</p>
+    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen het gladde oppervlak aan de massa verhindert.</p>
+    <div class="stappen modus" id="stappen"></div>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Een massa aan een veer die horizontaal trilt over een glad oppervlak, en eronder het vrijlichaamsdiagram van de massa op dat ogenblik"></canvas>
+      <div class="vldformules" id="vldf"></div>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button class="primary" id="play">⏸ Pauze</button><button id="reset">↺ loslaten</button></div>
+        <div class="note">Ter illustratie: <i>m</i> = 2.00 kg, <i>k</i> = 50.0 N/m, losgelaten op <i>x</i> = 0.150 m; 2 keer vertraagd. In stap 5 kun je <i>k</i> en <i>m</i> veranderen.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs">
+    <div class="card graph" data-minhoogte="210">
+      <h3 id="rtitel"></h3>
+      <canvas id="loep"></canvas>
+      <table class="proef" id="proef"></table>
+      <div class="stap" id="stap"></div>
+      <canvas id="gx"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, frame, curve, dot } = TM1;
+const C = TM1.kleuren();
+const KG = '#2f8f46', KR = C.F, KV = '#7b3fb5', KA = C.a;   // gewicht, normaalkracht, veerkracht, versnelling
+const GLOED = 'rgba(255,196,0,';
+const g = 10.0, M0 = 2.0, K0 = 50, A = 0.15, L0 = 0.6, VERTRAAG = 2;
+let stap = 1, anim = null, licht = null, proeven = {}, m = M0, k = K0, t = 0, playing = true;
+const om = () => Math.sqrt(k / m);
+const xt = s => A * Math.cos(om() * s), vt = s => -A * om() * Math.sin(om() * s), at = s => -(k / m) * xt(s);
+
+// ---------- de cyclus uit het handboek: vier fasen, telkens gescheiden door een transitie (een ogenblik) ----------
+// code 1, 3, 5, 7: fase 1–4 (een kwart periode); code 2, 4, 6, 8: de transitie die erop volgt
+const FASEN = [
+  'veer uitgerekt: trekkracht naar de rustpositie, de massa versnelt',
+  'de massa passeert de rustpositie met een snelheid die niet nul is',
+  'veer ingedrukt: drukkracht, de massa vertraagt',
+  'de snelheid wordt nul en de zin van de beweging keert om',
+  'veer ingedrukt: drukkracht naar de rustpositie, de massa versnelt',
+  'de massa passeert de rustpositie met een snelheid die niet nul is',
+  'veer uitgerekt: trekkracht, de massa vertraagt',
+  'de snelheid wordt nul en de zin van de beweging keert om; de cyclus begint opnieuw'
+];
+const FASEKLEUR = ['#cfe2fb', '#fbdcc4', '#d6efcc', '#ead8f4'];   // achtergrond van fase 1–4 (grafiek en tabel)
+const faseNaam = c => (c % 2 ? `fase ${(c + 1) / 2}` : 'transitie');
+function fase(s) {
+  const th = ((om() * s) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI), Q = Math.PI / 2, d = 0.13;
+  if (th < d || th > 4 * Q - d) return 8;
+  for (const [c, n] of [[Q, 2], [2 * Q, 4], [3 * Q, 6]]) if (Math.abs(th - c) < d) return n;
+  return th < Q ? 1 : th < 2 * Q ? 3 : th < 3 * Q ? 5 : 7;
+}
+
+// ---------- tekenhulp ----------
+function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
+function poly(ctx, pts, fill, stroke, w = 1.4) { ctx.save(); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.stroke(); } ctx.restore(); }
+function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 4) return false;
+  const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, h = 13, s = 4;
+  ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const kk of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x0 + kk * s * nx, y0 + kk * s * ny); ctx.lineTo(x1 - ux * h * 0.55 + kk * s * nx, y1 - uy * h * 0.55 + kk * s * ny); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(x1 - ux * h + nx * h * 0.75, y1 - uy * h + ny * h * 0.75); ctx.lineTo(x1, y1); ctx.lineTo(x1 - ux * h - nx * h * 0.75, y1 - uy * h - ny * h * 0.75); ctx.stroke();
+  ctx.restore(); return true;
+}
+function veer2(ctx, x0, x1, y, n = 10, amp = 7) {
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(x0, y);
+  const a = x0 + 0.08 * (x1 - x0), b = x1 - 0.08 * (x1 - x0); ctx.lineTo(a, y);
+  for (let i = 1; i < 2 * n; i++) ctx.lineTo(a + (b - a) * i / (2 * n), y + (i % 2 ? -amp : amp));
+  ctx.lineTo(b, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.restore();
+}
+function assenXYdown(ctx, x, y, Lp = 26) {            // x naar rechts, y naar beneden (zoals in het handboek), z het blad in (⊗)
+  arrow(ctx, x, y, x + Lp, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + Lp + 4, y + 5, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, x, y, x, y + Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 13, y + Lp + 2, '#6b737d', { vec: false, size: 13 });
+  ctx.save(); ctx.strokeStyle = '#6b737d'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x - 4, y - 4); ctx.lineTo(x + 4, y + 4); ctx.moveTo(x + 4, y - 4); ctx.lineTo(x - 4, y + 4); ctx.stroke(); ctx.restore();
+  label(ctx, 'z', '', x - 18, y - 4, '#6b737d', { vec: false, size: 13 });
+}
+
+// ---------- verbinding: de massa op het gladde oppervlak (y naar beneden) ----------
+const BEW = [
+  { id: 'neer', tekst: 'translatie volgens positieve <i>y</i> (naar beneden, het oppervlak in)', verh: true },
+  { id: 'op', tekst: 'translatie volgens negatieve <i>y</i> (van het oppervlak weg)', verh: false, uit: 'mogelijk: de massa komt los → <i>R</i> ≥ 0' },
+  { id: 'x', tekst: 'translatie ∥ <i>x</i> (horizontaal, langs de veer)', twee: true, verh: false, uit: 'mogelijk: het oppervlak is glad → geen kracht ∥ <i>x</i>' },
+  { id: 'z', tekst: 'translatie ∥ <i>z</i> (horizontaal, loodrecht op de veer)', twee: true, verh: false, uit: 'mogelijk: het oppervlak is glad → geen kracht ∥ <i>z</i>' }
+];
+
+// ---------- figuur: situatie (boven) en vrijlichaamsdiagram op dit ogenblik (onder) ----------
+const sc = setup(document.getElementById('scene'));
+let raak = null;
+function loepCirkel(ctx, q, r) {
+  const aan = stap === 2;
+  ctx.save();
+  if (aan) { ctx.fillStyle = 'rgba(29,92,150,0.16)'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = C.accent; ctx.lineWidth = aan ? 3 : 1.6; ctx.setLineDash(aan ? [] : [6, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2 * Math.PI); ctx.stroke();
+  const hx = q.x + r * Math.SQRT1_2, hy = q.y + r * Math.SQRT1_2; ctx.setLineDash([]); ctx.lineWidth = aan ? 5 : 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 0.32 * r, hy + 0.32 * r); ctx.stroke(); ctx.restore();
+  raak = { x: q.x, y: q.y, r };
+}
+function drawScene() {
+  const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
+  const H = Hall * 0.5, x = xt(t), f = fase(t);
+  const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
+  // ----- boven: situatie -----
+  titel('Situatie', 18);
+  const S = Math.min((W - 40) / 1.15, (H - 40) / 0.6), xw = 24, yg = 34 + (H - 34) * 0.62, hb = 0.13 * S;
+  const X = s => xw + (L0 + s) * S;                     // scherm-x van de linkerkant van de massa
+  // wand en grond
+  ctx.save(); ctx.fillStyle = '#e4e7eb'; ctx.fillRect(xw - 10, yg - 1.2 * hb - 20, 10, 1.2 * hb + 20); ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(xw, yg - 1.2 * hb - 20); ctx.lineTo(xw, yg); ctx.lineTo(W - 10, yg); ctx.stroke();
+  ctx.strokeStyle = '#9aa1aa'; ctx.lineWidth = 1; for (let p = xw + 6; p < W - 10; p += 9) { ctx.beginPath(); ctx.moveTo(p, yg); ctx.lineTo(p - 6, yg + 8); ctx.stroke(); } ctx.restore();
+  label(ctx, 'O', '', xw - 22, yg - hb / 2 + 5, C.ink, { vec: false, size: 15 });
+  // rustpositie en uitwijking x
+  const xr = X(0); lijn(ctx, { x: xr, y: yg - 1.5 * hb - 14 }, { x: xr, y: yg + 18 }, '#7a828c', 1.1, [4, 4]);
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.fillText('rustlengte l₀', xr, yg - 1.5 * hb - 20); ctx.restore();
+  if (Math.abs(x) * S > 6) { arrow(ctx, xr, yg + 14, X(x), yg + 14, C.ink, { w: 1.4, head: 8 }); label(ctx, 'x', '', (xr + X(x)) / 2 - 4, yg + 32, C.ink, { vec: false, size: 15 }); }
+  veer2(ctx, xw, X(x), yg - hb / 2);
+  ctx.save(); ctx.fillStyle = '#b9c4d0'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4; ctx.fillRect(X(x), yg - hb, hb, hb); ctx.strokeRect(X(x), yg - hb, hb, hb); ctx.restore();
+  label(ctx, 'm', '', X(x) + hb / 2 - 6, yg - hb / 2 + 5, C.ink, { vec: false, size: 15 });
+  if (stap <= 2) loepCirkel(ctx, { x: X(x) + hb / 2, y: yg }, 0.55 * hb + 10); else raak = null;
+  ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right'; ctx.fillText(faseNaam(f), W - 12, 18); ctx.restore();
+
+  // ----- onder: vrijlichaamsdiagram op dit ogenblik -----
+  ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
+  if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); assenXYdown(ctx, 30, Hall - 60); return; }
+  titel('Vrijgemaakte massa op dit ogenblik', H + 18);
+  const S2 = Math.min(W / 3.6, (Hall - H - 40) / 2.6), cx = W * 0.5, cy = H + 30 + (Hall - H - 40) * 0.5, kk = 0.85 * S2;   // kk: lengte van mg
+  const mg = m * g, Fv = -k * x, h2 = 0.26 * S2;
+  ctx.save(); ctx.fillStyle = '#b9c4d0'; ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 1.4; ctx.fillRect(cx - h2, cy - h2, 2 * h2, 2 * h2); ctx.strokeRect(cx - h2, cy - h2, 2 * h2, 2 * h2); ctx.restore();
+  lijn(ctx, { x: cx - 1.6 * h2, y: cy + h2 + 4 }, { x: cx + 1.6 * h2, y: cy + h2 + 4 }, C.accent, 1.5, [6, 4]);
+  lijn(ctx, { x: cx - h2 - 4, y: cy - 1.3 * h2 }, { x: cx - h2 - 4, y: cy + 1.3 * h2 }, C.accent, 1.5, [6, 4]);
+  const puls = anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1, glR = stap === 2 && licht && licht.b === 'neer' ? puls : 0;
+  if (glR) arrow(ctx, cx, cy, cx, cy - kk, GLOED + (0.35 + 0.5 * glR) + ')', { w: 12, head: 22 });
+  arrow(ctx, cx, cy, cx, cy - kk, KR, { w: glR ? 3.6 : 2.8, head: glR ? 14 : 12 }); label(ctx, 'R', '', cx + 8, cy - kk + 6, KR, { size: glR ? 17 : 15 });
+  arrow(ctx, cx, cy, cx, cy + kk, KG, { w: 2.8, head: 12 }); label(ctx, 'G', '', cx + 8, cy + kk + 2, KG, { size: 15 });
+  // veerkracht −kx (zelfde schaal als R en G) en versnelling (eigen schaal)
+  const lv = Fv / mg * kk;
+  if (arrow(ctx, cx, cy, cx + lv, cy, KV, { w: 2.8, head: 12 })) label(ctx, 'F', 'v', lv < 0 ? Math.min(cx + lv, cx - h2) - 28 : Math.max(cx + lv, cx + h2) + 8, cy - 8, KV, { size: 15 });
+  const la = at(t) / (A * k / m) * 0.9 * kk;
+  if (dubbelPijl(ctx, cx, cy - h2 - 20, cx + la, cy - h2 - 20, KA, 2)) label(ctx, 'a', '', cx + la + (la < 0 ? -20 : 8), cy - h2 - 14, KA, { size: 15 });
+  ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  if (stap === 2 && licht) {
+    const b = BEW.find(q => q.id === licht.b);
+    if (b && !b.verh) { const s = b.uit.replace(/<[^>]+>/g, ''); ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center'; ctx.fillText(s, W / 2, H + 38); ctx.restore(); }
+  }
+  assenXYdown(ctx, 30, Hall - 72);
+}
+
+// ---------- loep op het contact massa–oppervlak (stap 2) ----------
+const LP = setup(document.getElementById('loep'));
+function drawLoep() {
+  const ctx = LP.ctx, W = LP.w, H = LP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2) return;
+  // schuine projectie: x naar rechts, y naar beneden, z het blad in (schuin naar rechtsboven)
+  const S = Math.min(W / 3.0, H / 1.9), cx = W * 0.5, cy = H * 0.66;
+  const P = p => ({ x: cx + S * (p.x + 0.42 * p.z), y: cy + S * (p.y - 0.3 * p.z) });
+  let off = { x: 0, y: 0, z: 0 }, zin = 1;
+  const DIR = { neer: { x: 0, y: 1, z: 0 }, op: { x: 0, y: -1, z: 0 }, x: { x: 1, y: 0, z: 0 }, z: { x: 0, y: 0, z: 1 } };
+  if (anim) {
+    const b = anim.b, u = Math.min(anim.t / anim.T, 1), s = b.twee ? Math.sin(2 * Math.PI * u) : Math.sin(Math.PI * u); zin = s < 0 ? -1 : 1;
+    const a = b.verh ? Math.sin(anim.t * 40) * 0.02 * Math.abs(s) + 0.012 * s : 0.3 * s, d = DIR[b.id];
+    off = { x: d.x * a, y: d.y * a, z: d.z * a };
+  }
+  poly(ctx, [{ x: -1.3, y: 0, z: -0.3 }, { x: 1.3, y: 0, z: -0.3 }, { x: 1.3, y: 0, z: 1.2 }, { x: -1.3, y: 0, z: 1.2 }].map(P), 'rgba(226,231,237,0.9)', '#5b6168', 1.3);
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; const q0 = P({ x: -1.25, y: 0, z: -0.25 }); ctx.fillText('glad oppervlak', q0.x, q0.y + 16); ctx.restore();
+  const h = 0.38, ox = off.x, oy = Math.min(off.y, 0.01), oz = off.z;
+  const X0 = ox - h, X1 = ox + h, Y0 = oy, Y1 = oy - 2 * h, Z0 = oz + 0.1, Z1 = oz + 0.1 + 2 * h;   // Y1: bovenkant (y naar beneden)
+  poly(ctx, [{ x: X0, y: Y1, z: Z0 }, { x: X1, y: Y1, z: Z0 }, { x: X1, y: Y1, z: Z1 }, { x: X0, y: Y1, z: Z1 }].map(P), '#d3dae2', '#3d454f', 1.3);
+  poly(ctx, [{ x: X1, y: Y0, z: Z0 }, { x: X1, y: Y1, z: Z0 }, { x: X1, y: Y1, z: Z1 }, { x: X1, y: Y0, z: Z1 }].map(P), '#9aa6b3', '#3d454f', 1.3);
+  poly(ctx, [{ x: X0, y: Y0, z: Z0 }, { x: X1, y: Y0, z: Z0 }, { x: X1, y: Y1, z: Z0 }, { x: X0, y: Y1, z: Z0 }].map(P), '#b9c4d0', '#3d454f', 1.3);
+  { const a = P({ x: X0, y: Y0 - h, z: Z0 + h }), b = P({ x: X0 - 0.55, y: Y0 - h, z: Z0 + h }); lijn(ctx, a, b, '#9aa1aa', 1.4, [3, 4]);
+    ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('veer (al losgemaakt)', b.x - 10, b.y - 10); ctx.restore(); }
+  { const o2 = { x: W - 44, y: 20 }, Lp = 22;
+    arrow(ctx, o2.x, o2.y, o2.x + Lp, o2.y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', o2.x + Lp + 3, o2.y + 5, '#6b737d', { vec: false, size: 13 });
+    arrow(ctx, o2.x, o2.y, o2.x, o2.y + Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', o2.x - 12, o2.y + Lp + 2, '#6b737d', { vec: false, size: 13 });
+    arrow(ctx, o2.x, o2.y, o2.x + 0.42 * Lp, o2.y - 0.3 * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'z', '', o2.x + 0.42 * Lp - 2, o2.y - 0.3 * Lp - 4, '#6b737d', { vec: false, size: 13 }); }
+  if (anim) {
+    const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a', d = DIR[b.id], c0 = { x: 0, y: -h, z: 0.1 + h };
+    const a = P({ x: c0.x + d.x * zin * 0.55, y: c0.y + d.y * zin * 0.55, z: c0.z + d.z * zin * 0.55 }), q = P({ x: c0.x + d.x * zin * 1.05, y: c0.y + d.y * zin * 1.05, z: c0.z + d.z * zin * 1.05 });
+    arrow(ctx, a.x, a.y, q.x, q.y, kl, { w: 2.2, dash: [5, 3], head: 10 });
+    ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center'; ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W / 2, H - 8); ctx.restore();
+  }
+}
+
+// ---------- grafiek x(t) (stap 4 en 5) ----------
+const GX = setup(document.getElementById('gx'));
+let FX = null;
+function drawGrafiek() {
+  const zicht = stap >= 4; GX.c.style.display = zicht ? '' : 'none'; if (!zicht || GX.w < 10) return;
+  // breedte van de grafiek: een geheel aantal periodes, zodat de cursor na elke doorgang weer op de kromme valt
+  const T = 2 * Math.PI / om(), tmax = grafiekDuur();
+  FX = frame(GX, [0, tmax], [-0.2, 0.2], '$t$ [s]', '$x$ [m]');
+  const tt = t % tmax, c = fase(t), ctx = GX.ctx, y0 = FX.m.t, y1 = GX.h - FX.m.b;
+  // achtergrond: elke kwart periode een fase (1–4); de huidige fase sterker gekleurd en met een vet nummer
+  for (let q = 0; q * T / 4 < tmax - 1e-9; q++) {
+    const p = q % 4, a = FX.X(q * T / 4), b = FX.X(Math.min((q + 1) * T / 4, tmax));
+    const nu = c % 2 === 1 && (c - 1) / 2 === p && tt >= q * T / 4 && tt < (q + 1) * T / 4;
+    ctx.save(); ctx.globalAlpha = nu ? 0.95 : 0.45; ctx.fillStyle = FASEKLEUR[p]; ctx.fillRect(a, y0, b - a, y1 - y0); ctx.restore();
+    ctx.save(); ctx.font = nu ? '700 13px Inter, sans-serif' : '11px Inter, sans-serif'; ctx.fillStyle = nu ? C.ink : C.muted; ctx.textAlign = 'center';
+    if (b - a > 14) ctx.fillText(String(p + 1), (a + b) / 2, y0 + 13); ctx.restore();
+  }
+  curve(ctx, FX, 300, 0, tmax, s => s, xt, KV, 2.2); TM1.cursor(GX.ctx, FX, tt); dot(GX.ctx, FX.X(tt), FX.Y(xt(tt)), KV);
+}
+
+// ---------- formules onder het vrijlichaamsdiagram ----------
+const kl = (c, s) => `\\textcolor{${c}}{${s}}`;
+function render1(el, s) { try { katex.render(s, el, { throwOnError: false }); } catch (e) { el.textContent = s; } }
+function vldFormules() {
+  const el = document.getElementById('vldf'); if (!window.katex) return;
+  if (stap === 1) { el.innerHTML = ''; return; }
+  const mk = (id, s) => (stap === 2 && licht && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  const delen = [`${kl(KV, '\\vec F_v')} = ${kl(KV, '\\begin{Bmatrix}-kx\\\\ 0\\\\ 0\\end{Bmatrix}')}`,
+    `${kl(KR, '\\vec R')} = \\begin{Bmatrix}${kl(KR, '0')}\\\\ ${mk('neer', kl(KR, '-R'))}\\\\ ${kl(KR, '0')}\\end{Bmatrix}`, mk('op', `${kl(KR, 'R')} \\ge 0`),
+    `${kl(KG, '\\vec G')} = ${kl(KG, '\\begin{Bmatrix}0\\\\ mg\\\\ 0\\end{Bmatrix}')}`,
+    `${kl(KA, '\\vec a')} = ${kl(KA, '\\frac{\\mathrm{d}^2\\vec r}{\\mathrm{d}t^2}')}`];
+  el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
+}
+
+// ---------- rechterkaart: inhoud per stap ----------
+const $ = id => document.getElementById(id);
+const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie'];
+function proefTabel() {
+  if (stap !== 2) { $('proef').innerHTML = ''; return; }
+  $('proef').innerHTML = BEW.map(b => {
+    const uit = !proeven[b.id] ? '<span class="uit nog">nog niet geprobeerd</span>'
+      : b.verh ? `<span class="uit verh">✕ verhinderd</span> → <span style="color:${KR}"><span class="i">R</span></span>`
+      : `<span class="uit vrij">✓</span> ${b.uit}`;
+    return `<tr><td><button data-b="${b.id}">▶ probeer</button></td><td>${b.tekst}</td><td>${uit}</td></tr>`;
+  }).join('');
+  $('proef').querySelectorAll('button').forEach(kn => kn.onclick = () => {
+    const b = BEW.find(q => q.id === kn.dataset.b); proeven[b.id] = true;
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+  });
+}
+function res5() { return `<i>ω</i> = √(<i>k</i>/<i>m</i>) = ${om().toFixed(2)} rad/s, periode <i>T</i> = 2π/<i>ω</i> = ${(2 * Math.PI / om()).toFixed(2)} s.`; }
+function faseLijst() {
+  return `<table class="fasen" id="fasen">${FASEN.map((s, i) => {
+    const c = i + 1, kleur = c % 2 ? FASEKLEUR[(c - 1) / 2] : 'transparent';
+    const kl = [c % 2 ? '' : 'trans', fase(t) === c ? 'nu' : ''].filter(Boolean).join(' ');
+    return `<tr${kl ? ` class="${kl}"` : ''}><td><span class="vak" style="background:${kleur}"></span></td><td class="naam">${faseNaam(c)}</td><td>${s}</td></tr>`;
+  }).join('')}</table>`;
+}
+function stapInhoud() {
+  const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
+  $('rtitel').textContent = stap === 2 ? 'Verbinding: de massa op het gladde oppervlak' : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
+  const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
+  const tx = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
+  const F_ = kl(KV, '\\vec F_v'), R_ = kl(KR, '\\vec R'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a');
+  const BEWV = `${F_} + ${R_} + ${G_} = m${A_} = m\\,${kl(KA, '\\frac{\\mathrm{d}^2\\vec r}{\\mathrm{d}t^2}')}`;
+  const COMP = `${kl(KV, '\\begin{Bmatrix}-kx\\\\ 0\\\\ 0\\end{Bmatrix}')} + ${kl(KR, '\\begin{Bmatrix}0\\\\ -R\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ mg\\\\ 0\\end{Bmatrix}')} = ${kl(KA, '\\begin{Bmatrix}m\\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2}\\\\ 0\\\\ 0\\end{Bmatrix}')}`;
+  let h = '';
+  if (stap === 1) h = `<p>We maken de <b>puntmassa</b> vrij: maak ze los van de veer en van het horizontale oppervlak. Zo worden de veerkracht en de kracht van het oppervlak externe krachten, die voorkomen in de bewegingsvergelijking.</p>
+      <p class="noot">De bewegingsvergelijking geldt op elk ogenblik: het vrijlichaamsdiagram hieronder volgt de beweging.</p>`;
+  else if (stap === 2) h = `<p class="noot"><b>Veer.</b> De veer brengt een kracht volgens de veer over, evenredig met de verlenging <i>x</i> ten opzichte van de rustlengte: ${tx(`${F_} = -k\\,x\\,\\vec e_x`)}. Is de veer uitgerekt (<i>x</i> &gt; 0), dan trekt ze; is ze ingedrukt (<i>x</i> &lt; 0), dan duwt ze.</p>
+      <p class="noot"><b>Oppervlak.</b> In de loep zie je het contact met het gladde oppervlak. Enkel de translatie het oppervlak in is verhinderd: dat geeft de normaalkracht ${tx(R_)} (naar boven, dus volgens negatieve <i>y</i>). Horizontaal is er geen wrijving.</p>
+      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} aan (dubbele pijl).</p>`;
+  else if (stap === 3) h = `<h4>Bewegingsvergelijking (op een willekeurig moment)</h4>${v(BEWV)}
+      <h4>Bijkomende vergelijkingen</h4>
+      <p><b>Veerwet.</b> ${tx(`${kl(KV, 'F_{v,x}')} = -k\\,x`)}, met <i>x</i> de verlenging van de veer.</p>
+      <p><b>Kinematica.</b> De massa beweegt enkel volgens <i>x</i>: ${tx(`${A_} = ${kl(KA, '\\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2}\\,\\vec e_x')}`)}.</p>
+      <h4>Voorwaarde uit de verbinding</h4>${v(`${kl(KR, 'R')} \\ge 0`)}
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
+      <h4>Bewegingsvergelijking in componenten</h4>${v(COMP)}
+      <p class="noot">De kracht hangt af van de positie <i>x</i>: de bewegingsvergelijking wordt een differentiaalvergelijking in <i>x</i>(<i>t</i>).</p>`;
+  else if (stap === 4) h = `<h4>y-component</h4>${v(`${kl(KR, 'R')} = mg`)}
+      <h4>x-component</h4>${v(`-k\\,x = m\\,\\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} \\;\\Leftrightarrow\\; \\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} + \\frac{k}{m}\\,x = 0`)}
+      <p>Een dergelijke uitdrukking wordt een differentiaalvergelijking genoemd. Een functie van de volgende vorm is een oplossing:</p>
+      <div class="kader">${v(`x = A\\sin\\omega\\,(t - t_0) \\qquad \\text{met} \\qquad \\omega = \\sqrt{\\frac{k}{m}}`)}</div>
+      <p>Controle: leid de functie twee keer af naar de tijd en vul in.</p>
+      ${v(`\\frac{\\mathrm{d}x}{\\mathrm{d}t} = A\\,\\omega\\cos\\omega\\,(t - t_0), \\qquad \\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} = -A\\,\\omega^2\\sin\\omega\\,(t - t_0) = -\\omega^2\\,x`)}
+      ${v(`\\frac{\\mathrm{d}^2x}{\\mathrm{d}t^2} + \\frac{k}{m}\\,x = \\Big(-\\omega^2 + \\frac{k}{m}\\Big)\\,x = 0 \\quad \\text{als} \\quad \\omega^2 = \\frac{k}{m}`)}
+      <p class="noot">De factor <i>ω</i> is de cirkelfrequentie of pulsatie van de trilling; <i>t</i><sub>0</sub> geeft de beginvoorwaarde weer. Hier wordt de massa op <i>t</i> = 0 vanuit rust losgelaten op <i>x</i> = <i>A</i> = 0.150 m, zodat <i>t</i><sub>0</sub> = −<i>T</i>/4. Met <i>k</i> = 50.0 N/m en <i>m</i> = 2.00 kg is <i>ω</i> = 5.00 rad/s. De grafiek toont <i>x</i>(<i>t</i>).</p>`;
+  else h = `<p>De massa beweegt sneller heen en weer (de cirkelfrequentie is hoger) naarmate de veerstijfheid toeneemt en/of de massa afneemt.</p>
+      <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${k.toFixed(0)} N/m</b></div><input type="range" id="ksl" min="10" max="200" step="5" value="${k}"></div>
+      <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${m.toFixed(2)} kg</b></div><input type="range" id="msl" min="0.5" max="5" step="0.1" value="${m}"></div>
+      <p id="res5">${res5()}</p>
+      <h4>Beweeg zelf over de tijd</h4>
+      <div class="btnrow" style="margin:0 0 4px"><button class="primary" id="play5">${playing ? '⏸ Pauze' : '▶ Afspelen'}</button></div>
+      <div class="slider"><div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval">${tijdTekst()}</b></div><input type="range" id="tsl" min="0" max="1000" step="1" value="${tijdNaarSlider()}"></div>
+      <h4>De fasen van de beweging (waar je zit, staat in het vet)</h4>${faseLijst()}
+      <p class="noot">De kleuren komen overeen met de achtergrond van de grafiek: elke fase duurt een kwart periode. Een transitie is een ogenblik tussen twee fasen.</p>`;
+  el.innerHTML = h;
+  if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
+  // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
+  const upd = () => { t = 0; $('kval').textContent = `${k.toFixed(0)} N/m`; $('mval').textContent = `${m.toFixed(2)} kg`; $('res5').innerHTML = res5(); drawScene(); drawGrafiek(); syncTijd(); };
+  const sk = $('ksl'); if (sk) sk.oninput = e => { k = +e.target.value; upd(); };
+  const sm = $('msl'); if (sm) sm.oninput = e => { m = +e.target.value; upd(); };
+  const p5 = $('play5'); if (p5) p5.onclick = () => zetSpelen(!playing);
+  // tijdslider: zet de beweging stil op het gekozen tijdstip (over de breedte van de grafiek)
+  const ts = $('tsl'); if (ts) ts.oninput = e => { zetSpelen(false); t = +e.target.value / 1000 * grafiekDuur(); drawScene(); drawGrafiek(); markeerFase(); $('tval').textContent = tijdTekst(); };
+}
+// tijdas van de grafiek (en van de tijdslider): een geheel aantal periodes
+function grafiekDuur() { const T = 2 * Math.PI / om(); return T * Math.max(2, Math.ceil(2.6 / T)); }
+const tijdNaarSlider = () => Math.round((t % grafiekDuur()) / grafiekDuur() * 1000);
+const tijdTekst = () => `${(t % grafiekDuur()).toFixed(2)} s`;
+function syncTijd() { const ts = $('tsl'); if (!ts) return; ts.value = tijdNaarSlider(); $('tval').textContent = tijdTekst(); }
+function zetSpelen(p) {
+  playing = p; const s = p ? '⏸ Pauze' : '▶ Afspelen'; $('play').textContent = s; const p5 = $('play5'); if (p5) p5.textContent = s;
+}
+let laatsteFase = 0;
+function markeerFase() {
+  const lijst = $('fasen'); if (!lijst) return; const f = fase(t); if (f === laatsteFase) return; laatsteFase = f;
+  [...lijst.rows].forEach((tr, i) => tr.classList.toggle('nu', i + 1 === f));
+}
+function stapKnoppen() {
+  $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; laatsteFase = 0; if (stap !== 5) { k = K0; m = M0; } render(); });
+}
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); drawGrafiek(); vldFormules(); }
+window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
+const playBtn = $('play');
+playBtn.onclick = () => zetSpelen(!playing);
+$('reset').onclick = () => { t = 0; drawScene(); drawGrafiek(); syncTijd(); };
+sc.c.addEventListener('click', e => {
+  if (!raak || stap === 2) return; const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  if (Math.hypot(raak.x - x, raak.y - y) < raak.r * 1.3) { stap = 2; anim = null; licht = null; render(); }
+});
+TM1.scrub(GX, () => FX, s => { t = Math.max(0, s); zetSpelen(false); drawScene(); drawGrafiek(); markeerFase(); syncTijd(); });
+
+TM1.bijGrootte([sc, LP, GX], render);
+TM1.lus(dt => {
+  if (playing) t += dt / VERTRAAG;
+  if (anim) { anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); }
+  drawScene(); drawGrafiek(); markeerFase(); if (playing) syncTijd();
+}, () => playing || !!anim);
+})();
+</script>
+</body>
+</html>

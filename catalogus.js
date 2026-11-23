@@ -94,7 +94,7 @@ TM1.catalogus = [
       { id: '14.1', titel: 'Reuzenrad: translatie van de gondel', status: 'klaar' },
       { id: '14.2', titel: 'Rotor van een helikopter', status: 'klaar', opmerking: 'uitwerking: pure rotatie t.o.v. de piloot en translatie + rotatie t.o.v. de wereld' },
       { id: '14.3', titel: 'Wasmachine' },
-      { id: '14.4', titel: 'Ronddraaiende cilinder', status: 'klaar', opmerking: 'voorstel van uitwerking (niet in het handboek)' }]},
+      { id: '14.4', titel: 'Ronddraaiende cilinder', status: 'klaar' }]},
     { nr: 15, titel: 'Meetkundige analyses voor snelheden', map: 'h15-snelheden-meetkundig', items: [
       { id: '15.1', titel: 'Vlaggenmast', status: 'klaar' },
       { id: '15.2', titel: 'Mobiele robot', status: 'klaar' },
@@ -123,11 +123,11 @@ TM1.catalogus = [
   { deel: 'VI', titel: 'Dynamica van enkelvoudige lichamen', hoofdstukken: [
     { nr: 19, titel: 'Dynamica van een puntmassa', map: 'h19-dynamica-puntmassa', items: [
       { id: '19.1', titel: 'Een slinger beschrijft een kegelbeweging', status: 'klaar', opmerking: 'uitgewerkt naar de video (plan van aanpak 19.5)' },
-      { id: '19.2', titel: 'Een blok op een vallend platform' },
-      { id: '19.3', titel: 'Een container hangt aan een loopkat' },
-      { id: '19.4', titel: 'Een massa aan een ronddraaiende veer' },
-      { id: '19.5', titel: 'Een massa rondgeslingerd in een verticaal vlak' },
-      { id: '19.6', titel: 'Tweede postulaat als differentiaalvergelijking' }]},
+      { id: '19.2', titel: 'Een blok op een vallend platform', status: 'klaar' },
+      { id: '19.3', titel: 'Een container hangt aan een loopkat', status: 'klaar' },
+      { id: '19.4', titel: 'Een massa aan een ronddraaiende veer', status: 'klaar' },
+      { id: '19.5', titel: 'Een massa rondgeslingerd in een verticaal vlak', status: 'klaar' },
+      { id: '19.6', titel: 'Tweede postulaat als differentiaalvergelijking', status: 'klaar' }]},
     { nr: 20, titel: 'Dynamica van star lichaam in vlakke beweging', map: 'h20-dynamica-star-lichaam', items: [
       { id: '20.1', titel: 'Traagheidsmoment van een halter' },
       { id: '20.2', titel: 'Traagheidsmoment van een dunne staaf' },

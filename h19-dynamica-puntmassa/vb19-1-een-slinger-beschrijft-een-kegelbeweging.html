@@ -82,7 +82,7 @@ const { setup, arrow, label, rad, deg } = TM1;
 const C = TM1.kleuren();
 const KG = '#2f8f46', KF = C.F, KA = C.a, KW = C.M;    // kleuren: zwaartekracht, kabelkracht, versnelling, hoeksnelheid
 const GLOED = 'rgba(255,196,0,';
-const g = 9.81, L = 1.0, W0 = 3.5;                     // ter illustratie
+const g = 10.0, L = 1.0, W0 = 3.5;                     // ter illustratie
 let stap = 1, anim = null, licht = null, proeven = {}, om = W0, phi = 0, playing = true;
 const theta = () => (om * om * L > g ? Math.acos(g / (om * om * L)) : 0);
 
@@ -325,7 +325,7 @@ function stapInhoud() {
       <h4>y-component</h4>${v(`${kl(KF, 'F')}\\cos\\theta - mg = 0 \\;\\Rightarrow\\; ${kl(KF, 'F_\\text{kabel}')} = \\frac{mg}{\\cos\\theta}`)}
       <h4>x-component</h4>${v(`${kl(KF, 'F')}\\sin\\theta = m\\,\\omega^2 L\\sin\\theta \\;\\Rightarrow\\; ${kl(KF, 'F')} = m\\,\\omega^2 L \\quad (\\sin\\theta \\neq 0)`)}
       <div class="kader">${v(`\\frac{mg}{\\cos\\theta} = m\\,\\omega^2 L \\;\\Rightarrow\\; \\cos\\theta = \\frac{g}{L\\,\\omega^2}`)}</div>
-      <p class="noot">Met de illustratiewaarden (<i>L</i> = 1.00 m, <i>ω</i> = 3.50 rad/s): cos <i>θ</i> = 9.81/(1.00 · 3.50²) = 0.801, dus <i>θ</i> = 36.8° en <i>F</i><sub>kabel</sub> = 1.25 <i>mg</i>.</p>`;
+      <p class="noot">Met de illustratiewaarden (<i>L</i> = 1.00 m, <i>ω</i> = 3.50 rad/s): cos <i>θ</i> = 10.0/(1.00 · 3.50²) = 0.816, dus <i>θ</i> = 35.3° en <i>F</i><sub>kabel</sub> = 1.22 <i>mg</i>.</p>`;
   else {
     const th = theta(), wg = Math.sqrt(g / L);
     h = `<p>De oplossing ${t('\\cos\\theta = g/(L\\,\\omega^2)')} bestaat enkel als ${t('g/(L\\,\\omega^2) < 1')}:</p>
