@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oefening 3.10 – Een tomaat op de kruin van een joggende professor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:26/11.4;max-height:560px}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1.25fr) minmax(0,0.75fr)} }
+  .opgave{padding:10px 16px;margin:0 0 14px}
+  .opgave p{margin:0 0 6px;font-size:14px}
+  .opgave ol{margin:4px 0 6px;padding-left:22px;font-size:14px} .opgave li{margin:2px 0}
+  .opgave .label{font:600 11.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#oefenzittingen">← Alle oefeningen</a>
+  <header>
+    <h1>Oefening 3.10 — Een tomaat op de kruin van een joggende professor</h1>
+    <span class="kicker">Oefenzitting 3 · kinematica van een puntmassa · opgave en animatie</span>
+  </header>
+
+  <div class="opgave card">
+    <span class="label">Opgave</span>
+    <p>Een student heeft vanop een boomtak <i>A</i> een tomaat in <i>B</i> gemikt, precies op de kruin van een voorbij joggende professor. Hij heeft de tomaat gelanceerd onder een hoek <i>θ</i> = 45°. Gegeven: <i>h</i> = 2 m, <i>d</i> = 20 m.</p>
+    <ol type="a">
+      <li>Bereken de lanceringssnelheid <i>v</i><sub>0</sub> waarmee de student de tomaat heeft weggeworpen.</li>
+      <li>Bereken onder welke hoek (ten opzichte van de horizontale) de tomaat het hoofd van de professor heeft getroffen.</li>
+      <li>Men weet dat de prof op het ogenblik dat hij onder <i>A</i> doorkwam onraad vermoedde en met een constante versnelling van 0.5 m/s² wegspurtte. Hij bereikte <i>B</i> met een snelheid van 18 km/h. Waar bevond de professor zich op het ogenblik dat de tomaat gelanceerd werd?</li>
+    </ol>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Een student op een boomtak in A gooit een tomaat onder 45 graden; een professor spurt weg onder A door en wordt in B op de kruin geraakt"></canvas>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_baan" checked> <span>baan van de tomaat</span></label>
+          <label><input type="checkbox" id="t_strobo"> <span>stroboscoop (tomaat en professor)</span></label>
+          <label><input type="checkbox" id="t_maat" checked> <span>gegevens <i>h</i>, <i>d</i> en <i>θ</i></span></label>
+        </div>
+      </div>
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button id="play">▶ Afspelen</button> <button id="nul">↺ opnieuw</button></div>
+        <div class="slider vast">
+          <div class="lab"><span>Tijd <span class="i">t</span> (t = 0: de professor is onder <i>A</i>)</span><b id="tval"></b></div>
+          <input type="range" id="tt" min="0" max="1000" step="1">
+        </div>
+        <div class="note">De animatie loopt aan echte snelheid.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad } = TM1;
+const C = TM1.kleuren();
+// gegevens (g = 10 m/s²); de y-as is nul op de hoogte van de kruin van de professor
+const g = 10, H = 2, D = 20, TH = rad(45), AP = 0.5, VB = 5;   // VB: snelheid van de professor in B (18 km/h)
+// de beweging volgt uit de gegevens (ze wordt niet getoond als uitwerking)
+const TB = Math.sqrt(2 * (D + H) / g), V0 = D / (TB * Math.cos(TH));          // vluchttijd van de tomaat en lanceringssnelheid
+const TT = 10 - Math.sqrt(20), VP0 = VB - AP * TT, T1 = TT - TB;               // tijd van A tot B voor de prof, beginsnelheid, ogenblik van de worp
+const TEND = TT + 1.2, GROND = -1.8;
+let t = 0, playing = false;
+const xProf = s => (s < TT ? VP0 * s + 0.5 * AP * s * s : D);                 // na de treffer blijft hij staan
+const tomaat = s => { if (s <= T1) return { x: 0, y: H }; const u = Math.min(s, TT) - T1; return { x: V0 * Math.cos(TH) * u, y: H + V0 * Math.sin(TH) * u - 0.5 * g * u * u }; };
+const XMIN = -3.2, XMAX = 22.8, YMIN = -3.0, YMAX = 8.4;
+
+const sc = setup(document.getElementById('scene'));
+// joggende figuur: kruin in (x, 0); fase bepaalt de stand van armen en benen
+function professor(ctx, Q, S, x, fase, alfa = 1) {
+  const P = (dx, dy) => Q({ x: x + dx, y: dy });
+  ctx.save(); ctx.globalAlpha = alfa; ctx.strokeStyle = '#2f3a48'; ctx.lineWidth = Math.max(2, 0.07 * S); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const hoofd = P(0, -0.15); ctx.fillStyle = '#f1d6b8'; ctx.beginPath(); ctx.arc(hoofd.x, hoofd.y, 0.15 * S, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+  const nek = P(0.02, -0.32), heup = P(-0.04, -1.0), sw = Math.sin(fase), sw2 = Math.sin(fase + Math.PI);
+  const lijnen = [[nek, heup],
+    [heup, P(-0.04 + 0.32 * sw, -1.4), P(-0.04 + 0.45 * sw - 0.1, GROND + 0.02)],
+    [heup, P(-0.04 + 0.32 * sw2, -1.4), P(-0.04 + 0.45 * sw2 - 0.1, GROND + 0.02)],
+    [P(0.01, -0.42), P(0.01 + 0.25 * sw2, -0.68), P(0.12 + 0.3 * sw2, -0.62)],
+    [P(0.01, -0.42), P(0.01 + 0.25 * sw, -0.68), P(0.12 + 0.3 * sw, -0.62)]];
+  for (const l of lijnen) { ctx.beginPath(); l.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
+  ctx.restore();
+}
+function draw() {
+  const ctx = sc.ctx, W = sc.w, Hh = sc.h; ctx.clearRect(0, 0, W, Hh);
+  const S = Math.min(W / (XMAX - XMIN), Hh / (YMAX - YMIN)), ox = (W - S * (XMAX - XMIN)) / 2, oy = (Hh - S * (YMAX - YMIN)) / 2;
+  const Q = q => ({ x: ox + (q.x - XMIN) * S, y: Hh - oy - (q.y - YMIN) * S });
+  // grond
+  { const a = Q({ x: XMIN, y: GROND }), b = Q({ x: XMAX, y: YMIN }); ctx.save(); ctx.fillStyle = '#e4efd9'; ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y); ctx.strokeStyle = '#6f8f5a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, a.y); ctx.stroke(); ctx.restore(); }
+  // boom met de tak waarop de student zit
+  { ctx.save(); ctx.fillStyle = '#c9e2b8'; [[-1.6, 5.2, 1.6], [-0.2, 5.6, 1.4], [-2.6, 4.2, 1.2], [-0.9, 6.6, 1.2]].forEach(([x, y, r]) => { const c = Q({ x, y }); ctx.beginPath(); ctx.arc(c.x, c.y, r * S, 0, 2 * Math.PI); ctx.fill(); }); ctx.restore();
+    ctx.save(); ctx.strokeStyle = '#8a6a48'; ctx.lineCap = 'round';
+    const v = (p, q, w) => { const a = Q(p), b = Q(q); ctx.lineWidth = w * S; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
+    v({ x: -1.6, y: GROND }, { x: -1.6, y: 4.6 }, 0.45); v({ x: -1.6, y: 1.4 }, { x: 0.35, y: 1.85 }, 0.18); v({ x: -1.6, y: 3.6 }, { x: -0.4, y: 4.7 }, 0.15); ctx.restore(); }
+  // de student op de tak, met de hand in A
+  { const P = (x, y) => Q({ x, y }); ctx.save(); ctx.strokeStyle = '#2f3a48'; ctx.lineWidth = Math.max(2, 0.07 * S); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const k = P(-0.75, 2.85); ctx.fillStyle = '#f1d6b8'; ctx.beginPath(); ctx.arc(k.x, k.y, 0.17 * S, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+    [[P(-0.75, 2.66), P(-0.8, 1.85)], [P(-0.8, 1.85), P(-0.35, 1.8), P(-0.3, 1.25)], [P(-0.76, 2.45), P(-0.35, 2.25), P(-0.05, 2.05)]].forEach(l => { ctx.beginPath(); l.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
+    ctx.restore(); }
+  const A = Q({ x: 0, y: H }), Bq = Q({ x: D, y: 0 });
+  // baan van de tomaat (de volledige worp, gestippeld)
+  if (document.getElementById('t_baan').checked) {
+    ctx.save(); ctx.strokeStyle = '#c0392b'; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([5, 5]); ctx.beginPath();
+    for (let i = 0; i <= 120; i++) { const u = TB * i / 120, p = Q({ x: V0 * Math.cos(TH) * u, y: H + V0 * Math.sin(TH) * u - 0.5 * g * u * u }); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }
+    ctx.stroke(); ctx.restore();
+  }
+  // gegevens: h, d en θ (de maat d onder de grond, zodat de professor er niet over loopt)
+  if (document.getElementById('t_maat').checked) {
+    const k0 = Q({ x: 0, y: 0 });
+    ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(k0.x - 0.6 * S, k0.y); ctx.lineTo(Bq.x, k0.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(A.x + 1.6 * S, A.y); ctx.stroke(); ctx.restore();
+    arrow(ctx, A.x + 0.0, (A.y + k0.y) / 2, A.x, A.y, C.ink, { w: 1.3, head: 8 }); arrow(ctx, A.x, (A.y + k0.y) / 2, A.x, k0.y, C.ink, { w: 1.3, head: 8 });
+    label(ctx, 'h', '', A.x + 8, (A.y + k0.y) / 2 + 5, C.ink, { vec: false, size: 15 });
+    const yd = Q({ x: 0, y: GROND - 0.55 }).y; arrow(ctx, (k0.x + Bq.x) / 2, yd, k0.x, yd, C.ink, { w: 1.3, head: 8 }); arrow(ctx, (k0.x + Bq.x) / 2, yd, Bq.x, yd, C.ink, { w: 1.3, head: 8 });
+    label(ctx, 'd', '', (k0.x + Bq.x) / 2 - 4, yd + 18, C.ink, { vec: false, size: 15 });
+    ctx.save(); ctx.strokeStyle = '#4f5862'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(A.x, A.y, 1.2 * S, -TH, 0); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '', A.x + 1.3 * S * Math.cos(TH / 2) + 3, A.y - 1.3 * S * Math.sin(TH / 2) + 5, '#4f5862', { vec: false, size: 15 });
+  }
+  // stroboscoop: standen op gelijke tijdsintervallen tot nu
+  if (document.getElementById('t_strobo').checked) {
+    for (let s = 0; s <= Math.min(t, TT) + 1e-9; s += 0.4) {
+      professor(ctx, Q, S, xProf(s), xProf(s) * 2.2, 0.15);
+      if (s > T1) { const p = Q(tomaat(s)); ctx.save(); ctx.fillStyle = 'rgba(192,57,43,0.4)'; ctx.beginPath(); ctx.arc(p.x, p.y, 0.14 * S, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+    }
+  }
+  // de professor
+  professor(ctx, Q, S, xProf(t), xProf(t) * 2.2);
+  // de tomaat (na de treffer: een vlek op de kruin)
+  { const p = Q(tomaat(t)); ctx.save(); ctx.fillStyle = '#d63a2c'; ctx.strokeStyle = '#8f2016'; ctx.lineWidth = 1;
+    if (t >= TT) { ctx.beginPath(); ctx.ellipse(p.x, p.y - 0.03 * S, 0.26 * S, 0.1 * S, 0, 0, 2 * Math.PI); ctx.fill(); }
+    else { ctx.beginPath(); ctx.arc(p.x, p.y, 0.15 * S, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#3f8f3a'; ctx.beginPath(); ctx.arc(p.x, p.y - 0.13 * S, 0.05 * S, 0, 2 * Math.PI); ctx.fill(); }
+    ctx.restore(); }
+  label(ctx, 'A', '', A.x - 6, A.y - 12, C.ink, { vec: false, size: 16 });
+  label(ctx, 'B', '', Bq.x + 12, Bq.y - 6, C.ink, { vec: false, size: 16 });
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id), sl = $('tt');
+const naarSlider = () => { sl.value = Math.round(t / TEND * 1000); $('tval').textContent = `${t.toFixed(2)} s`; };
+function render() { draw(); naarSlider(); }
+sl.oninput = () => { playing = false; $('play').textContent = '▶ Afspelen'; t = sl.value / 1000 * TEND; render(); };
+$('play').onclick = () => { playing = !playing; if (playing && t >= TEND - 1e-3) t = 0; $('play').textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
+$('nul').onclick = () => { playing = false; $('play').textContent = '▶ Afspelen'; t = 0; render(); };
+['t_baan', 't_strobo', 't_maat'].forEach(id => $(id).onchange = draw);
+TM1.bijGrootte([sc], render);
+TM1.lus(dt => { t += dt; if (t >= TEND) { t = TEND; playing = false; $('play').textContent = '▶ Afspelen'; } render(); }, () => playing);   // aan echte snelheid
+
+})();
+</script>
+</body>
+</html>

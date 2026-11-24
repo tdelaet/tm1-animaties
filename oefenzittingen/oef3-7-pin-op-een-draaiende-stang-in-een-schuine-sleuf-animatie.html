@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oefening 3.7 – Pin op een draaiende stang in een schuine sleuf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../gedeeld/tm1.css">
+<style>
+  .scene canvas{height:auto;aspect-ratio:98/88;max-height:660px}
+  @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr)} }
+  .opgave{padding:10px 16px;margin:0 0 14px}
+  .opgave p{margin:0 0 6px;font-size:14px}
+  .opgave ol{margin:4px 0 6px;padding-left:22px;font-size:14px} .opgave li{margin:2px 0}
+  .opgave .label{font:600 11.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="terug" href="../index.html#oefenzittingen">← Alle oefeningen</a>
+  <header>
+    <h1>Oefening 3.7 — Pin op een draaiende stang in een schuine sleuf</h1>
+    <span class="kicker">Oefenzitting 3 · kinematica van een puntmassa · opgave en animatie</span>
+  </header>
+
+  <div class="opgave card">
+    <span class="label">Opgave</span>
+    <p>Op een stang die roteert rond het punt A is een pin <i>P</i> bevestigd die enerzijds vrij kan bewegen langsheen de stang en anderzijds glijdt in een schuine sleuf in een blok (zie figuur). Het blok is vast verbonden met de omgeving. De hoek <i>θ</i> die de roterende stang maakt met de horizontale verandert in functie van de tijd als <span data-tex="\theta(t) = \frac{\pi}{4} + \frac{\pi}{8}\sin\left(\frac{\pi}{2}t\right)"></span>.</p>
+    <ol type="a">
+      <li>Bepaal de uitdrukkingen voor |<i>AP</i>|(<i>t</i>) en <span data-tex="\vec r_P(t)"></span> die geldig zijn op elk tijdstip.</li>
+      <li>Bepaal |<i>AP</i>| en <span data-tex="\vec r_P"></span> voor <span data-tex="\theta(t) = \frac{\pi}{4}"></span>.</li>
+      <li>Bepaal uitdrukkingen voor de tijdsafgeleide van |<i>AP</i>|(<i>t</i>) en voor de snelheidsvector van het punt <i>P</i> die gelden voor alle tijdstippen.</li>
+      <li>Bepaal voor de stand bepaald door <span data-tex="\theta(t) = \frac{\pi}{4}"></span> de snelheidsvector van het punt <i>P</i>.</li>
+    </ol>
+  </div>
+
+  <div class="main">
+    <div class="card scene">
+      <canvas id="scene" aria-label="Een stang draait rond A; de pin P zit op de stang en glijdt in een schuine sleuf onder 60 graden in een vast blok"></canvas>
+    </div>
+    <div class="side">
+      <div class="card panel">
+        <h2>Tonen</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="t_baan" checked> <span>baan van <i>P</i> (stroboscoop)</span></label>
+          <label><input type="checkbox" id="t_hoek" checked> <span>hoek <i>θ</i>(<i>t</i>)</span></label>
+        </div>
+      </div>
+      <div class="card panel">
+        <h2>Bediening</h2>
+        <div class="btnrow" style="margin:0"><button id="play">▶ Afspelen</button> <button id="nul">θ = π/4</button></div>
+        <div class="slider vast">
+          <div class="lab"><span>Tijd <span class="i">t</span></span><b id="tval"></b></div>
+          <input type="range" id="tt" min="0" max="1000" step="1">
+        </div>
+        <div class="note" id="thval"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../gedeeld/tm1.js"></script>
+<script>
+(() => {
+const { setup, arrow, label, rad, deg } = TM1;
+const C = TM1.kleuren();
+const KP = C.r;                                          // pin
+// gegevens: A in de oorsprong, B op 2 m rechts van A; de sleuf maakt 60° met de horizontale (in B, naar links omhoog)
+const AB = 2.0, HS = rad(60), LSTANG = 2.55, TMAX = 4;     // één periode van θ(t): 2π/(π/2) = 4 s
+const BX0 = 0.74, BY1 = 2.3;                            // blok: van x = 0.74 m tot B, van de grond tot 2.3 m hoog
+let t = 0, playing = false;
+const theta = s => Math.PI / 4 + Math.PI / 8 * Math.sin(Math.PI / 2 * s);
+const AP = s => AB * Math.sin(HS) / Math.sin(theta(s) + HS);   // snijpunt van de stang met de sleuf (zonder de uitwerking te tonen)
+const P = s => ({ x: AP(s) * Math.cos(theta(s)), y: AP(s) * Math.sin(theta(s)) });
+const XMIN = -0.45, XMAX = 2.45, YMIN = -0.62, YMAX = 2.55;
+
+const sc = setup(document.getElementById('scene'));
+function steunpunt(ctx, q, S) {   // scharnier met vast steunpunt
+  const r = 0.07 * S, h = 0.16 * S;
+  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.fillStyle = '#fff'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - h * 0.7, q.y + h); ctx.lineTo(q.x + h * 0.7, q.y + h); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(q.x - h, q.y + h); ctx.lineTo(q.x + h, q.y + h); ctx.stroke();
+  for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(q.x + k * h / 3.2, q.y + h); ctx.lineTo(q.x + k * h / 3.2 - h * 0.3, q.y + h * 1.3); ctx.stroke(); }
+  ctx.fillStyle = '#1f2a37'; ctx.beginPath(); ctx.arc(q.x, q.y, r * 0.6, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+}
+function draw() {
+  const ctx = sc.ctx, W = sc.w, H = sc.h; ctx.clearRect(0, 0, W, H);
+  const S = Math.min(W / (XMAX - XMIN), H / (YMAX - YMIN)), ox = (W - S * (XMAX - XMIN)) / 2, oy = (H - S * (YMAX - YMIN)) / 2;
+  const Q = q => ({ x: ox + (q.x - XMIN) * S, y: H - oy - (q.y - YMIN) * S });
+  const A = Q({ x: 0, y: 0 }), B = Q({ x: AB, y: 0 }), es = { x: -Math.cos(HS), y: Math.sin(HS) };
+  // het vaste blok met de schuine sleuf
+  { const p0 = Q({ x: BX0, y: BY1 }), p1 = Q({ x: AB, y: 0 });
+    ctx.save(); ctx.fillStyle = '#4a4f57'; ctx.fillRect(p0.x, p0.y, p1.x - p0.x, p1.y - p0.y); ctx.restore();
+    const sMax = (BY1 - 0.1) / es.y, w = 0.055, n = { x: es.y, y: -es.x };
+    const k = [{ s: 0.06, z: 1 }, { s: sMax, z: 1 }, { s: sMax, z: -1 }, { s: 0.06, z: -1 }].map(o => Q({ x: AB + o.s * es.x + o.z * w * n.x, y: o.s * es.y + o.z * w * n.y }));
+    ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2b2f35'; ctx.lineWidth = 1.2; ctx.beginPath(); k.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+    const m0 = Q({ x: AB + 0.06 * es.x, y: 0.06 * es.y }), m1 = Q({ x: AB + sMax * es.x, y: sMax * es.y }); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#9aa1a9'; ctx.beginPath(); ctx.moveTo(m0.x, m0.y); ctx.lineTo(m1.x, m1.y); ctx.stroke(); ctx.restore();
+    // hoek van 60° tussen de sleuf en de horizontale, in B
+    ctx.save(); ctx.strokeStyle = '#e8eaed'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(B.x, B.y, 0.45 * S, Math.PI, Math.PI + HS); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.font = '14px Inter, sans-serif'; ctx.fillStyle = '#e8eaed'; ctx.fillText('60°', B.x - 0.78 * S, B.y - 0.16 * S); ctx.restore(); }
+  // steunpunten: A, de linkerkant van het blok en B
+  steunpunt(ctx, A, S); steunpunt(ctx, Q({ x: BX0, y: 0 }), S); steunpunt(ctx, B, S);
+  // maat 2 m
+  { const y = Q({ x: 0, y: -0.48 }).y; ctx.save(); ctx.strokeStyle = '#9aa1a9'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(A.x, A.y + 0.2 * S); ctx.lineTo(A.x, y + 6); ctx.moveTo(B.x, B.y + 0.2 * S); ctx.lineTo(B.x, y + 6); ctx.stroke(); ctx.restore();
+    arrow(ctx, (A.x + B.x) / 2, y, A.x, y, C.ink, { w: 1.3, head: 9 }); arrow(ctx, (A.x + B.x) / 2, y, B.x, y, C.ink, { w: 1.3, head: 9 });
+    ctx.save(); ctx.font = '15px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.fillText('2 m', (A.x + B.x) / 2, y - 7); ctx.restore(); }
+  // assen in A
+  arrow(ctx, A.x, A.y, A.x + 0.4 * S, A.y, '#3d454f', { w: 1.3, head: 8 }); label(ctx, 'x', '', A.x + 0.36 * S, A.y + 18, '#3d454f', { vec: false, size: 14 });
+  arrow(ctx, A.x, A.y, A.x, A.y - 0.4 * S, '#3d454f', { w: 1.3, head: 8 }); label(ctx, 'y', '', A.x - 16, A.y - 0.36 * S, '#3d454f', { vec: false, size: 14 });
+  // stroboscoop: standen van P op gelijke tijdsintervallen (één periode)
+  if (document.getElementById('t_baan').checked) {
+    for (let s = 0; s < TMAX - 1e-9; s += 0.2) { const r = Q(P(s)); ctx.save(); ctx.fillStyle = 'rgba(200,80,50,0.45)'; ctx.beginPath(); ctx.arc(r.x, r.y, 3, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+  }
+  // de draaiende stang
+  const th = theta(t), e = { x: Math.cos(th), y: Math.sin(th) }, Ae = Q({ x: LSTANG * e.x, y: LSTANG * e.y });
+  ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = '#5c636b'; ctx.lineWidth = 0.13 * S; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(Ae.x, Ae.y); ctx.stroke();
+  ctx.strokeStyle = '#a7adb4'; ctx.lineWidth = 0.13 * S - 3; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(Ae.x, Ae.y); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.fillStyle = '#1f2a37'; ctx.beginPath(); ctx.arc(A.x, A.y, 4, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  // hoek θ(t)
+  if (document.getElementById('t_hoek').checked) {
+    ctx.save(); ctx.strokeStyle = C.accent; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(A.x, A.y, 0.42 * S, -th, 0); ctx.stroke(); ctx.restore();
+    TM1.formule(ctx, '$\\theta(t)$', A.x + 0.5 * S * Math.cos(th / 2) + 6, A.y - 0.5 * S * Math.sin(th / 2) - 2, { color: C.accent, size: 14 });
+  }
+  // de pin P
+  const q = Q(P(t));
+  ctx.save(); ctx.fillStyle = KP; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, 6.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  label(ctx, 'P', '', q.x - 24, q.y - 8, KP, { vec: false, size: 16 });
+  label(ctx, 'A', '', A.x - 26, A.y + 6, C.ink, { vec: false, size: 16 }); label(ctx, 'B', '', B.x + 12, B.y + 6, C.ink, { vec: false, size: 16 });
+  if (Math.abs(th - Math.PI / 4) < 0.004 && Math.cos(Math.PI / 2 * t) > 0) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right'; ctx.fillText('stand θ = π/4', W - 12, 20); ctx.restore(); }
+}
+
+// ---------- bediening ----------
+const $ = id => document.getElementById(id), sl = $('tt');
+const naarSlider = () => { sl.value = Math.round(t / TMAX * 1000); $('tval').textContent = `${t.toFixed(2)} s`; $('thval').innerHTML = `<i>θ</i> = ${deg(theta(t)).toFixed(1)}°`; };
+function render() { draw(); naarSlider(); }
+sl.oninput = () => { playing = false; $('play').textContent = '▶ Afspelen'; t = sl.value / 1000 * TMAX; render(); };
+$('play').onclick = () => { playing = !playing; $('play').textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
+$('nul').onclick = () => { playing = false; $('play').textContent = '▶ Afspelen'; t = 0; render(); };
+['t_baan', 't_hoek'].forEach(id => $(id).onchange = draw);
+TM1.bijGrootte([sc], render);
+TM1.lus(dt => { t += dt; if (t >= TMAX) t -= TMAX; render(); }, () => playing);   // aan echte snelheid, periode 4 s
+
+// ---------- wiskunde in de opgave met KaTeX ----------
+window.addEventListener('load', () => { if (window.katex) document.querySelectorAll('[data-tex]').forEach(e => { try { katex.render(e.dataset.tex, e, { throwOnError: false }); } catch (_) {} }); });
+
+})();
+</script>
+</body>
+</html>

@@ -188,7 +188,9 @@ TM1.oefenzittingen = [
       { id: '3.3', soort: 'oef', titel: 'Pin in twee gleuven', status: 'klaar', pad: 'oefenzittingen/oef3-3-pin-in-twee-gleuven-animatie.html',
         padMetTips: 'oefenzittingen/oef3-3-pin-in-twee-gleuven.html' },
       { id: '3.5', soort: 'oef', titel: 'Pin in een sinusvormige gleuf', status: 'klaar', pad: 'oefenzittingen/oef3-5-pin-in-een-sinusvormige-gleuf-animatie.html',
-        padMetTips: 'oefenzittingen/oef3-5-pin-in-een-sinusvormige-gleuf.html' }]}
+        padMetTips: 'oefenzittingen/oef3-5-pin-in-een-sinusvormige-gleuf.html' },
+      { id: '3.7', soort: 'oef', titel: 'Pin op een draaiende stang in een schuine sleuf', status: 'klaar', pad: 'oefenzittingen/oef3-7-pin-op-een-draaiende-stang-in-een-schuine-sleuf-animatie.html' },
+      { id: '3.10', soort: 'oef', titel: 'Een tomaat op de kruin van een joggende professor', status: 'klaar', pad: 'oefenzittingen/oef3-10-een-tomaat-op-de-kruin-van-een-joggende-professor-animatie.html' }]}
   ]}
 ];
 
