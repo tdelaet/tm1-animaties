@@ -331,9 +331,7 @@ function stapInhoud() {
   let h = '';
   if (stap === 1) h = `<p>We maken de <b>puntmassa</b> vrij: maak ze los van de veer en van het horizontale oppervlak. Zo worden de veerkracht en de kracht van het oppervlak externe krachten, die voorkomen in de bewegingsvergelijking.</p>
       <p class="noot">De bewegingsvergelijking geldt op elk ogenblik: het vrijlichaamsdiagram hieronder volgt de beweging.</p>`;
-  else if (stap === 2) h = `<p class="noot"><b>Veer.</b> De veer brengt een kracht volgens de veer over, evenredig met de verlenging <i>x</i> ten opzichte van de rustlengte: ${tx(`${F_} = -k\\,x\\,\\vec e_x`)}. Is de veer uitgerekt (<i>x</i> &gt; 0), dan trekt ze; is ze ingedrukt (<i>x</i> &lt; 0), dan duwt ze.</p>
-      <p class="noot"><b>Oppervlak.</b> In de loep zie je het contact met het gladde oppervlak. Enkel de translatie het oppervlak in is verhinderd: dat geeft de normaalkracht ${tx(R_)} (naar boven, dus volgens negatieve <i>y</i>). Horizontaal is er geen wrijving.</p>
-      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} aan (dubbele pijl).</p>`;
+  else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (op een willekeurig moment)</h4>${v(BEWV)}
       <h4>Bijkomende vergelijkingen</h4>
       <p><b>Veerwet.</b> ${tx(`${kl(KV, 'F_{v,x}')} = -k\\,x`)}, met <i>x</i> de verlenging van de veer.</p>

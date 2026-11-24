@@ -299,9 +299,7 @@ function stapInhoud() {
   let h = '';
   if (stap === 1) h = `<p>We maken de <b>ronddraaiende massa</b> vrij, als een puntmassa <i>m</i>: maak ze los van de veer en van het horizontale oppervlak. Zo worden de veerkracht en de kracht van het oppervlak externe krachten, die voorkomen in de bewegingsvergelijking.</p>
       <p class="noot">Ga daarna naar stap 2 om de massa vrij te maken.</p>`;
-  else if (stap === 2) h = `<p class="noot"><b>Veer.</b> De veer brengt een kracht volgens de veer over, met een grootte die volgt uit de verlenging: ${tx(`${kl(KV, 'F_v')} = k\\,(l - l_0)`)}. Is de veer uitgerekt (<i>l</i> &gt; <i>l</i><sub>0</sub>), dan trekt ze de massa naar O: ${tx(`${F_} = ${kl(KV, 'F_v\\,\\vec e_x')}`)}.</p>
-      <p class="noot"><b>Oppervlak.</b> In de loep zie je het contact met het gladde oppervlak. Enkel de translatie het oppervlak in is verhinderd: dat geeft de normaalkracht ${tx(R_)}. Omdat het oppervlak glad is, is er geen wrijving: horizontaal kan de massa vrij bewegen.</p>
-      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} van de massa aan (dubbele pijl), naar O.</p>`;
+  else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (massa)</h4>${v(`${F_} + ${R_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijkingen</h4>
       <p><b>Kinematica.</b> De massa beschrijft een cirkel met straal <i>l</i> en constante hoeksnelheid <i>ω</i> (zie ook hoofdstuk 13): ${tx(`${kl(C.at, 'a_t')} = 0`)} en ${tx(`${kl(C.an, 'a_n')} = \\frac{v^2}{\\rho} = \\frac{(l\\,\\omega)^2}{l} = l\\,\\omega^2`)}, naar het middelpunt O: ${tx(`${A_} = ${kl(KA, 'l\\,\\omega^2\\,\\vec e_x')}`)}.</p>
@@ -315,8 +313,11 @@ function stapInhoud() {
       <h4>x-component, met de veerwet</h4>${v(`${kl(KV, 'F_v')} = m\\,l\\,\\omega^2 \\;\\Rightarrow\\; k\\,(l - l_0) = m\\,l\\,\\omega^2`)}
       <div class="kader">${v(`l = \\frac{k\\,l_0}{k - m\\,\\omega^2} = \\frac{120\\ \\text{N/m}\\cdot 0.500\\ \\text{m}}{120\\ \\text{N/m} - 2.00\\ \\text{kg}\\cdot(2.00\\ \\text{rad/s})^2} = 0.536\\ \\text{m}`)}</div>
       <p class="noot">De veerkracht is dan ${tx(`${kl(KV, 'F_v')} = k\\,(l - l_0) = 120\\ \\text{N/m}\\cdot 0.0357\\ \\text{m} = 4.29\\ \\text{N}`)}.</p>`;
-  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
-      <div class="kader">${v(`l = \\frac{k\\,l_0}{k - m\\,\\omega^2}, \\qquad ${kl(KR, 'R')} = mg`)}</div>
+  else h = `<div class="kader">${v(`l = \\frac{k\\,l_0}{k - m\\,\\omega^2}, \\qquad ${kl(KR, 'R')} = mg`)}</div>
+      <p style="margin-top:10px"><b>Lengte <i>l</i> van de veer in functie van de hoeksnelheid <i>ω</i></b> (het bolletje is de gekozen <i>ω</i>)</p>
+      <canvas class="gint" id="gint"></canvas>
+      <p>Bij <i>ω</i> = 0 heeft de veer haar rustlengte <i>l</i><sub>0</sub> = 0.500 m. Voor kleine <i>ω</i> wordt ze maar weinig langer, maar naarmate <i>ω</i> nadert tot √(<i>k</i>/<i>m</i>) = ${Math.sqrt(K / M).toFixed(2)} rad/s (stippellijn) groeit <i>l</i> onbeperkt: de veer kan de nodige naar O gerichte kracht dan niet meer leveren.</p>
+      <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p>In de noemer moeten <i>k</i> en <i>mω</i>² dezelfde eenheid hebben: kg · (1/s)² = kg/s² = N/m, net als <i>k</i>. Dan heeft <i>l</i> = <i>kl</i><sub>0</sub>/(…) de eenheid van <i>l</i><sub>0</sub>: meter.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
@@ -351,7 +352,16 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
-  const s = $('omsl'); if (s) s.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); };
+  const s = $('omsl'); if (s) s.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  tekenInt();
+}
+// grafiek in de interpretatie: l(ω), met de gekozen ω en de asymptoot ω = √(k/m)
+function tekenInt() {
+  if (stap !== 5) return;
+  const wg = Math.sqrt(K / M), r = TM1.grafiekIn($('gint'), [0, 8], [0, 3], '$\\omega$ [rad/s]', '$l$ [m]',
+    [{ f: w => (w < wg ? K * L0 / (K - M * w * w) : NaN), kleur: KV }], om);
+  if (!r) return;
+  const { F, ctx } = r; ctx.save(); ctx.strokeStyle = '#9aa1a9'; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(F.X(wg), F.Y(0)); ctx.lineTo(F.X(wg), F.Y(3)); ctx.stroke(); ctx.restore();
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');

@@ -292,8 +292,7 @@ function stapInhoud() {
   let h = '';
   if (stap === 1) h = `<p>De container is een onderdeel van het gehele systeem loopkat + kabel + container. We maken de <b>container</b> vrij door in gedachten de kabel door te snijden, en beschouwen ze als een puntmassa <i>m</i>. Zo wordt de kabelkracht een externe kracht, die voorkomt in de bewegingsvergelijking.</p>
       <p class="noot">Ga daarna naar stap 2 om de container vrij te maken.</p>`;
-  else if (stap === 2) h = `<p class="noot">In de loep zie je enkel de verbinding: de bovenkant van de container met het oog en het onderste stukje kabel. Enkel de translatie langs de kabel, weg van de loopkat, is verhinderd: dat geeft de contactkracht ${tx(S_)}, volgens de kabel (de resultante van de trekkrachten in de kabel). De richting van de kabel, de hoek <i>ϕ</i> met de verticale, is nog onbekend.</p>
-      <p class="noot">Daarnaast werkt de niet-contactkracht: het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} van de container aan (dubbele pijl).</p>`;
+  else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (container)</h4>${v(`${S_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijking: kinematica</h4>
       <p>Het geheel van loopkat en container beweegt samen, met dezelfde constante horizontale versnelling: ${tx(`${A_} = ${kl(KA, 'a\\,\\vec e_x')}`)}, met <i>a</i> = 0.800 m/s².</p>
@@ -306,8 +305,11 @@ function stapInhoud() {
       <div class="kader">${v(`${kl(KS, 'S')} = m\\sqrt{a^2 + g^2} = 30.1\\ \\text{kN}, \\qquad ${S_} = 2.40\\ \\text{kN}\\,\\vec e_x + 30.0\\ \\text{kN}\\,\\vec e_y`)}</div>
       <p>De horizontale component van de krachtvector ${tx(S_)} is meteen de kracht die de aandrijving van de loopkat moet opwekken om de last te verplaatsen. Deze kracht bedraagt dus <b>2.40 kN</b>.</p>`;
   else h = `<p>Merk op dat, in tegenstelling tot de statica, de kracht in de kabel niet gelijk is aan het gewicht van de container: de kabel moet de container ook versnellen.</p>
-      <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g}, \\qquad ${kl(KS, 'S')} = m\\sqrt{a^2 + g^2}`)}</div>
+      <p style="margin-top:10px"><b><i>ϕ</i> en <i>S</i> in functie van de versnelling <i>a</i></b> (<i>m</i> = 3000 kg; het bolletje is de gekozen <i>a</i>)</p>
+      <canvas class="gint" id="gint"></canvas><canvas class="gint" id="gint2"></canvas>
+      <p>Bij <i>a</i> = 0 hangt de kabel verticaal en is <i>S</i> = <i>mg</i>. Hoe sterker de loopkat versnelt, hoe schuiner de kabel (<i>ϕ</i> nadert 90°) en hoe groter de kabelkracht. Voor versnellingen die klein zijn tegenover <i>g</i> neemt <i>ϕ</i> bijna lineair toe, terwijl <i>S</i> nauwelijks groter wordt dan <i>mg</i>.</p>
+      <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p><i>a</i>/<i>g</i> is een verhouding van twee versnellingen en heeft geen eenheid, zoals het argument van atan moet. <i>S</i> heeft de eenheid kg · m/s² = N.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
@@ -341,7 +343,14 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
-  const s = $('asl'); if (s) s.oninput = e => { a = +e.target.value; t = 0; $('aval').textContent = `${a.toFixed(2)} m/s²`; $('res5').innerHTML = res5(); drawScene(); };
+  const s = $('asl'); if (s) s.oninput = e => { a = +e.target.value; t = 0; $('aval').textContent = `${a.toFixed(2)} m/s²`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  tekenInt();
+}
+// grafieken in de interpretatie: ϕ(a) en S(a), met de gekozen a
+function tekenInt() {
+  if (stap !== 5) return;
+  TM1.grafiekIn($('gint'), [0, 6], [0, 35], '$a$ [m/s²]', '$\\phi$ [°]', [{ f: x => deg(Math.atan(x / g)), kleur: '#4f5862' }], a);
+  TM1.grafiekIn($('gint2'), [0, 6], [29, 36], '$a$ [m/s²]', '$S$ [kN]', [{ f: x => M * Math.hypot(x, g) / 1000, kleur: KS }], a);
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');

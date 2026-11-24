@@ -353,12 +353,7 @@ function stapInhoud() {
   let h = '';
   if (stap === 1) h = `<p>We maken de <b>massa</b> vrij, als een puntmassa <i>m</i>: maak ze los van de veer en van de geleiding. Zo worden de veerkracht en de kracht van de geleiding externe krachten, die voorkomen in de bewegingsvergelijking.</p>
       <p class="noot">We bestuderen de massa in A, net na het loslaten uit rust, voor een willekeurige hoek <i>θ</i> (tussen 0° en 90°); het vrijlichaamsdiagram toont <i>θ</i> = 30°. Ga daarna naar stap 2 om de massa vrij te maken.</p>`;
-  else if (stap === 2) h = `<p class="noot">De massa heeft <b>twee verbindingen</b>: de geleiding en de veer. Bestudeer ze elk apart met de knoppen boven de loep.</p>
-      ${verb === 'g'
-        ? `<p class="noot"><b>Verbinding 1: geleiding.</b> In de loep zie je de massa in de geleiding (de veer is al losgemaakt). De geleiding verhindert de translatie naar O én weg van O: dat geeft de normaalkracht ${tx(N_)}, loodrecht op de geleiding, in een zin die nog onbekend is (een geleiding kan in beide zinnen duwen). Omdat de geleiding glad is, is er geen kracht langs de geleiding.</p>`
-        : `<p class="noot"><b>Verbinding 2: veer.</b> In de loep zie je de massa met het onderste stuk veer (de geleiding is al losgemaakt). Een veer verhindert geen enkele beweging, maar verzet zich ertegen: beweegt de massa langs de veer, dan verandert de lengte van de veer en dus de veerkracht. Beweegt de massa loodrecht op de veer, dan draait de veer rond B en verandert de lengte (in eerste benadering) niet. De veer oefent dus een kracht volgens de veer uit, met een grootte die volgt uit de verlenging: ${tx(`${kl(KV, 'F_v')} = k\\,(\\ell - \\ell_0)`)}.</p>
-           <p class="noot">De lengte van de veer is de koorde van P naar B: ${tx('\\ell = 2r\\cos(\\theta/2)')}. De veer is uitgerekt (<i>ℓ</i> &gt; <i>ℓ</i><sub>0</sub> = <i>r</i>) en trekt de massa naar B; de richting maakt een hoek <i>θ</i>/2 met de horizontale.</p>`}
-      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} aan (dubbele pijlen), met natuurlijke componenten: de tangentiële ${tx(kl(KA, 'a_t'))} en de normale ${tx(kl(KA, 'a_n'))} (naar O).</p>`;
+  else if (stap === 2) h = `<p class="noot">De massa heeft <b>twee verbindingen</b>: de geleiding en de veer. Bestudeer ze elk apart met de knoppen boven de loep.</p>`;
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (massa)</h4>${v(`${F_} + ${N_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijkingen</h4>
       <p><b>Veerwet en meetkunde.</b> ${tx(`${kl(KV, 'F_v')} = k\\,(\\ell - \\ell_0) = k\\,\\big(2r\\cos(\\theta/2) - r\\big)`)}</p>

@@ -286,8 +286,7 @@ function stapInhoud() {
   let h = '';
   if (stap === 1) h = `<p>We maken het <b>blok</b> vrij als een puntmassa <i>m</i>, in het hoogste punt van de baan: snijd het touw door aan het blok. Zo wordt de touwkracht een externe kracht, die voorkomt in de bewegingsvergelijking.</p>
       <p class="noot">Ga daarna naar stap 2 om het blok vrij te maken.</p>`;
-  else if (stap === 2) h = `<p class="noot">In de loep zie je het blok in het hoogste punt, met het onderste stukje touw (O ligt eronder). Enkel de translatie langs het touw, weg van O, is verhinderd: dat geeft de touwkracht ${tx(S_)}, volgens het touw naar O, dus in het hoogste punt naar beneden (positieve <i>y</i>).</p>
-      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}, eveneens naar beneden. Duid ook de versnelling ${tx(A_)} van het blok aan (dubbele pijl), naar O.</p>`;
+  else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (blok, hoogste punt)</h4>${v(`${S_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijking: kinematica</h4>
       <p>Als goede benadering beweegt het blok in de buurt van het hoogste punt met een constante grootte van de snelheid: het heeft dan enkel een normaalversnelling (zie ook hoofdstuk 13), naar het middelpunt O, dus volgens positieve <i>y</i>:</p>
@@ -300,8 +299,11 @@ function stapInhoud() {
       <p>Hoe trager het blok draait, hoe kleiner de touwkracht. De minimale snelheid wordt bereikt als de spankracht in het touw nul wordt (met <span data-tex="${kl(KS, 'S')} \\ge 0"></span>):</p>
       <div class="kader">${v(`${kl(KS, 'S')} = 0 \\;\\Rightarrow\\; \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = l\\,\\omega_\\text{min} = \\sqrt{g\\,l}`)}</div>
       <p class="noot">Met de illustratiewaarde <i>l</i> = 1.00 m: <i>ω</i><sub>min</sub> = √10 = 3.16 rad/s en <i>v</i><sub>min</sub> = 3.16 m/s.</p>`;
-  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
-      <div class="kader">${v(`${kl(KS, 'S')} = m\\,(l\\,\\omega^2 - g), \\qquad \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = \\sqrt{g\\,l}`)}</div>
+  else h = `<div class="kader">${v(`${kl(KS, 'S')} = m\\,(l\\,\\omega^2 - g), \\qquad \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = \\sqrt{g\\,l}`)}</div>
+      <p style="margin-top:10px"><b>Touwkracht <i>S</i> in het hoogste punt in functie van de hoeksnelheid <i>ω</i></b> (bij de gekozen <i>l</i>; het bolletje is de gekozen <i>ω</i>)</p>
+      <canvas class="gint" id="gint"></canvas>
+      <p>De touwkracht groeit kwadratisch met <i>ω</i>. Bij <i>ω</i><sub>min</sub> = √(<i>g</i>/<i>l</i>) is <i>S</i> = 0: het gewicht levert dan juist de nodige normaalversnelling. Daaronder zou <i>S</i> negatief moeten zijn (stippellijn): dat kan niet, het touw wordt slap.</p>
+      <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p><span data-tex="\\sqrt{\\frac{\\text{m/s}^2}{\\text{m}}} = \\frac{1}{\\text{s}}"></span>, de eenheid van een hoeksnelheid; <span data-tex="\\sqrt{\\text{m/s}^2\\cdot\\text{m}} = \\text{m/s}"></span>, de eenheid van een snelheid. In <i>S</i> hebben <i>lω</i>² en <i>g</i> allebei de eenheid m/s², dus <i>S</i> is in N.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
@@ -337,9 +339,18 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
-  const upd = () => { $('omval').textContent = `${om.toFixed(2)} rad/s`; $('lval').textContent = `${l.toFixed(2)} m`; $('res5').innerHTML = res5(); drawScene(); };
+  const upd = () => { $('omval').textContent = `${om.toFixed(2)} rad/s`; $('lval').textContent = `${l.toFixed(2)} m`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
   const so = $('omsl'); if (so) so.oninput = e => { om = +e.target.value; upd(); };
   const sl = $('lsl'); if (sl) sl.oninput = e => { l = +e.target.value; upd(); };
+  tekenInt();
+}
+// grafiek in de interpretatie: S/(mg) in het hoogste punt in functie van ω, bij de gekozen l
+function tekenInt() {
+  if (stap !== 5) return;
+  const wm = Math.sqrt(g / l), s = w => l * w * w / g - 1;
+  TM1.grafiekIn($('gint'), [0, 7], [-1.2, 7], '$\\omega$ [rad/s]', '$S/(mg)$', [
+    { f: w => (w >= wm ? s(w) : NaN), kleur: KS },
+    { f: w => (w <= wm ? s(w) : NaN), kleur: '#9aa1a9', stippel: true, naam: 'S < 0: touw slap' }], om);
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');

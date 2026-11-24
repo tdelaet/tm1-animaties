@@ -336,8 +336,7 @@ function stapInhoud() {
   let h = '';
   if (stap === 1) h = `<p>We maken het <b>pakje</b> vrij, als een puntmassa <i>m</i>: maak het los van de band. Zo worden de krachten van de band op het pakje externe krachten, die voorkomen in de bewegingsvergelijking.</p>
       <p class="noot">We bestuderen het pakje op de trommel, in de stand <i>θ</i> waar het net begint te glijden. Ga daarna naar stap 2 om het pakje vrij te maken.</p>`;
-  else if (stap === 2) h = `<p class="noot">In de loep zie je het contact tussen het pakje en de ruwe band. De band verhindert de translatie naar binnen: dat geeft de normaalkracht ${tx(N_)}. Zolang het pakje niet glijdt, verhindert de band ook de translatie langs de band: dat geeft de wrijvingskracht ${tx(W_)}. Het pakje heeft de neiging naar beneden te glijden (volgens <i>x</i>), dus wijst de wrijving volgens negatieve <i>x</i>.</p>
-      <p class="noot">Daarnaast werkt het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} van het pakje aan (dubbele pijl), naar de as van de trommel. De assen draaien mee: <i>x</i> langs de band, <i>y</i> naar buiten.</p>`;
+  else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (pakje)</h4>${vv(`${N_} + ${W_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijkingen</h4>
       <p><b>Kinematica: het pakje volgt nog net de band.</b> Het beschrijft een cirkel met straal <i>R</i> aan de constante snelheid van de band:</p>
@@ -356,8 +355,11 @@ function stapInhoud() {
       <p>Met de gegevens (<i>μ</i> = 1, <i>v</i><sub>band</sub> = 0.85 m/s, <i>R</i> = 0.2 m):</p>
       ${vv(`\\theta = \\operatorname{acos}\\left(\\frac{1\\cdot(0.85\\ \\text{m/s})^2}{10\\ \\text{m/s}^2\\cdot 0.2\\ \\text{m}\\cdot\\sqrt 2}\\right) - \\operatorname{atan} 1 = \\operatorname{acos}(0.255) - 45^\\circ = 75.2^\\circ - 45^\\circ = 30.2^\\circ`)}
       <p class="noot">Controle van de voorwaarde <i>N</i> ≥ 0 (<span class="evaltag">teken controleren</span>): <span data-tex="${kl(KN, 'N')} = m\\,(g\\cos\\theta - v_\\text{band}^2/R) = 0.1\\ \\text{kg}\\cdot(8.64 - 3.61)\\ \\text{m/s}^2 = 0.50\\ \\text{N} \\ge 0"></span>: het pakje ligt nog tegen de band.</p>`;
-  else h = `<p>We evalueren de symbolische oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
-      <div class="kader">${vv(TH)}</div>
+  else h = `<div class="kader">${vv(TH)}</div>
+      <p style="margin-top:10px"><b>Hoek <i>θ</i> waarbij het pakje begint te glijden, in functie van de bandsnelheid <i>v</i><sub>band</sub></b> (bij de gekozen <i>μ</i>; het bolletje is de gekozen <i>v</i><sub>band</sub>)</p>
+      <canvas class="gint" id="gint"></canvas>
+      <p>Hoe sneller de band, hoe vroeger het pakje begint te glijden: <i>θ</i> daalt van atan <i>μ</i> (een trage band, enkel het gewicht en de wrijving tellen) tot 0 bij <i>v</i><sub>band</sub> = √(<i>gR</i>), waar het pakje al op de top loskomt.</p>
+      <p>We evalueren de symbolische oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p>Het argument van acos en atan moet zonder eenheid zijn. Dat klopt: <span data-tex="\\frac{\\mu\\,v_\\text{band}^2}{g\\,R\\,\\sqrt{\\mu^2 + 1}} \\;\\to\\; \\frac{(\\text{m/s})^2}{(\\text{m/s}^2)\\cdot\\text{m}} = 1"></span>, en <i>μ</i> heeft geen eenheid.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
@@ -394,9 +396,16 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
-  const upd = () => { $('vval').textContent = `${v.toFixed(2)} m/s`; $('muval').textContent = mu.toFixed(2); $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); vldFormules(); };
+  const upd = () => { $('vval').textContent = `${v.toFixed(2)} m/s`; $('muval').textContent = mu.toFixed(2); $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); vldFormules(); tekenInt(); };
   const sv = $('vsl'); if (sv) sv.oninput = e => { v = +e.target.value; upd(); };
   const sm = $('musl'); if (sm) sm.oninput = e => { mu = +e.target.value; upd(); };
+  tekenInt();
+}
+// grafiek in de interpretatie: θ(v_band) bij de gekozen μ (zelfde uitdrukking als thetaC, met v als variabele)
+function tekenInt() {
+  if (stap !== 5) return;
+  const th = vb => { if (vb * vb > g * R) return 0; const c = mu * vb * vb / (g * R), r = Math.hypot(mu, 1); return c > r ? NaN : deg(Math.max(0, Math.acos(c / r) - Math.atan2(1, mu))); };
+  TM1.grafiekIn($('gint'), [0, 1.6], [0, 60], '$v_{band}$ [m/s]', '$\\theta$ [°]', [{ f: th, kleur: '#4f5862' }], v);
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');

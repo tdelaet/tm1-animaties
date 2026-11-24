@@ -321,8 +321,7 @@ function stapInhoud() {
   if (stap === 1) h = `<p>We maken de <b>puntmassa <i>m</i></b> vrij: snijd de kabel door aan de puntmassa. Zo wordt de kracht van de kabel op de massa een externe kracht, die voorkomt in de bewegingsvergelijking.</p>
       <p>De kabel is massaloos en het bolgewricht wrijvingsloos: de kabel brengt enkel een trekkracht volgens de kabel over.</p>
       <p class="noot">Ga daarna naar stap 2 om de puntmassa vrij te maken.</p>`;
-  else if (stap === 2) h = `<p class="noot">In de loep zie je enkel de verbinding: de puntmassa en het onderste stukje kabel. Een puntmassa heeft geen oriëntatie, dus enkel translaties zijn van belang. Enkel de translatie langs de kabel, weg van het ophangpunt, is verhinderd: dat geeft de kabelkracht ${t(F_)}, volgens de kabel.</p>
-      <p class="noot">Daarnaast werkt de zwaartekracht ${t(`${G_} = ${kl(KG, '-mg\\,\\vec e_y')}`)} (een niet-contactkracht). Duid ook de versnelling ${t(A_)} van de puntmassa aan (dubbele pijl): bij de cirkelbeweging is die naar de as gericht, zie stap 3.</p>`;
+  else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (puntmassa)</h4>${v(BEWV)}
       <h4>Bijkomende vergelijking: kinematica</h4>
       <p>De puntmassa beschrijft een cirkel in een horizontaal vlak, met straal ${t('\\rho = L\\sin\\theta')} en constante hoeksnelheid <i>ω</i>, dus met een constante grootte van de snelheid ${t('v = \\omega L\\sin\\theta')}. In natuurlijke componenten:</p>
@@ -339,8 +338,11 @@ function stapInhoud() {
       <p class="noot">Met de illustratiewaarden (<i>L</i> = 1.00 m, <i>ω</i> = 3.50 rad/s): cos <i>θ</i> = 10.0/(1.00 · 3.50²) = 0.816, dus <i>θ</i> = 35.3° en <i>F</i><sub>kabel</sub> = 1.22 <i>mg</i>.</p>`;
   else {
     const th = theta(), wg = Math.sqrt(g / L);
-    h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
-      <div class="kader">${v(`\\theta = \\operatorname{acos}\\frac{g}{L\\,\\omega^2}, \\qquad ${kl(KF, 'F_\\text{kabel}')} = m\\,\\omega^2 L`)}</div>
+    h = `<div class="kader">${v(`\\theta = \\operatorname{acos}\\frac{g}{L\\,\\omega^2}, \\qquad ${kl(KF, 'F_\\text{kabel}')} = m\\,\\omega^2 L`)}</div>
+      <p style="margin-top:10px"><b><i>θ</i> en <i>F</i><sub>kabel</sub> in functie van de hoeksnelheid <i>ω</i></b> (bij <i>L</i> = 1.00 m; het bolletje is de gekozen <i>ω</i>)</p>
+      <canvas class="gint" id="gint"></canvas><canvas class="gint" id="gint2"></canvas>
+      <p>Onder <i>ω</i> = √(<i>g</i>/<i>L</i>) = ${wg.toFixed(2)} rad/s is er geen kegelbeweging: de massa hangt verticaal (<i>θ</i> = 0, <i>F</i><sub>kabel</sub> = <i>mg</i>). Daarboven neemt <i>θ</i> eerst snel toe en nadert dan 90°, zonder het te bereiken. De kabelkracht groeit kwadratisch met <i>ω</i>.</p>
+      <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p>Het argument van acos moet zonder eenheid zijn: ${t('\\frac{g}{L\\,\\omega^2} \\;\\to\\; \\frac{\\text{m/s}^2}{\\text{m}\\cdot(1/\\text{s})^2} = 1')}. De kabelkracht heeft de eenheid van een kracht: ${t('\\text{kg}\\cdot(1/\\text{s})^2\\cdot\\text{m} = \\text{N}')}.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
@@ -375,7 +377,15 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart opnieuw opbouwen), zodat de slider bij het slepen niet verspringt
-  const os = $('omsl'); if (os) os.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); };
+  const os = $('omsl'); if (os) os.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  tekenInt();
+}
+// grafieken in de interpretatie: θ(ω) en F_kabel(ω)/(mg), met de gekozen ω
+function tekenInt() {
+  if (stap !== 5) return;
+  const kegel = w => w * w * L > g;
+  TM1.grafiekIn($('gint'), [0, 8], [0, 90], '$\\omega$ [rad/s]', '$\\theta$ [°]', [{ f: w => (kegel(w) ? deg(Math.acos(g / (w * w * L))) : 0), kleur: '#4f5862' }], om);
+  TM1.grafiekIn($('gint2'), [0, 8], [0, 7], '$\\omega$ [rad/s]', '$F/(mg)$', [{ f: w => (kegel(w) ? w * w * L / g : 1), kleur: KF }], om);
 }
 function res5() {
   const th = theta(), wg = Math.sqrt(g / L);

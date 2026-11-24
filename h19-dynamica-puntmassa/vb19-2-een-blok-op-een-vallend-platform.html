@@ -145,8 +145,8 @@ function standen() {
 const BEW = [
   { id: 'yplus', d: V(0, 1, 0), tekst: 'translatie volgens positieve <i>y</i> (naar beneden, het platform in)', verh: true, kr: 'R' },
   { id: 'ymin', d: V(0, -1, 0), tekst: 'translatie volgens negatieve <i>y</i> (omhoog, van het platform weg)', verh: false, uit: 'mogelijk: het blok komt los → <i>R</i> ≥ 0' },
-  { id: 'x', d: V(1, 0, 0), twee: true, tekst: 'translatie ∥ <i>x</i> (horizontaal over het platform)', verh: true, kr: 'R_x', noot: 'zolang het blok niet schuift' },
-  { id: 'z', d: V(0, 0, 1), twee: true, tekst: 'translatie ∥ <i>z</i> (horizontaal over het platform)', verh: true, kr: 'R_z', noot: 'zolang het blok niet schuift' }
+  { id: 'x', d: V(1, 0, 0), twee: true, tekst: 'translatie ∥ <i>x</i> (horizontaal over het platform)', verh: false, uit: 'mogelijk: het blok kan horizontaal over het platform bewegen → geen kracht ∥ <i>x</i>' },
+  { id: 'z', d: V(0, 0, 1), twee: true, tekst: 'translatie ∥ <i>z</i> (horizontaal over het platform)', verh: false, uit: 'mogelijk: het blok kan horizontaal over het platform bewegen → geen kracht ∥ <i>z</i>' }
 ];
 
 // ---------- figuur: situatie (boven) en vrijlichaamsdiagram (onder) ----------
@@ -200,8 +200,7 @@ function drawScene() {
     if (glR) arrow(ctx, cx, cy, cx, cy - Rv * k, GLOED + (0.35 + 0.5 * glR) + ')', { w: 12, head: 22 });
     arrow(ctx, cx, cy, cx, cy - Rv * k, KR, { w: glR ? 3.6 : 2.8, head: glR ? 14 : 12 }); label(ctx, 'R', '', cx + 8, cy - Rv * k + 6, KR, { size: glR ? 17 : 15 });
   } else { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KR; ctx.fillText(ag > 1 ? 'R = 0 (los)' : 'R = 0', cx + 8, cy - 0.35 * k); ctx.restore(); }
-  // gloed voor R_x en R_z (componenten die nul blijken te zijn): korte horizontale / ⊗-aanduiding
-  if (gl && licht && (licht.b === 'x' || licht.b === 'z')) {
+  if (false) {   // horizontale translaties zijn mogelijk: er is geen horizontale kracht om te laten oplichten
     ctx.save(); ctx.strokeStyle = GLOED + (0.4 + 0.5 * gl) + ')'; ctx.lineWidth = 10; ctx.lineCap = 'round';
     if (licht.b === 'x') { ctx.beginPath(); ctx.moveTo(cx - 0.5 * k, cy + h2 + 4); ctx.lineTo(cx + 0.5 * k, cy + h2 + 4); ctx.stroke(); }
     else { ctx.beginPath(); ctx.arc(cx, cy + h2 + 4, 9, 0, 2 * Math.PI); ctx.stroke(); }
@@ -247,7 +246,7 @@ function vldFormules() {
   const el = document.getElementById('vldf'); if (!window.katex) return;
   if (stap === 1) { el.innerHTML = ''; return; }
   const mk = (id, s) => (stap === 2 && licht && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
-  const delen = [`${kl(KR, '\\vec R')} = \\begin{Bmatrix}${mk('x', kl(KR, 'R_x'))}\\\\ ${mk('yplus', kl(KR, '-R'))}\\\\ ${mk('z', kl(KR, 'R_z'))}\\end{Bmatrix}`,
+  const delen = [`${kl(KR, '\\vec R')} = ${mk('yplus', kl(KR, 'R'))}${kl(KR, '\\begin{Bmatrix}0\\\\ -1\\\\ 0\\end{Bmatrix}')}`,
     mk('ymin', `${kl(KR, 'R')} \\ge 0`),
     `${kl(KG, '\\vec G')} = ${kl(KG, 'm\\vec g')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`,
     `${kl(KA, '\\vec a')} = ${kl(KA, 'a\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`];
@@ -281,25 +280,27 @@ function stapInhoud() {
   const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
   const tx = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
   const R_ = kl(KR, '\\vec R'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a');
-  const COMP = `\\begin{Bmatrix}${kl(KR, 'R_x')}\\\\ ${kl(KR, '-R')}\\\\ ${kl(KR, 'R_z')}\\end{Bmatrix} + ${kl(KG, '\\begin{Bmatrix}0\\\\ mg\\\\ 0\\end{Bmatrix}')} = ${kl(KA, '\\begin{Bmatrix}0\\\\ ma\\\\ 0\\end{Bmatrix}')}`;
+  const COMP = `${kl(KR, '\\begin{Bmatrix}0\\\\ -R\\\\ 0\\end{Bmatrix}')} +${kl(KG, '\\begin{Bmatrix}0\\\\ mg\\\\ 0\\end{Bmatrix}')} = ${kl(KA, '\\begin{Bmatrix}0\\\\ ma\\\\ 0\\end{Bmatrix}')}`;
   let h = '';
   if (stap === 1) h = `<p>Het blok is een onderdeel van het gehele systeem blok + platform (+ aarde). We maken het <b>blok</b> vrij van het platform, en beschouwen het als een puntmassa <i>m</i>. Zo wordt de kracht van het platform op het blok een externe kracht, die voorkomt in de bewegingsvergelijking.</p>
       <p class="noot">Ga daarna naar stap 2 om het blok vrij te maken.</p>`;
-  else if (stap === 2) h = `<p class="noot">In de loep zie je enkel het contact tussen het blok en het platform. Het platform verhindert de translatie naar beneden; zolang het blok niet schuift, verhindert het ook de horizontale translaties. Dat geeft de contactkracht ${tx(R_)} van het platform op het blok, met componenten ${tx(kl(KR, 'R_x'))}, ${tx(kl(KR, '-R'))} en ${tx(kl(KR, 'R_z'))} (de <i>y</i>-as wijst naar beneden).</p>
-      <p class="noot">Daarnaast werkt de niet-contactkracht: het gewicht ${tx(`${G_} = ${kl(KG, 'm\\vec g')}`)}. Duid ook de versnelling ${tx(A_)} van het blok aan (dubbele pijl).</p>`;
+  else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (blok)</h4>${v(`${R_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijking: kinematica</h4>
       <p>Het blok rust op het platform en beweegt mee: zolang het contact blijft bestaan, heeft het dezelfde versnelling als het platform, ${tx(`${A_} = ${kl(KA, 'a\\,\\vec e_y')}`)}.</p>
       <h4>Voorwaarde uit de verbinding</h4>${v(`${kl(KR, 'R')} \\ge 0`)}
       <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
       <h4>Bewegingsvergelijking in componenten (y-as naar beneden)</h4>${v(COMP)}
-      <p class="noot">Drie vergelijkingen voor drie onbekenden: ${tx(kl(KR, 'R_x'))}, ${tx(kl(KR, 'R'))} en ${tx(kl(KR, 'R_z'))}.</p>`;
+      <p class="noot">De <i>x</i>- en de <i>z</i>-vergelijking zijn identiek nul (0 = 0); de <i>y</i>-vergelijking bevat de enige onbekende ${tx(kl(KR, 'R'))}.</p>`;
   else if (stap === 4) h = `${v(COMP)}
-      ${v(`${kl(KR, 'R_x')} = 0, \\qquad ${kl(KR, 'R_z')} = 0, \\qquad -${kl(KR, 'R')} + mg = ma`)}
+      <h4>(y)</h4>${v(`-${kl(KR, 'R')} + mg = ma`)}
       <div class="kader">${v(`${kl(KR, 'R')} = m\\,(g - a)`)}</div>
-      <p class="noot">De horizontale componenten zijn nul: de verbindingskracht van het platform op het blok is verticaal, naar boven. Met de illustratiewaarde <i>a</i> = 0.50 <i>g</i> is <i>R</i> = 0.50 <i>mg</i>.</p>`;
-  else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
-      <div class="kader">${v(`${kl(KR, 'R')} = m\\,(g - a)`)}</div>
+      <p class="noot">Met de illustratiewaarde <i>a</i> = 0.50 <i>g</i> is <i>R</i> = 0.50 <i>mg</i>.</p>`;
+  else h = `<div class="kader">${v(`${kl(KR, 'R')} = m\\,(g - a)`)}</div>
+      <p style="margin-top:10px"><b><i>R</i> in functie van de versnelling <i>a</i> van het platform</b> (het bolletje is de gekozen <i>a</i>)</p>
+      <canvas class="gint" id="gint"></canvas>
+      <p>De verbindingskracht daalt lineair met <i>a</i>: van <i>mg</i> (platform in rust) tot 0 bij <i>a</i> = <i>g</i>. Voor <i>a</i> &gt; <i>g</i> zou de formule een negatieve <i>R</i> geven (stippellijn): dat kan niet, het blok komt los van het platform en <i>R</i> = 0.</p>
+      <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p><i>g</i> en <i>a</i> zijn allebei versnellingen, dus het verschil heeft een eenheid: m/s². Dan heeft <i>R</i> de eenheid kg · m/s² = N, die van een kracht.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
@@ -333,7 +334,15 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
-  const s = $('agsl'); if (s) s.oninput = e => { ag = +e.target.value; t = 0; $('agval').textContent = `${ag.toFixed(2)} g`; $('res5').innerHTML = res5(); drawScene(); };
+  const s = $('agsl'); if (s) s.oninput = e => { ag = +e.target.value; t = 0; $('agval').textContent = `${ag.toFixed(2)} g`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  tekenInt();
+}
+// grafiek in de interpretatie: R/(mg) in functie van a/g, met de gekozen a
+function tekenInt() {
+  if (stap !== 5) return;
+  TM1.grafiekIn($('gint'), [0, 1.5], [-0.6, 1.1], '$a/g$', '$R/(mg)$', [
+    { f: x => Math.max(0, 1 - x), kleur: KR },   // voor a > g komt het blok los: R = 0
+    { f: x => (x >= 1 ? 1 - x : NaN), kleur: '#9aa1a9', stippel: true, bolletje: false, naam: 'R < 0: niet mogelijk' }], ag);
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');

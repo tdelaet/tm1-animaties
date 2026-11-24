@@ -220,6 +220,39 @@
     ctx.beginPath(); ctx.moveTo(F.X(x), F.Y(F.yr[0])); ctx.lineTo(F.X(x), F.Y(F.yr[1])); ctx.stroke(); ctx.restore();
   }
 
+  /**
+   * Grafiek voor de interpretatie (stap 5) in een canvas dat in de stapkaart staat.
+   * krommen: [{ f: x => y, kleur, naam?, stippel?, bolletje? }]; waarden buiten het bereik of NaN worden niet getekend.
+   * xNu: de gekozen waarde (cursorlijn en bolletjes op de krommen); legende rechtsboven met de namen.
+   */
+  function grafiekIn(cv, xr, yr, xl, yl, krommen, xNu) {
+    if (!cv) return null;
+    const r = cv.getBoundingClientRect(); if (r.width < 10 || r.height < 10) return null;
+    const d = window.devicePixelRatio || 1; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+    const ctx = cv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+    const G = { c: cv, ctx, w: r.width, h: r.height }, F = frame(G, xr, yr, xl, yl);
+    ctx.save(); ctx.beginPath(); ctx.rect(F.m.l, F.m.t, G.w - F.m.l - F.m.r, G.h - F.m.t - F.m.b); ctx.clip();
+    for (const k of krommen) {
+      ctx.save(); ctx.strokeStyle = k.kleur; ctx.lineWidth = k.dik ?? 2.2; ctx.lineJoin = 'round'; if (k.stippel) ctx.setLineDash([6, 4]);
+      ctx.beginPath(); let aan = false;
+      for (let i = 0; i <= 300; i++) {
+        const x = xr[0] + (xr[1] - xr[0]) * i / 300, y = k.f(x);
+        if (!isFinite(y) || y < yr[0] - 10 * (yr[1] - yr[0]) || y > yr[1] + 10 * (yr[1] - yr[0])) { aan = false; continue; }
+        aan ? ctx.lineTo(F.X(x), F.Y(y)) : ctx.moveTo(F.X(x), F.Y(y)); aan = true;
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    ctx.restore();
+    if (xNu != null && xNu >= xr[0] && xNu <= xr[1]) {
+      cursor(ctx, F, xNu);
+      for (const k of krommen) { if (k.bolletje === false) continue; const y = k.f(xNu); if (isFinite(y) && y >= yr[0] && y <= yr[1]) dot(ctx, F.X(xNu), F.Y(y), k.kleur); }
+    }
+    ctx.save(); ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+    krommen.filter(k => k.naam).forEach((k, i) => { ctx.fillStyle = k.kleur; ctx.fillText(k.naam, G.w - F.m.r - 4, F.m.t + 12 + 14 * i); });
+    ctx.restore();
+    return { F, ctx, G };
+  }
+
   /** Klikken of slepen in een grafiek: callback krijgt de x-waarde op de horizontale as. */
   function scrub(G, getFrame, onX) {
     let down = false;
@@ -502,6 +535,6 @@
   global.TM1 = Object.assign(global.TM1 || {}, {
     tex, werkblad, vastVak, vasteSchaal, driehoekLegende, breuk,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
-    frame, curve, dot, cursor, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
+    frame, curve, dot, cursor, grafiekIn, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });
 })(window);
