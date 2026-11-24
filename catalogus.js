@@ -92,7 +92,7 @@ TM1.catalogus = [
       { id: '13.9', titel: 'Plooiladder', status: 'klaar' }]},
     { nr: 14, titel: 'Kinematica van een lichaam', map: 'h14-kinematica-lichaam', items: [
       { id: '14.1', titel: 'Reuzenrad: translatie van de gondel', status: 'klaar' },
-      { id: '14.2', titel: 'Rotor van een helikopter', status: 'klaar', opmerking: 'uitwerking: pure rotatie t.o.v. de piloot en translatie + rotatie t.o.v. de wereld' },
+      { id: '14.2', titel: 'Rotor van een helikopter', status: 'klaar' },
       { id: '14.3', titel: 'Wasmachine' },
       { id: '14.4', titel: 'Ronddraaiende cilinder', status: 'klaar' }]},
     { nr: 15, titel: 'Meetkundige analyses voor snelheden', map: 'h15-snelheden-meetkundig', items: [
@@ -100,7 +100,7 @@ TM1.catalogus = [
       { id: '15.2', titel: 'Mobiele robot', status: 'klaar' },
       { id: '15.3', titel: 'Reuzenrad', status: 'klaar' },
       { id: '15.4', titel: 'Rollend wiel', status: 'klaar' },
-      { id: '15.5', titel: 'Telescopische kraanwagen', status: 'klaar' },
+      { id: '15.5', titel: 'Telescopische kraanwagen', status: 'klaar', opmerking: 'oplossing met vectoriële ketting' },
       { id: '15.6', titel: 'Telescopische kraanwagen', status: 'klaar', opmerking: 'oplossing met driehoeksmeetkunde' },
       { id: '15.7', titel: 'Plooiladder', status: 'klaar' },
       { id: '15.8', titel: 'Kubus duwt tegen zware plaat', status: 'klaar' },
@@ -122,14 +122,15 @@ TM1.catalogus = [
   ]},
   { deel: 'VI', titel: 'Dynamica van enkelvoudige lichamen', hoofdstukken: [
     { nr: 19, titel: 'Dynamica van een puntmassa', map: 'h19-dynamica-puntmassa', items: [
-      { id: '19.1', titel: 'Een slinger beschrijft een kegelbeweging', status: 'klaar', opmerking: 'uitgewerkt naar de video (plan van aanpak 19.5)' },
+      { id: '19.1', titel: 'Een slinger beschrijft een kegelbeweging', status: 'klaar' },
       { id: '19.2', titel: 'Een blok op een vallend platform', status: 'klaar' },
       { id: '19.3', titel: 'Een container hangt aan een loopkat', status: 'klaar' },
       { id: '19.4', titel: 'Een massa aan een ronddraaiende veer', status: 'klaar' },
       { id: '19.5', titel: 'Een massa rondgeslingerd in een verticaal vlak', status: 'klaar' },
       { id: '19.6', titel: 'Tweede postulaat als differentiaalvergelijking', status: 'klaar' },
-      { id: '19.7', titel: 'Een pakje glijdt van een transportband', status: 'klaar' },
-      { id: '19.8', titel: 'Een massa in een geleiding met een veer', status: 'klaar' }]},
+      { id: '19.7', titel: 'Een pakje glijdt van een transportband', status: 'klaar', opmerking: 'uit les groep B' },
+      { id: '19.8', titel: 'Een massa in een geleiding met een veer', status: 'klaar', opmerking: 'uit les groep B' },
+      { id: '19.9', titel: 'Een bobslee daalt en neemt een bocht', status: 'klaar', opmerking: 'uit les groep B' }]},
     { nr: 20, titel: 'Dynamica van star lichaam in vlakke beweging', map: 'h20-dynamica-star-lichaam', items: [
       { id: '20.1', titel: 'Traagheidsmoment van een halter' },
       { id: '20.2', titel: 'Traagheidsmoment van een dunne staaf' },
