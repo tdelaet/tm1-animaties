@@ -141,8 +141,8 @@ function veer(ctx, p, q, n = 9, amp = 6) {
 // natuurlijke assen in de stand θ: e_t in de zin van de beweging (θ neemt toe), e_n naar het middelpunt O
 function assenTN(ctx, o, th, Lp = 26) {
   const et = { x: Math.sin(th), y: Math.cos(th) }, en = { x: Math.cos(th), y: -Math.sin(th) };   // scherm (y naar beneden)
-  arrow(ctx, o.x, o.y, o.x + et.x * Lp, o.y + et.y * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'e', 't', o.x + et.x * (Lp + 10) - 4, o.y + et.y * (Lp + 10) + 6, '#6b737d', { size: 13 });
-  arrow(ctx, o.x, o.y, o.x + en.x * Lp, o.y + en.y * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'e', 'n', o.x + en.x * (Lp + 10) - 2, o.y + en.y * (Lp + 10) + 6, '#6b737d', { size: 13 });
+  arrow(ctx, o.x, o.y, o.x + et.x * Lp, o.y + et.y * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', o.x + et.x * (Lp + 10) - 4, o.y + et.y * (Lp + 10) + 6, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, o.x, o.y, o.x + en.x * Lp, o.y + en.y * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', o.x + en.x * (Lp + 10) - 2, o.y + en.y * (Lp + 10) + 6, '#6b737d', { vec: false, size: 13 });
 }
 
 // ---------- twee verbindingen, elk apart te bestuderen: de (gladde) geleiding (v: 'g') en de veer (v: 'v') ----------
@@ -219,11 +219,7 @@ function drawScene() {
     const Lt = 0.8 * k; if (dubbelPijl(ctx, o.x, o.y, o.x + et.x * Lt, o.y + et.y * Lt, KA, 2)) label(ctx, 'a', 't', o.x + et.x * Lt + 8, o.y + et.y * Lt + 4, KA, { size: 15 });
     // net na het loslaten is v = 0, dus a_n = v²/r = 0: geen normaalversnelling
     ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KA; ctx.fillText('a_n = 0 (v = 0)', o.x - 30, o.y - 12); ctx.restore(); }
-  if (ass === 'xy') {                                   // assen x (horizontaal) en y (verticaal)
-    const o = { x: W - 70, y: Hall - 40 }, Lp = 26;
-    arrow(ctx, o.x, o.y, o.x + Lp, o.y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', o.x + Lp + 4, o.y + 5, '#6b737d', { vec: false, size: 13 });
-    arrow(ctx, o.x, o.y, o.x, o.y - Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', o.x - 13, o.y - Lp + 4, '#6b737d', { vec: false, size: 13 });
-  } else assenTN(ctx, { x: W - 70, y: Hall - 60 }, t0);
+  assenTN(ctx, { x: W - 70, y: Hall - 60 }, t0);
   if (stap === 2 && licht) {
     const b = BEW.find(q => q.id === licht.b);
     if (b && !b.verh) { const s = b.uit.replace(/<[^>]+>/g, ''), i = s.indexOf('→'); ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center'; ctx.fillText((i > 0 ? s.slice(0, i) : s).trim(), W / 2, H + 38); ctx.restore(); }
@@ -297,10 +293,11 @@ function vldFormules() {
   const el = document.getElementById('vldf'); if (!window.katex) return;
   if (stap === 1) { el.innerHTML = ''; return; }
   const mk = (ids, s) => (stap === 2 && licht && ids.includes(licht.b) ? `\\colorbox{#ffe08a}{$${s}$}` : s);
+  // componenten volgens de x-as (langs de geleiding, in de zin waarin de massa vertrekt) en de y-as (naar O)
   const delen = [`${kl(KV, '\\vec F_v')} = ${mk(['vweg', 'vnaar'], kl(KV, 'F_v'))}${kl(KV, '\\begin{Bmatrix}\\sin(\\theta/2)\\\\ \\cos(\\theta/2)\\end{Bmatrix}')}, \\quad ${mk(['vweg', 'vnaar'], `${kl(KV, 'F_v')} = k\\,(\\ell - \\ell_0)`)}`,
     `${kl(KN, '\\vec N')} = ${mk(['in', 'uit'], kl(KN, 'N'))}${kl(KN, '\\begin{Bmatrix}0\\\\ 1\\end{Bmatrix}')}`,
     `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}\\cos\\theta\\\\ -\\sin\\theta\\end{Bmatrix}')}`,
-    `${kl(KA, '\\vec a')} = ${kl(KA, '\\begin{Bmatrix}a_t\\\\ a_n\\end{Bmatrix}')}`];
+    `${kl(KA, '\\vec a')} = ${kl(KA, '\\begin{Bmatrix}a_t\\\\ 0\\end{Bmatrix}')}`];
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
 
@@ -337,7 +334,7 @@ function proefTabel() {
     anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
   });
 }
-const res5 = () => `Bij <i>θ</i> = 30°: <i>a<sub>t</sub></i> = <span style="color:${KG}">${(g * Math.cos(TH0)).toFixed(2)}</span> + <span style="color:${KV}">${((K * Rg / M) * (2 * Math.cos(TH0 / 2) - 1) * Math.sin(TH0 / 2)).toFixed(2)}</span> = <b>${at(TH0).toFixed(2)} m/s²</b> (bijdrage van het gewicht + bijdrage van de veer).`;
+const res5 = () => `Bij <i>θ</i> = 30°: <i>a<sub>t</sub></i> = <span style="color:${KG}">${(g * Math.cos(TH0)).toFixed(2)}</span> + <span style="color:${KV}">${((K * Rg / M) * (2 * Math.cos(TH0 / 2) - 1) * Math.sin(TH0 / 2)).toFixed(2)}</span> = <b>${at(TH0).toFixed(2)} m/s²</b> (bijdrage van het gewicht + bijdrage van de veer); <i>N</i> = <b>${Nnorm(TH0).toFixed(2)} N</b>.`;
 function stapInhoud() {
   const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
   $('rtitel').textContent = stap === 2 ? VERB[verb] : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
@@ -348,12 +345,14 @@ function stapInhoud() {
   const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
   const tx = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
   const F_ = kl(KV, '\\vec F_v'), N_ = kl(KN, '\\vec N'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a');
-  const COMP = `${kl(KV, '\\begin{Bmatrix}F_v\\sin(\\theta/2)\\\\ F_v\\cos(\\theta/2)\\end{Bmatrix}')} + ${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\cos\\theta\\\\ -mg\\sin\\theta\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_t\\\\ v^2/r\\end{Bmatrix}')}\\quad \\begin{matrix}(t)\\\\ (n)\\end{matrix}`;
+  // bewegingsvergelijking in componenten, net na het loslaten (v = 0, dus a_n = 0), in het gekozen assenstelsel
+  const COMP = `${kl(KV, '\\begin{Bmatrix}F_v\\sin(\\theta/2)\\\\ F_v\\cos(\\theta/2)\\end{Bmatrix}')} + ${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\cos\\theta\\\\ -mg\\sin\\theta\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_t\\\\ 0\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`;
+  const NN = `${kl(KN, 'N')} = ${kl(KG, 'mg\\sin\\theta')} - ${kl(KV, 'k\\,r\\,\\big(2\\cos(\\theta/2) - 1\\big)\\cos(\\theta/2)')}`;
   // bijdrage van het gewicht (groen) en van de veer (paars), in de kleuren van de krachten
   const AT = `a_t = ${kl(KG, 'g\\cos\\theta')} + ${kl(KV, '\\frac{k\\,r}{m}\\,\\big(2\\cos(\\theta/2) - 1\\big)\\sin(\\theta/2)')}`;
   let h = '';
   if (stap === 1) h = `<p>We maken de <b>massa</b> vrij, als een puntmassa <i>m</i>: maak ze los van de veer en van de geleiding. Zo worden de veerkracht en de kracht van de geleiding externe krachten, die voorkomen in de bewegingsvergelijking.</p>
-      <p class="noot">We bestuderen de massa in een willekeurige stand <i>θ</i> (tussen 0° en 90°); het vrijlichaamsdiagram toont de stand <i>θ</i> = 30°. Ga daarna naar stap 2 om de massa vrij te maken.</p>`;
+      <p class="noot">We bestuderen de massa in A, net na het loslaten uit rust, voor een willekeurige hoek <i>θ</i> (tussen 0° en 90°); het vrijlichaamsdiagram toont <i>θ</i> = 30°. Ga daarna naar stap 2 om de massa vrij te maken.</p>`;
   else if (stap === 2) h = `<p class="noot">De massa heeft <b>twee verbindingen</b>: de geleiding en de veer. Bestudeer ze elk apart met de knoppen boven de loep.</p>
       ${verb === 'g'
         ? `<p class="noot"><b>Verbinding 1: geleiding.</b> In de loep zie je de massa in de geleiding (de veer is al losgemaakt). De geleiding verhindert de translatie naar O én weg van O: dat geeft de normaalkracht ${tx(N_)}, loodrecht op de geleiding, in een zin die nog onbekend is (een geleiding kan in beide zinnen duwen). Omdat de geleiding glad is, is er geen kracht langs de geleiding.</p>`
@@ -363,25 +362,31 @@ function stapInhoud() {
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (massa)</h4>${v(`${F_} + ${N_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijkingen</h4>
       <p><b>Veerwet en meetkunde.</b> ${tx(`${kl(KV, 'F_v')} = k\\,(\\ell - \\ell_0) = k\\,\\big(2r\\cos(\\theta/2) - r\\big)`)}</p>
-      <p><b>Kinematica.</b> De massa beweegt over een cirkel met straal <i>r</i> (zie hoofdstuk 13): ${tx(`${kl(KA, '\\vec a')} = ${kl(KA, 'a_t')}\\,\\vec e_t + ${kl(KA, 'a_n')}\\,\\vec e_n`)} met ${tx(`${kl(KA, 'a_n')} = v^2/r`)}, naar O.</p>
+      <p><b>Kinematica.</b> De massa beweegt over een cirkel met straal <i>r</i> (zie hoofdstuk 13): ${tx(`${kl(KA, '\\vec a')} = ${kl(KA, 'a_t')}\\,\\vec e_t + ${kl(KA, 'a_n')}\\,\\vec e_n`)} met ${tx(`${kl(KA, 'a_n')} = v^2/r`)}, naar O. Net na het loslaten uit rust is <i>v</i> = 0, dus ${tx(`${kl(KA, 'a_n')} = 0`)}: de versnelling ligt volledig langs de geleiding, ${tx(`${kl(KA, '\\vec a')} = ${kl(KA, 'a_t')}\\,\\vec e_t`)}, met ${tx('\\vec e_t')} in de zin waarin de massa vertrekt.</p>
       <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
-      <h4>Bewegingsvergelijking in componenten (e<sub>t</sub>, e<sub>n</sub>)</h4>${v(COMP)}
-      <p class="noot">De (t)-component bevat enkel de onbekende <i>a<sub>t</sub></i>: de normaalkracht en de (onbekende) snelheid komen er niet in voor. Daarmee volstaat de (t)-component voor de gevraagde tangentiële versnelling.</p>`;
-  else if (stap === 4) h = `<h4>(t)-component</h4>${v(`m\\,a_t = ${kl(KV, 'F_v\\sin(\\theta/2)')} + ${kl(KG, 'mg\\cos\\theta')}`)}
-      <div class="kader">${v(AT)}</div>
+      <h4>Bewegingsvergelijking in componenten</h4>
+      <p class="noot">We kiezen de <b>x-as langs de geleiding</b>, in de zin waarin de massa vertrekt, en de <b>y-as naar O</b> (de richtingen van de natuurlijke componenten). Zo bevat de x-component enkel de onbekende <i>a<sub>t</sub></i>, en de y-component enkel de onbekende <i>N</i>: twee ontkoppelde vergelijkingen voor de twee onbekenden.</p>
+      ${v(COMP)}`;
+  else if (stap === 4) h = `${v(COMP)}
+      <h4>x-component (langs de geleiding)</h4>${v(`m\\,a_t = ${kl(KV, 'F_v\\sin(\\theta/2)')} + ${kl(KG, 'mg\\cos\\theta')}`)}
+      <h4>y-component (naar O)</h4>${v(`${kl(KV, 'F_v\\cos(\\theta/2)')} + ${kl(KN, 'N')} - ${kl(KG, 'mg\\sin\\theta')} = 0 \\;\\Rightarrow\\; ${kl(KN, 'N')} = ${kl(KG, 'mg\\sin\\theta')} - ${kl(KV, 'F_v\\cos(\\theta/2)')}`)}
+      <p>Met ${tx(`${kl(KV, 'F_v')} = k\\,r\\,\\big(2\\cos(\\theta/2) - 1\\big)`)}:</p>
+      <div class="kader">${v(AT)}${v(NN)}</div>
       <p>Met de gegevens (<i>m</i> = 0.4 kg, <i>k</i> = 10 N/m, <i>r</i> = 0.5 m) bij <i>θ</i> = 30°:</p>
       ${v(`a_t = ${kl(KG, '10\\ \\text{m/s}^2\\cdot\\cos 30^\\circ')} + ${kl(KV, '\\frac{10\\ \\text{N/m}\\cdot 0.5\\ \\text{m}}{0.4\\ \\text{kg}}\\,\\big(2\\cos 15^\\circ - 1\\big)\\sin 15^\\circ')} = ${kl(KG, '8.66\\ \\text{m/s}^2')} + ${kl(KV, '3.01\\ \\text{m/s}^2')} = 11.7\\ \\text{m/s}^2`)}
-      <p>De grafiek toont beide bijdragen en hun som in functie van <i>θ</i> (de stand <i>θ</i> = 30° is aangeduid):</p>
-      <canvas id="gat"></canvas>
-      <p class="noot">De (n)-component, ${tx(`${kl(KV, 'F_v')}\\cos(\\theta/2) + ${kl(KN, 'N')} - mg\\sin\\theta = m\\,v^2/r`)}, bevat twee onbekenden (<i>N</i> en <i>v</i>). Om de normaalkracht te bepalen heb je eerst de snelheid nodig, bijvoorbeeld met de energievergelijking (hoofdstuk 23).</p>`;
+      ${v(`${kl(KN, 'N')} = ${kl(KG, '0.4\\ \\text{kg}\\cdot 10\\ \\text{m/s}^2\\cdot\\sin 30^\\circ')} - ${kl(KV, '4.66\\ \\text{N}\\cdot\\cos 15^\\circ')} = ${kl(KG, '2.00\\ \\text{N}')} - ${kl(KV, '4.50\\ \\text{N}')} = -2.50\\ \\text{N}`)}
+      <p class="noot"><i>N</i> is negatief: de geleiding duwt de massa niet naar O, maar naar buiten, met een kracht van 2.50 N.</p>
+      <p>De grafiek toont de bijdragen tot <i>a<sub>t</sub></i> en hun som in functie van <i>θ</i> (de stand <i>θ</i> = 30° is aangeduid):</p>
+      <canvas id="gat"></canvas>`;
   else h = `<p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
-      <div class="kader">${v(AT)}</div>
+      <div class="kader">${v(AT)}${v(NN)}</div>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
-        <p>Beide termen moeten een versnelling zijn: <i>g</i> cos <i>θ</i> in m/s², en <span data-tex="\\frac{k\\,r}{m} \\;\\to\\; \\frac{\\text{N/m}\\cdot\\text{m}}{\\text{kg}} = \\frac{\\text{kg}\\cdot\\text{m/s}^2}{\\text{kg}} = \\text{m/s}^2"></span>; de factor met cos en sin heeft geen eenheid.</p></div>
+        <p>Beide termen van <i>a<sub>t</sub></i> moeten een versnelling zijn: <i>g</i> cos <i>θ</i> in m/s², en <span data-tex="\\frac{k\\,r}{m} \\;\\to\\; \\frac{\\text{N/m}\\cdot\\text{m}}{\\text{kg}} = \\frac{\\text{kg}\\cdot\\text{m/s}^2}{\\text{kg}} = \\text{m/s}^2"></span>; de factor met cos en sin heeft geen eenheid. In <i>N</i> zijn <i>mg</i> en <i>kr</i> allebei krachten (N).</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
-        <p>Voor <i>θ</i> tussen 0° en 90° zijn beide termen positief: het gewicht en de (uitgerekte) veer trekken de massa allebei verder langs de geleiding. De massa versnelt dus in de zin van de beweging, zoals verwacht vlak na het loslaten uit A.</p></div>
+        <p><i>a<sub>t</sub></i>: voor <i>θ</i> tussen 0° en 90° zijn beide termen positief: het gewicht en de (uitgerekte) veer trekken de massa allebei verder langs de geleiding. De massa vertrekt dus naar beneden, zoals verwacht.</p>
+        <p><i>N</i> = −2.50 N is negatief: de geleiding duwt naar buiten. Dat klopt: de veer trekt de massa met 4.50 N naar O toe (component langs de y-as), terwijl het gewicht ze maar met 2.00 N van O weg trekt. Omdat de massa nog stilstaat (<i>a<sub>n</sub></i> = 0), moet de geleiding het verschil naar buiten leveren.</p></div>
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
-        <p><i>a<sub>t</sub></i> = 11.7 m/s² bij <i>θ</i> = 30°: iets groter dan <i>g</i>, omdat de veer meetrekt. De bijdrage van het gewicht (8.66 m/s²) is wat kleiner dan <i>g</i>, want de geleiding is daar al wat schuin.</p></div>
+        <p><i>a<sub>t</sub></i> = 11.7 m/s² bij <i>θ</i> = 30°: iets groter dan <i>g</i>, omdat de veer meetrekt. De bijdrage van het gewicht (8.66 m/s²) is wat kleiner dan <i>g</i>, want de geleiding is daar al wat schuin. <i>N</i> = 2.50 N is van dezelfde grootteorde als het gewicht (4.0 N) en de veerkracht (4.66 N).</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de veerconstante, de massa en de straal (bij <i>θ</i> = 30°):</p>
         <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${K.toFixed(1)} N/m</b></div><input type="range" id="ksl" min="0" max="30" step="0.5" value="${K}"></div>
@@ -394,8 +399,8 @@ function stapInhoud() {
           <li><b><i>r</i> groter:</b> de bijdrage van de veer is evenredig met <i>r</i>: in dezelfde stand <i>θ</i> is de veer verder uitgerekt (de verlenging 2<i>r</i> cos(<i>θ</i>/2) − <i>r</i> is evenredig met <i>r</i>). De bijdrage van het gewicht hangt niet af van <i>r</i>.</li>
         </ul></div>
       <div class="eval"><span class="evaltag">bijzondere gevallen</span>
-        <p><b>In A</b> (<i>θ</i> = 0): <i>a<sub>t</sub></i> = <i>g</i>. De veer is horizontaal en staat loodrecht op de geleiding (die daar verticaal is): enkel het gewicht versnelt de massa langs de geleiding.</p>
-        <p><b>Onderaan</b> (<i>θ</i> = 90°): <i>g</i> cos 90° = 0: het gewicht staat loodrecht op de geleiding; enkel de veer versnelt de massa nog: <span data-tex="a_t = \\frac{k\\,r}{m}(\\sqrt 2 - 1)\\sin 45^\\circ = 3.66\\ \\text{m/s}^2"></span>.</p>
+        <p><b>Loslaten op de horizontale door O</b> (<i>θ</i> = 0): <i>a<sub>t</sub></i> = <i>g</i>. De veer is horizontaal en staat loodrecht op de geleiding (die daar verticaal is): enkel het gewicht versnelt de massa langs de geleiding. De veer trekt de massa met <i>kr</i> naar O; de geleiding duwt even hard terug: <i>N</i> = −<i>kr</i> = −5.0 N.</p>
+        <p><b>Loslaten onderaan</b> (<i>θ</i> = 90°): <i>g</i> cos 90° = 0: het gewicht staat loodrecht op de geleiding; enkel de veer versnelt de massa nog: <span data-tex="a_t = \\frac{k\\,r}{m}(\\sqrt 2 - 1)\\sin 45^\\circ = 3.66\\ \\text{m/s}^2"></span>. De geleiding moet dan het grootste deel van het gewicht dragen: <i>N</i> = 2.54 N &gt; 0.</p>
         <p><b>Zonder veer</b> (<i>k</i> = 0): <i>a<sub>t</sub></i> = <i>g</i> cos <i>θ</i>, zoals voor een massa die enkel onder haar gewicht in een cirkelvormige geleiding glijdt.</p></div>`;
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
