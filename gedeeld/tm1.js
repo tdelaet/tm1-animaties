@@ -253,6 +253,112 @@
     return { F, ctx, G };
   }
 
+  /**
+   * Blok "Versnelling" onder de verbinding (stap 2 van de dynamicavoorbeelden).
+   * Twee vragen over de snelheid: verandert haar grootte (→ a_t) en verandert haar richting (→ a_n)?
+   * cfg = {
+   *   na: element waaronder het blok komt (de proeftabel), titel,
+   *   soort: 'cirkel' | 'recht',
+   *   grootte: 'constant' | 'toe' | 'af' | 'rust' | 'trilling',
+   *   zin: 1 (wijzerzin) of -1 (cirkel), hoek: bewegingsrichting op het scherm in rad (recht, 0 = naar rechts, π/2 = naar beneden),
+   *   fase: plaats op de cirkel in rad vanaf de top, in wijzerzin (cirkel), straal: naam van de straal ('R', 'L', …), midden: naam van het middelpunt,
+   *   rijen: { grootte: { uit, kop }, richting: { uit, kop } }   (uit: html in de tabel; kop: formule boven de figuur, zie formule()),
+   *   kleur, bijKlik(): de pagina wist haar eigen oplichten en hertekent, tik(): hertekent het vrijlichaamsdiagram tijdens de animatie
+   * }
+   * Teruggegeven: toon(zichtbaar), reset(), licht() (id die oplicht), gloed(id) (0..1, pulserend tijdens de animatie), mk(id, tex) (kader rond een formuledeel).
+   */
+  function versnelling(cfg) {
+    const C = kleuren(), KA = cfg.kleur || '#1c7ed6';
+    const blok = document.createElement('div'); blok.style.display = 'none';
+    blok.innerHTML = `<h3 style="margin:16px 0 4px">${cfg.titel || 'Versnelling'}</h3>${cfg.intro ? `<p class="noot" style="margin:2px 0 6px">${cfg.intro}</p>` : ''}<canvas style="width:100%;height:${cfg.hoogte || 210}px;display:block;touch-action:pan-y;cursor:default"></canvas><table class="proef"></table>`;
+    cfg.na.insertAdjacentElement('afterend', blok);
+    const G = setup(blok.querySelector('canvas')), tab = blok.querySelector('table');
+    let anim = null, licht = null, zicht = false; const gezien = {};
+    const VRAGEN = [['grootte', 'grootte van de snelheid'], ['richting', 'richting van de snelheid']];
+    function tabel() {
+      tab.innerHTML = VRAGEN.map(([id, t]) => `<tr><td><button data-v="${id}">▶ bekijk</button></td><td>${t}</td><td>${gezien[id] ? `<span class="uit vrij">✓</span> ${cfg.rijen[id].uit}` : '<span class="uit nog">nog niet bekeken</span>'}</td></tr>`).join('');
+      tab.querySelectorAll('button').forEach(b => b.onclick = () => {
+        const id = b.dataset.v; gezien[id] = true; licht = id; anim = { id, t: 0, T: 3 };
+        if (cfg.bijKlik) cfg.bijKlik();
+        let last = null; const f = ts => { if (!anim) return; if (last !== null) anim.t += Math.min((ts - last) / 1000, 0.05); last = ts;
+          if (anim.t >= anim.T) anim = null; teken(); if (cfg.tik) cfg.tik(); if (anim) requestAnimationFrame(f); };
+        requestAnimationFrame(f);
+      });
+    }
+    // pijl met dubbele lijn (versnelling)
+    function dubbel(ctx, x0, y0, x1, y1, w = 2) {
+      const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if (l < 4) return false;
+      const ux = dx / l, uy = dy / l, nx = -uy, ny = ux, h = 12, s = 3.5;
+      ctx.save(); ctx.strokeStyle = KA; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x0 + k * s * nx, y0 + k * s * ny); ctx.lineTo(x1 - ux * h * 0.55 + k * s * nx, y1 - uy * h * 0.55 + k * s * ny); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(x1 - ux * h + nx * h * 0.75, y1 - uy * h + ny * h * 0.75); ctx.lineTo(x1, y1); ctx.lineTo(x1 - ux * h - nx * h * 0.75, y1 - uy * h - ny * h * 0.75); ctx.stroke();
+      ctx.restore(); return true;
+    }
+    const blokje = (ctx, x, y, ang, alfa) => { ctx.save(); ctx.globalAlpha = alfa; ctx.translate(x, y); ctx.rotate(ang); ctx.fillStyle = '#c9ddf0'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.fillRect(-8, -8, 16, 16); ctx.strokeRect(-8, -8, 16, 16); ctx.restore(); };
+    const snel = (ctx, x, y, ux, uy, L, alfa, naam) => { if (L < 3) return; ctx.save(); ctx.globalAlpha = alfa; arrow(ctx, x, y, x + ux * L, y + uy * L, C.ink, { w: 2, head: 9 }); ctx.restore(); if (naam) label(ctx, 'v', '', x + ux * (L + 8) - 2, y + uy * (L + 8) - 3, C.ink, { size: 14 }); };
+    function teken() {
+      const ctx = G.ctx, W = G.w, H = G.h; ctx.clearRect(0, 0, W, H);
+      if (!zicht || W < 40 || H < 40) return;
+      const id = anim ? anim.id : licht, u = anim ? Math.min(anim.t / anim.T, 1) : 1, gr = cfg.grootte;
+      const toonT = id === 'grootte' || gezien.grootte, toonN = id === 'richting' || gezien.richting;
+      if (cfg.soort === 'cirkel') {
+        // helft 'onder': enkel de onderste helft van de cirkel (als de bestudeerde stand onder het middelpunt ligt)
+        const onder = cfg.helft === 'onder', Rp = onder ? Math.min(W * 0.3, H - 74) : Math.min(W * 0.2, (H - 56) / 2), o = { x: W * 0.42, y: onder ? 52 : 34 + Rp + 6 }, zin = cfg.zin || 1;
+        const P = f => ({ x: o.x + Rp * Math.sin(f), y: o.y - Rp * Math.cos(f) }), T = f => ({ x: zin * Math.cos(f), y: zin * Math.sin(f) });
+        ctx.save(); ctx.strokeStyle = '#9fb7cc'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.arc(o.x, o.y, Rp, 0, onder ? Math.PI : 2 * Math.PI); ctx.stroke(); ctx.restore();
+        if (onder) { ctx.save(); ctx.strokeStyle = '#d0d6dc'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(o.x - Rp - 8, o.y); ctx.lineTo(o.x + Rp + 8, o.y); ctx.stroke(); ctx.restore(); }
+        ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(o.x, o.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+        if (cfg.midden) label(ctx, cfg.midden, '', o.x + 7, o.y + (onder ? -6 : 16), '#4f5862', { vec: false, size: 13 });
+        const f0 = cfg.fase || 0, d = 0.55 * zin, Lv = 0.7 * Rp;
+        // snelheid langs de baan: na = later (bij 'rust' bewegen we vanuit rust), voor = vroeger
+        const vRel = k => gr === 'toe' ? 1 + 0.35 * k : gr === 'af' ? 1 - 0.25 * k : gr === 'rust' ? 0.45 * k : 1;   // k < 0: vroeger, k > 0: later
+        const ks = gr === 'rust' ? [1, 2] : [-2, -1];
+        for (const k of ks) { const f = f0 + k * d, q = P(f), t = T(f); blokje(ctx, q.x, q.y, f, 0.25); snel(ctx, q.x, q.y, t.x, t.y, Lv * vRel(k) * (gr === 'rust' ? 1 : 1), 0.35, false); }
+        const fNu = gr === 'rust' ? f0 : f0 - (1 - u) * d, q = P(fNu), t = T(fNu);
+        blokje(ctx, q.x, q.y, fNu, 1); snel(ctx, q.x, q.y, t.x, t.y, gr === 'rust' ? 0 : Lv * vRel(-(1 - u)), 1, true);
+        const links = q.x < o.x, tekstje = (s, kleur, rij) => { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = kleur; ctx.textAlign = links ? 'right' : 'left'; ctx.fillText(s, q.x + (links ? -14 : 14), q.y - 22 + 15 * rij); ctx.restore(); };
+        if (gr === 'rust') tekstje('v = 0', C.ink, 0);
+        if (toonN) {
+          const nx = (o.x - q.x) / Rp, ny = (o.y - q.y) / Rp;
+          ctx.save(); ctx.strokeStyle = '#9aa1a9'; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(o.x, o.y); ctx.stroke(); ctx.restore();
+          if (cfg.straal) label(ctx, cfg.straal, '', (q.x + o.x) / 2 - 14 * ny, (q.y + o.y) / 2 + 14 * nx + 4, '#4f5862', { vec: false, size: 13 });
+          if (gr === 'rust') tekstje('a_n = 0', KA, 1);
+          else if (dubbel(ctx, q.x + nx * 10, q.y + ny * 10, q.x + nx * (10 + 0.5 * Rp), q.y + ny * (10 + 0.5 * Rp))) label(ctx, 'a', 'n', q.x + nx * (10 + 0.62 * Rp) + 8, q.y + ny * (10 + 0.62 * Rp) + 4, KA, { size: 14 });
+        }
+        if (toonT && gr !== 'constant') {
+          const s = gr === 'af' ? -1 : 1, L = 0.45 * Rp, b = { x: q.x - t.y * 16, y: q.y + t.x * 16 };   // iets naast de baan
+          if (dubbel(ctx, b.x, b.y, b.x + s * t.x * L, b.y + s * t.y * L)) label(ctx, 'a', 't', b.x + s * t.x * (L + 8) - 4, b.y + s * t.y * (L + 8) + 14, KA, { size: 14 });
+        }
+      } else {   // rechtlijnig
+        const ang = cfg.hoek || 0, ux = Math.cos(ang), uy = Math.sin(ang), c = { x: W * 0.45, y: 34 + (H - 34) * 0.5 }, Ls = Math.min(W * 0.7, Math.abs(uy) > 0.5 ? H - 60 : W * 0.8);
+        ctx.save(); ctx.strokeStyle = '#9fb7cc'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(c.x - ux * Ls / 2, c.y - uy * Ls / 2); ctx.lineTo(c.x + ux * Ls / 2, c.y + uy * Ls / 2); ctx.stroke(); ctx.restore();
+        const pos = s => ({ x: c.x + ux * s * Ls / 2, y: c.y + uy * s * Ls / 2 });
+        let standen, nu;
+        if (gr === 'trilling') {   // harmonische trilling: x = A cos ωt; snelheid nul in de uitersten, maximaal in het midden
+          const vAt = ph => -Math.sin(ph), xAt = ph => 0.8 * Math.cos(ph);
+          standen = [0.6, 1.3, 2.0].map(ph => ({ s: xAt(ph), v: vAt(ph) })); const ph = 0.4 + 2 * Math.PI * u * (anim ? 1 : 0) + (anim ? 0 : 2.4); nu = { s: xAt(ph), v: vAt(ph), a: -xAt(ph) };
+        } else {
+          const fv = s => 0.35 + 0.65 * (s + 0.8) / 1.6;   // versnellend: snelheid neemt toe in de zin van de beweging
+          standen = [-0.8, -0.45].map(s => ({ s, v: fv(s) })); const sN = -0.45 + 0.6 * u; nu = { s: sN, v: fv(sN), a: 1 };
+        }
+        const Lv = 0.22 * Ls;
+        for (const st of standen) { const q = pos(st.s); blokje(ctx, q.x, q.y, 0, 0.25); snel(ctx, q.x, q.y, ux * Math.sign(st.v || 1), uy * Math.sign(st.v || 1), Lv * Math.abs(st.v), 0.35, false); }
+        const q = pos(nu.s); blokje(ctx, q.x, q.y, 0, 1); snel(ctx, q.x, q.y, ux * Math.sign(nu.v || 1), uy * Math.sign(nu.v || 1), Lv * Math.abs(nu.v), 1, true);
+        if (toonT) { const s = Math.sign(nu.a) || 1, L = gr === 'trilling' ? 0.3 * Ls * Math.abs(nu.a) : 0.18 * Ls, b = { x: q.x - uy * 18, y: q.y + ux * 18 };
+          if (dubbel(ctx, b.x, b.y, b.x + s * ux * L, b.y + s * uy * L)) label(ctx, 'a', '', b.x + s * ux * (L + 8) - 2, b.y + s * uy * (L + 8) + 12, KA, { size: 14 }); }
+        if (toonN) { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KA; ctx.fillText('a_n = 0', q.x + uy * 22 + 6, q.y - ux * 22 - 4); ctx.restore(); }
+      }
+      if (id && cfg.rijen[id].kop) formule(ctx, cfg.rijen[id].kop, W / 2, 18, { align: 'center', color: KA, size: 13 });
+    }
+    return {
+      toon(z) { zicht = z; blok.style.display = z ? '' : 'none'; if (z) { G.resize(); tabel(); teken(); } },
+      reset() { anim = null; licht = null; teken(); },
+      licht: () => licht,
+      gloed: id => (licht === id ? (anim ? 0.5 + 0.5 * Math.sin(anim.t * 9) : 1) : 0),
+      mk: (id, s) => (licht === id ? `\\colorbox{#ffe08a}{$${s}$}` : s)
+    };
+  }
+
   /** Klikken of slepen in een grafiek: callback krijgt de x-waarde op de horizontale as. */
   function scrub(G, getFrame, onX) {
     let down = false;
@@ -535,6 +641,6 @@
   global.TM1 = Object.assign(global.TM1 || {}, {
     tex, werkblad, vastVak, vasteSchaal, driehoekLegende, breuk,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
-    frame, curve, dot, cursor, grafiekIn, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
+    frame, curve, dot, cursor, grafiekIn, versnelling, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });
 })(window);

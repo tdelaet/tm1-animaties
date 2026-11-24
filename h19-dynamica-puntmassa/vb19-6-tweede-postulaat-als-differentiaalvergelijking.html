@@ -65,7 +65,6 @@
 
   <div class="instructie card">
     <p>Het tweede postulaat van Newton drukt een verband uit tussen de kracht op een puntmassa en haar versnelling, de tweede afgeleide van de positie. Als de kracht een functie is van de positie, de snelheid en/of de tijd, dan wordt het tweede postulaat een tweede-orde differentiaalvergelijking. Als illustratie: een puntmassa die met een veer (veerconstante <i>k</i>, rustlengte <i>l</i><sub>0</sub>) bevestigd is aan een vast punt O, beweegt zonder wrijving over een horizontaal oppervlak. Ze wordt uit de evenwichtspositie getrokken en vanuit rust losgelaten.</p>
-    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen het gladde oppervlak aan de massa verhindert.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -131,6 +130,7 @@ function fase(s) {
 function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
 function poly(ctx, pts, fill, stroke, w = 1.4) { ctx.save(); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.stroke(); } ctx.restore(); }
 function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  if (kleur === KA && stap === 2 && VB.gloed(GLOEI)) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * VB.gloed(GLOEI)) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
   const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 4) return false;
   const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, h = 13, s = 4;
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -293,12 +293,19 @@ function vldFormules() {
     `${kl(KR, '\\vec R')} = \\begin{Bmatrix}${kl(KR, '0')}\\\\ ${mk('neer', kl(KR, '-R'))}\\\\ ${kl(KR, '0')}\\end{Bmatrix}`, mk('op', `${kl(KR, 'R')} \\ge 0`),
     `${kl(KG, '\\vec G')} = ${kl(KG, '\\begin{Bmatrix}0\\\\ mg\\\\ 0\\end{Bmatrix}')}`,
     `${kl(KA, '\\vec a')} = ${kl(KA, '\\frac{\\mathrm{d}^2\\vec r}{\\mathrm{d}t^2}')}`];
+  if (stap === 2) for (let i = 0; i < delen.length; i++) if (delen[i].includes('\\vec a')) delen[i] = VB.mk(GLOEI, delen[i]);
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
 const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
+// ---------- blok "versnelling" onder de verbinding (stap 2) ----------
+const GLOEI = 'grootte';   // de vraag die de versnelling in het vrijlichaamsdiagram laat oplichten
+const VB = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: de massa trilt langs de x-as', soort: 'recht', grootte: 'trilling', hoek: 0, kleur: KA,
+  rijen: { grootte: { uit: `verandert voortdurend: nul in de uiterste standen, maximaal in de evenwichtsstand → <span style="color:${KA}">versnelling <i>a</i> = d²<i>x</i>/d<i>t</i>², langs <i>x</i></span>`, kop: 'de grootte (en de zin) van $v$ verandert  →  $a$ langs $x$' },
+           richting: { uit: `blijft langs de <i>x</i>-as (een rechte baan) → <span style="color:${KA}"><i>a<sub>n</sub></i> = 0</span>`, kop: 'de baan is recht  →  $a_n = 0$' } },
+  bijKlik: () => { anim = null; licht = null; render(); }, tik: () => drawScene() });
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -309,7 +316,7 @@ function proefTabel() {
   }).join('');
   $('proef').querySelectorAll('button').forEach(kn => kn.onclick = () => {
     const b = BEW.find(q => q.id === kn.dataset.b); proeven[b.id] = true;
-    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; VB.reset(); render();
   });
 }
 function res5() { return `<i>ω</i> = √(<i>k</i>/<i>m</i>) = ${om().toFixed(2)} rad/s, periode <i>T</i> = 2π/<i>ω</i> = ${(2 * Math.PI / om()).toFixed(2)} s.`; }
@@ -418,9 +425,9 @@ function markeerFase() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; laatsteFase = 0; openEval = -1; if (stap !== 5) { k = K0; m = M0; } render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); laatsteFase = 0; openEval = -1; if (stap !== 5) { k = K0; m = M0; } render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); drawGrafiek(); vldFormules(); }
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); drawGrafiek(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => zetSpelen(!playing);

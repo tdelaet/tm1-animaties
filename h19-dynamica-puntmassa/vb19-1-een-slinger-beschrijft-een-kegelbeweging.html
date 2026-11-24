@@ -58,7 +58,6 @@
 
   <div class="instructie card">
     <p>Een puntmassa <i>m</i> volgt een cirkelvormige baan in een horizontaal vlak, met hoeksnelheid <i>ω</i> rond de verticale as. Ze hangt aan een massaloze kabel met lengte <i>L</i>, in een wrijvingsloos bolgewricht, in het zwaartekrachtveld <span data-tex="\vec g"></span>. De kabel sluit een hoek <i>θ</i> in met de as van symmetrie. <b>Bepaal het verband tussen de hoek <i>θ</i> en de hoeksnelheid <i>ω</i>.</b></p>
-    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen de kabel aan de puntmassa verhindert; een verhinderde beweging geeft een kracht, die oplicht in het vrijlichaamsdiagram. Sleep in de figuur om het aanzicht te draaien.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -123,6 +122,7 @@ function bol(ctx, q, r, kleur = '#e8590c') {
 }
 // dubbele pijl (⇒) voor de versnelling, zoals in de video: twee evenwijdige lijnen en een open kop
 function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  if (kleur === KA && stap === 2 && VB.gloed(GLOEI)) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * VB.gloed(GLOEI)) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
   const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if (l < 4) return false;
   const ux = dx / l, uy = dy / l, nx = -uy, ny = ux, h = 13, s = 4;
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -290,12 +290,19 @@ function vldFormules() {
     mk('naar', `${kl(KF, 'F')} \\ge 0`),
     `${kl(KG, 'm\\vec g')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ -1\\end{Bmatrix}')}`,
     `${kl(KA, '\\vec a')} = ${kl(KA, 'a\\begin{Bmatrix}1\\\\ 0\\end{Bmatrix}')}`];
+  if (stap === 2) for (let i = 0; i < delen.length; i++) if (delen[i].includes('\\vec a')) delen[i] = VB.mk(GLOEI, delen[i]);
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
 const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
+// ---------- blok "versnelling" onder de verbinding (stap 2) ----------
+const GLOEI = 'richting';   // de vraag die de versnelling in het vrijlichaamsdiagram laat oplichten
+const VB = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: de puntmassa beschrijft een horizontale cirkel', soort: 'cirkel', grootte: 'constant', zin: 1, fase: 0, straal: 'r', midden: 'as', kleur: KA,
+  rijen: { grootte: { uit: `constant (de hoeksnelheid <i>ω</i> is constant) → <span style="color:${KA}"><i>a<sub>t</sub></i> = 0</span>`, kop: 'de grootte van $v$ blijft gelijk  →  $a_t = 0$' },
+           richting: { uit: `draait mee rond de verticale as, op een cirkel met straal <i>r</i> = <i>L</i> sin <i>θ</i> → <span style="color:${KA}"><i>a<sub>n</sub></i> = <i>ω</i>²<i>L</i> sin <i>θ</i>, naar de as</span>`, kop: 'de richting van $v$ draait mee  →  $a_n = \\omega^2 r$, naar de as' } },
+  bijKlik: () => { anim = null; licht = null; render(); }, tik: () => drawScene() });
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -306,7 +313,7 @@ function proefTabel() {
   }).join('');
   $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
     const b = BEW.find(x => x.id === k.dataset.b); proeven[b.id] = true;
-    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; VB.reset(); render();
   });
 }
 function stapInhoud() {
@@ -394,9 +401,9 @@ function res5() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((t, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${t}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) om = W0; render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) om = W0; render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); document.querySelectorAll('.instructie [data-tex]').forEach(e => window.katex && render1(e, e.dataset.tex)); });
 $('aanzicht').onclick = () => { Object.assign(view, STANDAARD); drawScene(); };
 const playBtn = $('play');

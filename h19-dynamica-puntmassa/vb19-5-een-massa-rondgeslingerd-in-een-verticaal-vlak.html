@@ -57,7 +57,6 @@
 
   <div class="instructie card">
     <p>Een blok met massa <i>m</i> wordt aan een touw met lengte <i>l</i> rondgeslingerd in een verticaal vlak rond een horizontale as in het punt O. <b>Gevraagd: bereken de minimale snelheid die het blok in het hoogste punt van de baan moet hebben opdat het touw nog net gespannen zou blijven.</b></p>
-    <p>Doorloop de vijf stappen van het plan van aanpak. We bestuderen het blok in het <b>hoogste punt</b> van de baan. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen het touw aan het blok verhindert; een verhinderde beweging geeft een kracht, die oplicht in het vrijlichaamsdiagram.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -107,6 +106,7 @@ const EZ = V(0, 0, 1);
 function rotAx(p, c, a, ang) { const r = sub(p, c), cs = Math.cos(ang), sn = Math.sin(ang); return add(c, add(add(mul(r, cs), mul(cross(a, r), sn)), mul(a, dot(a, r) * (1 - cs)))); }
 function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
 function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  if (kleur === KA && stap === 2 && VB.gloed(GLOEI)) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * VB.gloed(GLOEI)) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
   const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 4) return false;
   const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, h = 13, s = 4;
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -251,12 +251,19 @@ function vldFormules() {
   const delen = [`${kl(KS, '\\vec S')} = ${mk('weg', kl(KS, 'S'))}${kl(KS, '\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`, mk('naar', `${kl(KS, 'S')} \\ge 0`),
     `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`,
     `${kl(KA, '\\vec a')} = ${kl(KA, 'a\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`];
+  if (stap === 2) for (let i = 0; i < delen.length; i++) if (delen[i].includes('\\vec a')) delen[i] = VB.mk(GLOEI, delen[i]);
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
 const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
+// ---------- blok "versnelling" onder de verbinding (stap 2) ----------
+const GLOEI = 'richting';   // de vraag die de versnelling in het vrijlichaamsdiagram laat oplichten
+const VB = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: het blok beschrijft een cirkel rond O', soort: 'cirkel', grootte: 'constant', zin: 1, fase: 0, straal: 'l', midden: 'O', kleur: KA,
+  rijen: { grootte: { uit: `constant (de hoeksnelheid <i>ω</i> is constant) → <span style="color:${KA}"><i>a<sub>t</sub></i> = 0</span>`, kop: 'de grootte van $v$ blijft gelijk  →  $a_t = 0$' },
+           richting: { uit: `draait mee rond O, op een cirkel met straal <i>l</i> → <span style="color:${KA}"><i>a<sub>n</sub></i> = <i>lω</i>², naar O (in het hoogste punt naar beneden)</span>`, kop: 'de richting van $v$ draait mee  →  $a_n = l\\omega^2$, naar O' } },
+  bijKlik: () => { anim = null; licht = null; render(); }, tik: () => drawScene() });
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -267,7 +274,7 @@ function proefTabel() {
   }).join('');
   $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
     const b = BEW.find(x => x.id === k.dataset.b); proeven[b.id] = true;
-    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; VB.reset(); render();
   });
 }
 function res5() {
@@ -354,9 +361,9 @@ function tekenInt() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) { om = W0; l = L0; } render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) { om = W0; l = L0; } render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 const zetSpelen = p => { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; };

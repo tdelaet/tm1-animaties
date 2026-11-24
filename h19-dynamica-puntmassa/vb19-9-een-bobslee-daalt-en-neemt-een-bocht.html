@@ -72,7 +72,6 @@
       <li>de wrijving is tegengesteld aan de bewegingsrichting;</li>
       <li>in de bocht beschrijft de bob een cirkel met straal <i>R</i>, onafhankelijk van zijn plaats op de wand.</li>
     </ul>
-    <p>Doorloop voor elk deel de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen het ijs aan de bob verhindert of tegenwerkt; dat geeft een kracht, die oplicht in het vrijlichaamsdiagram.</p>
     <div class="deelrij modus" id="delen"></div>
     <div class="stappen modus" id="stappen"></div>
   </div>
@@ -113,7 +112,7 @@ const g = 10.0, M = 400, MU0 = 0.005, HEL0 = 0.15, V0 = 11, V1 = 25, R0 = 25, L2
 let deel = 1, stap = 1, anim = null, licht = null, proeven = {}, playing = true, openEval = -1;
 let toonVA = false;                          // deel 2: snelheid en versnelling tekenen (dan daalt de snelheid ook in de animatie)
 let hel = HEL0, mu = MU0, v1 = V1, Rb = R0;   // gegevens (in stap 5 met sliders te veranderen)
-let t1 = 0, s2 = 0;                          // tijd in deel 1, baanpositie in deel 2
+let t1 = 0, s2 = L2;                          // tijd in deel 1, baanpositie in deel 2 (start meteen in de bocht, met de bob al op de wand)
 const herstel = () => { hel = HEL0; mu = MU0; v1 = V1; Rb = R0; };
 
 // ---------- deel 1: rechte helling, eenparig versneld vanaf v0 (na de duwstart) ----------
@@ -131,11 +130,11 @@ const nN = v => Math.hypot(1, an(v) / g);            // N / (mg)
 const aT2 = v => -mu * g * nN(v);                    // a_t = −μN/m
 const sB = () => Math.PI * Rb;                       // lengte van de bocht (halve cirkel)
 const sTot = () => 2 * L2 + sB();
-// snelheid langs de baan: zonder vinkje constant; met vinkje daalt ze in de bocht door de wrijving
+// snelheid langs de baan: in de bocht daalt ze door de wrijving (en daarmee ook de hoek β); het vinkje tekent enkel v, a_t en a_n
 // (v dv/ds = −μ√(g² + v⁴/R²) laat zich integreren met asinh)
 function vBocht(u) { const X = Math.asinh(v1 * v1 / (g * Rb)) - 2 * mu * u / Rb; return X > 0 ? Math.sqrt(g * Rb * Math.sinh(X)) : 0; }
 const vLive = ss => (ss < L2 ? v1 : ss < L2 + sB() ? vBocht(ss - L2) : vBocht(sB()));   // werkelijke snelheid langs de baan (voor de grafiek in stap 5)
-const vOp = ss => (!toonVA || ss < L2 ? v1 : ss < L2 + sB() ? vBocht(ss - L2) : vBocht(sB()));
+const vOp = ss => (ss < L2 ? v1 : ss < L2 + sB() ? vBocht(ss - L2) : vBocht(sB()));
 // baan in bovenaanzicht: recht omhoog (x = R), halve cirkel rond de oorsprong (tegenwijzerzin), recht omlaag (x = −R)
 function baanPunt(ss) {
   if (ss < L2) return { x: Rb, y: -L2 + ss, hx: 0, hy: 1, bocht: false };
@@ -149,6 +148,7 @@ const betaVis = ss => beta(vOp(ss)) * klem((ss - (L2 - 6)) / 6) * klem((L2 + sB(
 // ---------- tekenhulp ----------
 function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
 function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  if (kleur === KA && gloedA('n')) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * gloedA('n')) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
   const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if (l < 4) return false;
   const ux = dx / l, uy = dy / l, nx = -uy, ny = ux, h = 13, q = 4;
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -358,8 +358,7 @@ function drawScene2(ctx, W, Hall) {
   { const cg = { x: cps.x - 0.42 * Sd * Math.sin(b), y: cps.y - 0.42 * Sd * Math.cos(b) }; loodrecht(ctx, cg.x, cg.y, false, '#fff', 6, 1.6); }
   { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.fillText('rijrichting ⊗ (het blad in)', Wl + 10, 38); ctx.restore(); }
   if (b > 0.03) { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(W - Wl < 250 ? '← kromtemiddelpunt' : '← naar het kromtemiddelpunt', Wl + 10, H - 10); ctx.restore(); }
-  { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right';
-    ctx.fillText(bp.bocht ? `in de bocht: β = ${deg(beta(v)).toFixed(1)}°` : 'recht stuk: op de vloer', W - 12, 56); ctx.restore(); }
+  // geen waarde van β in de doorsnede: die is net wat gevraagd wordt
   if (stap <= 2) loepCirkel(ctx, cps, Math.max(14, 0.42 * Sd)); else raak = null;
 
   // ----- onder: vrijlichaamsdiagram van de bob in de doorsnede, bij het inrijden van de bocht -----
@@ -387,7 +386,8 @@ function drawScene2(ctx, W, Hall) {
     loodrecht(ctx, cpV.x, cpV.y, true, KW, 8, 2); label(ctx, 'W', '', cpV.x + 12, cpV.y + 16, KW, { size: 15 });
     ctx.save(); ctx.font = '11.5px Inter, sans-serif'; ctx.fillStyle = KW; ctx.textAlign = 'right'; ctx.fillText(`uit het blad, W = ${(mu * nN(v1)).toFixed(3)} G`, W - 10, Hall - 10); ctx.restore(); }
   // versnelling in het massacentrum: a_t uit het blad (⊙), a_n horizontaal naar het kromtemiddelpunt
-  { loodrecht(ctx, cx, cy, true, KA, 11, 2); label(ctx, 'a', 't', cx - 4, cy - 18, KA, { size: 15 });
+  { if (gloedA('t')) { ctx.save(); ctx.fillStyle = GLOED + (0.4 + 0.5 * gloedA('t')) + ')'; ctx.beginPath(); ctx.arc(cx, cy, 17, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+    loodrecht(ctx, cx, cy, true, KA, 11, 2); label(ctx, 'a', 't', cx - 4, cy - 18, KA, { size: 15 });
     const l = Math.min(0.55 * k, 0.55 * k * an(v1) / 49);
     if (dubbelPijl(ctx, cx - 11, cy, cx - 11 - l, cy, KA, 2)) label(ctx, 'a', 'n', cx - 11 - l - 4, cy + 22, KA, { size: 15 }); }
   assenDoorsnede(ctx, 60, Hall - 26);
@@ -475,12 +475,26 @@ function vldFormules() {
        `${kl(KW, '\\vec W')} = ${mk('x', kl(KW, 'W'))}${kl(KW, '\\begin{Bmatrix}-1\\\\ 0\\\\ 0\\end{Bmatrix}')}`, mk('x', `${kl(KW, 'W')} = \\mu ${kl(KN, 'N')}`),
        `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ 0\\\\ -1\\end{Bmatrix}')}`,
        `${kl(KA, '\\vec a')} = ${kl(KA, '\\begin{Bmatrix}a_t\\\\ v^2/R\\\\ 0\\end{Bmatrix}')}`];
+  const vbl = VBn().licht(); if (stap === 2 && vbl && (deel === 2 || vbl === 'grootte')) for (let i = 0; i < delen.length; i++) if (delen[i].includes('\\vec a')) delen[i] = VBn().mk(vbl, delen[i]);
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((sp, i) => render1(sp, delen[i]));
 }
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
 const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
+// ---------- blok "versnelling" onder de verbinding (stap 2), één per deel ----------
+const vbKlik = () => { anim = null; licht = null; render(); };
+const VB1 = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: de bob glijdt rechtdoor de helling af', soort: 'recht', grootte: 'toe', hoek: Math.atan(HEL0), kleur: KA,
+  rijen: { grootte: { uit: `neemt toe: de bob versnelt langs de helling → <span style="color:${KA}"><i>a<sub>t</sub></i>, langs de helling</span>`, kop: 'de grootte van $v$ neemt toe  →  $a_t$ langs de helling' },
+           richting: { uit: `blijft langs de helling (een rechte baan) → <span style="color:${KA}"><i>a<sub>n</sub></i> = 0</span>`, kop: 'de richting van $v$ blijft gelijk  →  $a_n = 0$' } },
+  bijKlik: vbKlik, tik: () => drawScene() });
+const VB2 = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: de bob neemt de bocht', soort: 'cirkel', grootte: 'af', zin: -1, fase: 0, straal: 'R', kleur: KA,
+  rijen: { grootte: { uit: `neemt (een klein beetje) af door de wrijving → <span style="color:${KA}"><i>a<sub>t</sub></i> &lt; 0, tegengesteld aan <i>v</i></span>`, kop: 'de grootte van $v$ neemt af  →  $a_t$, tegengesteld aan $v$' },
+           richting: { uit: `draait mee in de bocht, een cirkel met straal <i>R</i> → <span style="color:${KA}"><i>a<sub>n</sub></i> = <i>v</i>²/<i>R</i>, naar het kromtemiddelpunt</span>`, kop: 'de richting van $v$ draait mee  →  $a_n = v^2/R$' } },
+  bijKlik: vbKlik, tik: () => drawScene() });
+const VBn = () => (deel === 1 ? VB1 : VB2);
+// welke vraag laat de versnelling in het vrijlichaamsdiagram oplichten (op de helling is a_n = 0; in de bocht zijn a_t en a_n er allebei)
+const gloedA = soort => (stap === 2 ? (deel === 1 ? VB1.gloed('grootte') : VB2.gloed(soort === 't' ? 'grootte' : 'richting')) : 0);
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW[deel].map(b => {
@@ -491,7 +505,7 @@ function proefTabel() {
   }).join('');
   $('proef').querySelectorAll('button').forEach(kn => kn.onclick = () => {
     const b = BEW[deel].find(z => z.id === kn.dataset.b); proeven[deel + b.id] = true;
-    anim = { b, t: 0, T: b.twee ? 2.6 : b.glijdt ? 2.2 : 1.5 }; licht = { b: b.id }; render();
+    anim = { b, t: 0, T: b.twee ? 2.6 : b.glijdt ? 2.2 : 1.5 }; licht = { b: b.id }; VB1.reset(); VB2.reset(); render();
   });
 }
 function res5() {
@@ -735,24 +749,24 @@ function inhoud2() {
 
 function bediening() {
   $('delen').innerHTML = [[1, 'Deel 1. Rechte helling'], [2, 'Deel 2. De bocht']].map(([d, t_]) => `<button data-d="${d}" class="${deel === d ? 'actief' : ''}">${t_}</button>`).join('');
-  $('delen').querySelectorAll('button').forEach(b => b.onclick = () => { deel = +b.dataset.d; anim = null; licht = null; openEval = -1; herstel(); t1 = 0; s2 = 0; render(); });
+  $('delen').querySelectorAll('button').forEach(b => b.onclick = () => { deel = +b.dataset.d; anim = null; licht = null; VB1.reset(); VB2.reset(); openEval = -1; herstel(); t1 = 0; s2 = L2; render(); });
   $('vavak').style.display = deel === 2 ? 'flex' : 'none'; $('toonva').checked = toonVA;
   const eigen = hel !== HEL0 || mu !== MU0 || v1 !== V1 || Rb !== R0;
   $('bnoot').innerHTML = (deel === 1
     ? `Deel 1: de bob rijdt de helling op met 11 m/s en bereikt 25 m/s na ${a1() > 0 ? tE().toFixed(1) : '∞'} s. De animatie loopt aan echte snelheid.`
-    : 'Deel 2: de animatie loopt aan echte snelheid. Links het bovenaanzicht, rechts een doorsnede loodrecht op de baan ter plaatse van de bob, gezien van achter de bob: de rijrichting wijst het blad in (⊗). Met het vinkje teken je de snelheid en de versnelling; dan neemt de snelheid in de bocht ook af door de wrijving. <i>a<sub>t</sub></i> is veel kleiner dan <i>a<sub>n</sub></i> en is getekend met een minimale lengte.')
+    : 'Deel 2: de animatie loopt aan echte snelheid. Links het bovenaanzicht, rechts een doorsnede loodrecht op de baan ter plaatse van de bob, gezien van achter de bob: de rijrichting wijst het blad in (⊗). In de bocht neemt de snelheid af door de wrijving, en daarmee ook de hoek β. Met het vinkje teken je de snelheid en de versnelling. <i>a<sub>t</sub></i> is veel kleiner dan <i>a<sub>n</sub></i> en is getekend met een minimale lengte.')
     + (eigen ? ' <b>Eigen keuze in stap 5</b>; een andere stap of een ander deel brengt de gegevens terug.' : '');
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((t_, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${t_}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) { herstel(); t1 = Math.min(t1, tE()); s2 = Math.min(s2, sTot()); } render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB1.reset(); VB2.reset(); openEval = -1; if (stap !== 5) { herstel(); t1 = Math.min(t1, tE()); s2 = Math.min(s2, sTot()); } render(); });
 }
-function render() { stapKnoppen(); bediening(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+function render() { stapKnoppen(); bediening(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB1.toon(stap === 2 && deel === 1); VB2.toon(stap === 2 && deel === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); document.querySelectorAll('.instructie [data-tex]').forEach(e => render1(e, e.dataset.tex)); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
-$('reset').onclick = () => { t1 = 0; s2 = 0; drawScene(); };
-$('toonva').onchange = e => { toonVA = e.target.checked; s2 = 0; drawScene(); };
+$('reset').onclick = () => { t1 = 0; s2 = L2; drawScene(); if (deel === 2 && stap === 5) grafiek(); };   // ook de grafiek springt terug naar de startsnelheid
+$('toonva').onchange = e => { toonVA = e.target.checked; s2 = L2; drawScene(); };
 sc.c.addEventListener('click', e => {
   if (!raak || stap === 2) return; const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
   if (Math.hypot(raak.x - x, raak.y - y) < raak.r * 1.4) { stap = 2; anim = null; licht = null; render(); }
@@ -762,7 +776,7 @@ TM1.bijGrootte([sc, LP], render);
 TM1.lus(dt => {
   if (playing) {
     if (deel === 1) { t1 += dt; if (a1() <= 0 || t1 > tE() + 2.5) t1 = 0; }
-    else { s2 += Math.max(vOp(s2), 1) * dt; if (s2 > sTot()) s2 = 0; }
+    else { s2 += Math.max(vOp(s2), 1) * dt; if (s2 > sTot()) s2 = L2; }
   }
   if (anim) { anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); }
   drawScene();

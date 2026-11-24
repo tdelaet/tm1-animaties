@@ -57,7 +57,6 @@
 
   <div class="instructie card">
     <p>Een horizontaal platform maakt een verticaal neerwaartse beweging met een versnelling <i>a</i> &lt; <i>g</i>. Hierop rust een blok met massa <i>m</i>. <b>Gevraagd: de verbindingskracht uitgeoefend door het platform op het blok.</b></p>
-    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen het platform aan het blok verhindert; een verhinderde beweging geeft een kracht(component), die oplicht in het vrijlichaamsdiagram.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -117,6 +116,7 @@ function platform(ctx, P, y, half = 1.3, diep = 1.5) {
 }
 // dubbele pijl (⇒) voor de versnelling
 function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  if (kleur === KA && stap === 2 && VB.gloed(GLOEI)) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * VB.gloed(GLOEI)) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
   const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if (l < 4) return false;
   const ux = dx / l, uy = dy / l, nx = -uy, ny = ux, h = 13, s = 4;
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -250,12 +250,19 @@ function vldFormules() {
     mk('ymin', `${kl(KR, 'R')} \\ge 0`),
     `${kl(KG, '\\vec G')} = ${kl(KG, 'm\\vec g')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`,
     `${kl(KA, '\\vec a')} = ${kl(KA, 'a\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`];
+  if (stap === 2) for (let i = 0; i < delen.length; i++) if (delen[i].includes('\\vec a')) delen[i] = VB.mk(GLOEI, delen[i]);
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
 const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
+// ---------- blok "versnelling" onder de verbinding (stap 2) ----------
+const GLOEI = 'grootte';   // de vraag die de versnelling in het vrijlichaamsdiagram laat oplichten
+const VB = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: het blok beweegt mee met het platform', soort: 'recht', grootte: 'toe', hoek: Math.PI / 2, kleur: KA,
+  rijen: { grootte: { uit: `neemt toe: het platform versnelt naar beneden → <span style="color:${KA}">versnelling <i>a</i> naar beneden</span>`, kop: 'de grootte van $v$ neemt toe  →  $a$ langs de beweging' },
+           richting: { uit: `blijft verticaal (een rechte baan) → <span style="color:${KA}"><i>a<sub>n</sub></i> = 0</span>`, kop: 'de richting van $v$ blijft gelijk  →  $a_n = 0$' } },
+  bijKlik: () => { anim = null; licht = null; render(); }, tik: () => drawScene() });
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -266,7 +273,7 @@ function proefTabel() {
   }).join('');
   $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
     const b = BEW.find(x => x.id === k.dataset.b); proeven[b.id] = true;
-    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; VB.reset(); render();
   });
 }
 function res5() {
@@ -346,9 +353,9 @@ function tekenInt() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) ag = A0; render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) ag = A0; render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };

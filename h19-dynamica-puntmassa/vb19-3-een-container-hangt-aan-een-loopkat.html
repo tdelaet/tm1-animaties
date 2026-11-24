@@ -13,7 +13,7 @@
 <style>
   .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer;touch-action:pan-y}
   .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
-  #loep{max-height:320px;touch-action:pan-y}
+  #loep{max-height:210px;touch-action:pan-y}
   @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
   .instructie{padding:10px 16px;margin:0 0 14px}
   .instructie p{margin:0 0 8px;font-size:14px}
@@ -57,7 +57,6 @@
 
   <div class="instructie card">
     <p>Een container hangt met een massaloze kabel van 5.00 m onder een loopkat. De container heeft een massa van 3.00 ton. Het geheel van loopkat en container beweegt met een constante horizontale versnelling van 0.800 m/s² naar rechts. <b>Gevraagd: welke hoek sluit de kabel in met de verticale? Hoe groot is de kracht die de aandrijving van de loopkat moet opwekken om de last horizontaal te verplaatsen met de gegeven versnelling?</b></p>
-    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen de kabel aan de container verhindert; een verhinderde beweging geeft een kracht, die oplicht in het vrijlichaamsdiagram.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -69,7 +68,7 @@
     <div class="side">
       <div class="card panel">
         <h2>Bediening</h2>
-        <div class="btnrow" style="margin:0"><button class="primary" id="play">⏸ Pauze</button></div>
+        <div class="btnrow" style="margin:0"><button class="primary" id="play">▶ Afspelen</button></div>
         <div class="note">De loopkat vertrekt telkens vanuit rust en versnelt in werkelijke tijd. De container hangt al onder de constante hoek <i>ϕ</i> (de slingerbeweging bij het vertrek is weggelaten). In stap 5 kun je <i>a</i> veranderen; de hoek is dan beter te zien.</div>
       </div>
     </div>
@@ -93,7 +92,7 @@ const C = TM1.kleuren();
 const KG = '#2f8f46', KS = C.F, KA = C.a;              // kleuren: gewicht, kabelkracht, versnelling
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, M = 3000, LK = 5.0, A0 = 0.8;          // in de cursus altijd g = 10.0 m/s²
-let stap = 1, anim = null, licht = null, proeven = {}, a = A0, t = 0, playing = true, openEval = -1;
+let stap = 1, anim = null, licht = null, proeven = {}, a = A0, t = 0, playing = false, openEval = -1;   // bij het laden staat de animatie stil in de bestudeerde stand
 const phi = () => Math.atan(a / g);
 
 // ---------- vectoren: x naar rechts, y omhoog, z naar de kijker ----------
@@ -107,6 +106,7 @@ function rotAx(p, c, as, ang) { const r = sub(p, c), cs = Math.cos(ang), sn = Ma
 
 function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
 function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+  if (kleur === KA && stap === 2 && VB.gloed(GLOEI)) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * VB.gloed(GLOEI)) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
   const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if (l < 4) return false;
   const ux = dx / l, uy = dy / l, nx = -uy, ny = ux, h = 13, s = 4;
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -114,11 +114,9 @@ function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
   ctx.beginPath(); ctx.moveTo(x1 - ux * h + nx * h * 0.75, y1 - uy * h + ny * h * 0.75); ctx.lineTo(x1, y1); ctx.lineTo(x1 - ux * h - nx * h * 0.75, y1 - uy * h - ny * h * 0.75); ctx.stroke();
   ctx.restore(); return true;
 }
-function assen2(ctx, x, y, Lp = 26) {               // x naar rechts, y omhoog, z naar de kijker (⊙)
+function assen2(ctx, x, y, Lp = 26) {               // x naar rechts, y omhoog (vlak probleem: geen z-as)
   arrow(ctx, x, y, x + Lp, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + Lp + 4, y + 5, '#6b737d', { vec: false, size: 13 });
   arrow(ctx, x, y, x, y - Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 13, y - Lp + 4, '#6b737d', { vec: false, size: 13 });
-  ctx.save(); ctx.strokeStyle = '#6b737d'; ctx.fillStyle = '#6b737d'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.stroke(); ctx.beginPath(); ctx.arc(x, y, 1.8, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
-  label(ctx, 'z', '', x - 18, y + 16, '#6b737d', { vec: false, size: 13 });
 }
 function container(ctx, cx, cy, bw, bh) {
   ctx.save(); ctx.fillStyle = '#7cc4f2'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.fillRect(cx - bw / 2, cy - bh / 2, bw, bh); ctx.strokeRect(cx - bw / 2, cy - bh / 2, bw, bh);
@@ -130,8 +128,7 @@ function container(ctx, cx, cy, bw, bh) {
 const BEW = [
   { id: 'weg', tekst: 'translatie langs de kabel, weg van de loopkat (de kabel verlengt)', verh: true },
   { id: 'naar', tekst: 'translatie langs de kabel, naar de loopkat toe', verh: false, slap: true, uit: 'mogelijk: de kabel wordt slap → <i>S</i> ≥ 0 (een kabel kan enkel trekken)' },
-  { id: 'vlak', tekst: 'translatie loodrecht op de kabel, in het <i>xy</i>-vlak', twee: true, as: 'z', verh: false, uit: 'mogelijk: de container beweegt over een cirkelboog rond de loopkat → geen kracht' },
-  { id: 'uit', tekst: 'translatie volgens <i>z</i> (loodrecht op het vlak van de kabel)', twee: true, as: 'x', verh: false, uit: 'mogelijk: de container beweegt over een cirkelboog rond de loopkat → geen kracht' }
+  { id: 'vlak', tekst: 'translatie loodrecht op de kabel', twee: true, as: 'z', verh: false, uit: 'mogelijk: de container beweegt over een cirkelboog rond de loopkat → geen kracht' }
 ];
 
 // ---------- figuur: situatie (boven) en vrijlichaamsdiagram (onder) ----------
@@ -224,11 +221,10 @@ function drawLoep() {
     const pts = []; for (let i = -12; i <= 12; i++) pts.push(P(rotAx(M0, OP, boog, i / 12 * 0.12)));
     ctx.save(); ctx.strokeStyle = '#2f7d3a'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 4]); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.restore();
   }
-  // bovenkant van de container (een stukje) met het oog, en de kabel naar de loopkat
+  // de container als blokje (zoals in het vrijlichaamsdiagram), met de kabel naar de loopkat aan de bovenkant
   const d = sub(Mp, M0), pm = P(Mp);
-  { const q = [V(-1.1, 0, 0), V(1.1, 0, 0), V(1.1, -0.55, 0), V(-1.1, -0.55, 0)].map(p => P(add(p, add(d, V(0, -0.12, 0)))));
-    ctx.save(); ctx.fillStyle = '#7cc4f2'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
-  ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pm.x, pm.y + 0.05 * S, 0.09 * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  { const q = [V(-0.3, 0, 0), V(0.3, 0, 0), V(0.3, -0.6, 0), V(-0.3, -0.6, 0)].map(p => P(add(p, d)));
+    ctx.save(); ctx.fillStyle = '#c9ddf0'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
   const eM = unit(sub(OP, Mp)), top = add(Mp, mul(eM, 0.95)), pt = P(top);
   ctx.save(); ctx.strokeStyle = '#3d454f'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(pm.x, pm.y);
   ctx.quadraticCurveTo((pm.x + pt.x) / 2 + slap * S * 1.1, (pm.y + pt.y) / 2 + slap * S * 0.4, pt.x, pt.y); ctx.stroke(); ctx.restore();
@@ -237,7 +233,7 @@ function drawLoep() {
   { const o = { x: 30, y: H - 24 }, Lp = 24;
     arrow(ctx, o.x, o.y, o.x + Lp, o.y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', o.x + Lp + 4, o.y + 5, '#6b737d', { vec: false, size: 13 });
     arrow(ctx, o.x, o.y, o.x, o.y - Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', o.x - 13, o.y - Lp + 4, '#6b737d', { vec: false, size: 13 });
-    arrow(ctx, o.x, o.y, o.x - 0.45 * Lp, o.y + 0.3 * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'z', '', o.x - 0.45 * Lp - 12, o.y + 0.3 * Lp + 6, '#6b737d', { vec: false, size: 13 }); }
+  }
   if (anim) {
     const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a';
     let dd = b.verh ? mul(e, -1) : b.slap ? e : b.as === 'z' ? unit(cross(EZ, e)) : EZ; dd = mul(dd, zin);
@@ -253,16 +249,22 @@ function vldFormules() {
   const el = document.getElementById('vldf'); if (!window.katex) return;
   if (stap === 1) { el.innerHTML = ''; return; }
   const mk = (id, s) => (stap === 2 && licht && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
-  const delen = [`${kl(KS, '\\vec S')} = ${mk('weg', kl(KS, 'S'))}${kl(KS, '\\begin{Bmatrix}\\sin\\phi\\\\ \\cos\\phi\\\\ 0\\end{Bmatrix}')}`,
+  const delen = [`${kl(KS, '\\vec S')} = ${mk('weg', kl(KS, 'S'))}${kl(KS, '\\begin{Bmatrix}\\sin\\phi\\\\ \\cos\\phi\\end{Bmatrix}')}`,
     mk('naar', `${kl(KS, 'S')} \\ge 0`),
-    `${kl(KG, '\\vec G')} = ${kl(KG, 'm\\vec g')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ -1\\\\ 0\\end{Bmatrix}')}`,
-    `${kl(KA, '\\vec a')} = ${kl(KA, 'a\\begin{Bmatrix}1\\\\ 0\\\\ 0\\end{Bmatrix}')}`];
+    `${kl(KG, '\\vec G')} = ${kl(KG, 'm\\vec g')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ -1\\end{Bmatrix}')}`,
+    `${kl(KA, '\\vec a')} = \\begin{Bmatrix}${VB.mk('grootte', kl(KA, 'a'))}\\\\ ${VB.mk('richting', kl(KA, '0'))}\\end{Bmatrix}`];   // blok "versnelling": grootte → a, richting → 0
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
 const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelijkingen', 'Oplossen', 'Interpretatie en controle'];
+// ---------- blok "versnelling" onder de verbinding (stap 2) ----------
+const GLOEI = 'grootte';   // de vraag die de versnelling in het vrijlichaamsdiagram laat oplichten
+const VB = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: de container beweegt mee met de loopkat', hoogte: 120, soort: 'recht', grootte: 'toe', hoek: 0, kleur: KA,
+  rijen: { grootte: { uit: `neemt toe: de loopkat versnelt naar rechts → <span style="color:${KA}">versnelling <i>a</i> naar rechts</span>`, kop: 'de grootte van $v$ neemt toe  →  $a$ langs de beweging' },
+           richting: { uit: `blijft horizontaal (een rechte baan) → <span style="color:${KA}"><i>a<sub>n</sub></i> = 0</span>`, kop: 'de richting van $v$ blijft gelijk  →  $a_n = 0$' } },
+  bijKlik: () => { anim = null; licht = null; render(); }, tik: () => drawScene() });
 function proefTabel() {
   if (stap !== 2) { $('proef').innerHTML = ''; return; }
   $('proef').innerHTML = BEW.map(b => {
@@ -273,7 +275,7 @@ function proefTabel() {
   }).join('');
   $('proef').querySelectorAll('button').forEach(k => k.onclick = () => {
     const b = BEW.find(x => x.id === k.dataset.b); proeven[b.id] = true;
-    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; VB.reset(); render();
   });
 }
 // zelfde afronding als in de oplossing (stap 4): ϕ in rad (4 decimalen) en in graden (2 decimalen), krachten op 3 beduidende cijfers
@@ -288,7 +290,7 @@ function stapInhoud() {
   const v = s => `<div class="vgl" data-tex="${s.replace(/"/g, '&quot;')}"></div>`;
   const tx = s => `<span data-tex="${s.replace(/"/g, '&quot;')}"></span>`;
   const S_ = kl(KS, '\\vec S'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a');
-  const COMP = `${kl(KS, '\\begin{Bmatrix}S\\sin\\phi\\\\ S\\cos\\phi\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ -mg\\\\ 0\\end{Bmatrix}')} = ${kl(KA, '\\begin{Bmatrix}ma\\\\ 0\\\\ 0\\end{Bmatrix}')}`;
+  const COMP = `${kl(KS, '\\begin{Bmatrix}S\\sin\\phi\\\\ S\\cos\\phi\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ -mg\\end{Bmatrix}')} = ${kl(KA, '\\begin{Bmatrix}ma\\\\ 0\\end{Bmatrix}')}`;
   let h = '';
   if (stap === 1) h = `<p>De container is een onderdeel van het gehele systeem loopkat + kabel + container. We maken de <b>container</b> vrij door in gedachten de kabel door te snijden, en beschouwen ze als een puntmassa <i>m</i>. Zo wordt de kabelkracht een externe kracht, die voorkomt in de bewegingsvergelijking.</p>
       <p class="noot">Ga daarna naar stap 2 om de container vrij te maken.</p>`;
@@ -301,8 +303,8 @@ function stapInhoud() {
       <h4>Bewegingsvergelijking in componenten</h4>${v(COMP)}
       <p class="noot">Twee vergelijkingen voor twee onbekenden: de kabelkracht <i>S</i> en de hoek <i>ϕ</i>.</p>`;
   else if (stap === 4) h = `${v(COMP)}
-      ${v(`\\tan\\phi = \\frac{ma}{mg} = \\frac{0.800\\ \\text{m/s}^2}{10.0\\ \\text{m/s}^2} = 0.0800 \\;\\Rightarrow\\; \\phi = 0.0798\\ \\text{rad} = 4.57^\\circ`)}
-      <div class="kader">${v(`${kl(KS, 'S')} = m\\sqrt{a^2 + g^2} = 30.1\\ \\text{kN}, \\qquad ${S_} = 2.40\\ \\text{kN}\\,\\vec e_x + 30.0\\ \\text{kN}\\,\\vec e_y`)}</div>
+      ${v(`\\tan\\phi = \\frac{ma}{mg} = \\frac{0.800\\ \\text{m/s}^2}{10.0\\ \\text{m/s}^2} = 0.0800`)}
+      <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g} = 0.0798\\ \\text{rad} = 4.57^\\circ`)}${v(`${kl(KS, 'S')} = m\\sqrt{a^2 + g^2} = 30.1\\ \\text{kN}, \\qquad ${S_} = 2.40\\ \\text{kN}\\,\\vec e_x + 30.0\\ \\text{kN}\\,\\vec e_y`)}</div>
       <p>De horizontale component van de krachtvector ${tx(S_)} is meteen de kracht die de aandrijving van de loopkat moet opwekken om de last te verplaatsen. Deze kracht bedraagt dus <b>2.40 kN</b>.</p>`;
   else h = `<p>Merk op dat, in tegenstelling tot de statica, de kracht in de kabel niet gelijk is aan het gewicht van de container: de kabel moet de container ook versnellen.</p>
       <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g}, \\qquad ${kl(KS, 'S')} = m\\sqrt{a^2 + g^2}`)}</div>
@@ -354,9 +356,9 @@ function tekenInt() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5) a = A0; render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) a = A0; render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };

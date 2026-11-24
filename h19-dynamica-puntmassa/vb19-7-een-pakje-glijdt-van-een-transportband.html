@@ -13,7 +13,9 @@
 <style>
   .scene canvas{height:auto;aspect-ratio:98/112;max-height:760px;cursor:pointer;touch-action:pan-y}
   .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
-  #loep{max-height:320px;touch-action:pan-y}
+  #loep{max-height:235px;touch-action:pan-y}
+  #vloep{height:210px !important;width:100%;display:block;touch-action:pan-y;cursor:default}
+  #versnblok h3{margin:16px 0 4px}
   @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
   .instructie{padding:10px 16px;margin:0 0 14px}
   .instructie p{margin:0 0 8px;font-size:14px}
@@ -59,7 +61,6 @@
 
   <div class="instructie card">
     <p>Een transportband loopt met een constante snelheid <i>v</i><sub>band</sub> = 0.85 m/s over een trommel met straal <i>R</i> = 0.2 m. Een pakje met massa <i>m</i> = 0.1 kg ligt op de band; de wrijvingscoëfficiënt tussen pakje en band is <i>μ</i> = 1. Het pakje volgt de band over de trommel, tot het begint te glijden en in de bak valt. <b>Gevraagd: waar begint het pakje net van de band te glijden (bij welke hoek <i>θ</i>, gemeten vanaf de top van de trommel)?</b></p>
-    <p>Doorloop de vijf stappen van het plan van aanpak. In <b>stap 2, het vrijmaken</b>, probeer je rechts in de loep welke bewegingen de band aan het pakje verhindert; een verhinderde beweging geeft een kracht, die oplicht in het vrijlichaamsdiagram.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -82,6 +83,11 @@
       <h3 id="rtitel"></h3>
       <canvas id="loep"></canvas>
       <table class="proef" id="proef"></table>
+      <div id="versnblok" style="display:none">
+        <h3>Versnelling: het pakje volgt de band over de trommel</h3>
+        <canvas id="vloep"></canvas>
+        <table class="proef" id="vproef"></table>
+      </div>
       <div class="stap" id="stap"></div>
     </div>
   </div>
@@ -95,7 +101,7 @@ const C = TM1.kleuren();
 const KG = '#e03131', KN = '#37b24d', KW = '#2b7a3d', KA = '#1c7ed6';   // kleuren zoals in de les: G rood, N lichtgroen, W groen, a blauw
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, R = 0.2, M = 0.1, V0 = 0.85, MU0 = 1.0, VERTRAAG = 4, HP = 0.022;   // HP: halve ribbe van het pakje [m]
-let stap = 1, anim = null, licht = null, proeven = {}, v = V0, mu = MU0, t = 0, playing = true, openEval = -1;   // openEval: welke controlestrategie is opengeklapt (−1: geen)
+let stap = 1, anim = null, licht = null, proeven = {}, vanim = null, vlicht = null, vproeven = {}, v = V0, mu = MU0, t = 0, playing = true, openEval = -1;   // openEval: welke controlestrategie is opengeklapt (−1: geen)
 
 // hoek waarbij het pakje net begint te glijden: μ cos θ − sin θ = μ v²/(gR)  (vorm a cos θ + b sin θ = c)
 function thetaC() {
@@ -235,7 +241,10 @@ function drawScene() {
   kracht(ey, Nv, KN, 'N', gl('in'), 6, -4);
   kracht({ x: -ex.x, y: -ex.y }, Wv, KW, 'W', gl('x'), -22, -4);
   kracht({ x: 0, y: 1 }, 1, KG, 'G', 0, 8, 4);
-  { const L = 0.8 * k, x0 = cx - ey.x * 18, y0 = cy - ey.y * 18; if (dubbelPijl(ctx, x0, y0, x0 - ey.x * L, y0 - ey.y * L, KA, 2)) label(ctx, 'a', 'n', x0 - ey.x * L - 24, y0 - ey.y * L + 6, KA, { size: 15 }); }
+  { const L = 0.8 * k, x0 = cx - ey.x * 18, y0 = cy - ey.y * 18;
+    const gA = stap === 2 && vlicht === 'richting' ? (vanim ? 0.5 + 0.5 * Math.sin(vanim.t * 9) : 1) : 0;   // gloed vanuit het blok "versnelling"
+    if (gA) arrow(ctx, x0, y0, x0 - ey.x * L, y0 - ey.y * L, GLOED + (0.35 + 0.5 * gA) + ')', { w: 14, head: 22 });
+    if (dubbelPijl(ctx, x0, y0, x0 - ey.x * L, y0 - ey.y * L, KA, 2)) label(ctx, 'a', 'n', x0 - ey.x * L - 24, y0 - ey.y * L + 6, KA, { size: 15 }); }
   if (th > 0.02) { ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - 0.7 * k); ctx.stroke(); ctx.restore();
     ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(cx, cy, 0.45 * k, -Math.PI / 2, -Math.PI / 2 + th); ctx.stroke(); ctx.restore();
     label(ctx, 'θ', '', cx + 0.55 * k * Math.sin(th / 2) - 2, cy - 0.55 * k * Math.cos(th / 2) + 4, '#4f5862', { vec: false, size: 14 }); }
@@ -261,24 +270,24 @@ function drawLoep() {
   }
   // zoals links in de situatie: alles (band, pakje, proefbeweging, assen) over θ gedraaid rond het contactpunt
   const th = isNaN(thetaC()) ? 0 : thetaC();
-  // verticale door het contactpunt en de hoek θ tussen de verticale en de (gedraaide) y-as, niet mee gedraaid
-  if (th > 0.02) {
-    lijn(ctx, { x: cx, y: cy }, { x: cx, y: cy - 0.85 * S }, '#7a828c', 1.1, [4, 3]);
-    ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, 0.68 * S, -Math.PI / 2, -Math.PI / 2 + th); ctx.stroke(); ctx.restore();
-    label(ctx, 'θ', '', cx + 0.8 * S * Math.sin(th / 2) - 4, cy - 0.8 * S * Math.cos(th / 2) + 5, '#4f5862', { vec: false, size: 15 });
-  }
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(th); ctx.translate(-cx, -cy);
   ctx.save(); ctx.strokeStyle = '#2f5d80'; ctx.fillStyle = '#5b9bd5'; ctx.lineWidth = 1.5; ctx.beginPath();
   ctx.arc(cx, cy + Rl * S, Rl * S, -Math.PI / 2 - 0.5, -Math.PI / 2 + 0.5); ctx.arc(cx, cy + Rl * S, (Rl - 0.4) * S, -Math.PI / 2 + 0.5, -Math.PI / 2 - 0.5, true); ctx.closePath(); ctx.fill(); ctx.stroke();   // enkel een rand van de trommel
   ctx.strokeStyle = '#1f2a37'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy + Rl * S, Rl * S, -Math.PI / 2 - 0.5, -Math.PI / 2 + 0.5); ctx.stroke(); ctx.restore();
   lijn(ctx, { x: cx, y: cy }, { x: cx, y: cy - 0.85 * S }, '#1f2a37', 1.2, [2, 3]);   // radiale richting (y-as) door het contactpunt
   const h = 0.26, q = { x: cx + dx * S, y: cy - (h + Math.max(dy, 0)) * S + Math.min(dy, 0) * S };
-  ctx.save(); ctx.fillStyle = '#1f2a37'; ctx.fillRect(q.x - h * S, q.y - h * S, 2 * h * S, 2 * h * S); ctx.restore();
+  ctx.save(); ctx.fillStyle = '#c9ddf0'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.fillRect(q.x - h * S, q.y - h * S, 2 * h * S, 2 * h * S); ctx.strokeRect(q.x - h * S, q.y - h * S, 2 * h * S, 2 * h * S); ctx.restore();
   if (anim) {
     const b = anim.b, kl = b.verh ? '#c0392b' : '#2f7d3a', d = b.id === 'in' ? { x: 0, y: 1 } : b.id === 'uit' ? { x: 0, y: -1 } : { x: zin, y: 0 };
     const c0 = { x: cx + 0.55 * S, y: cy - h * S }; arrow(ctx, c0.x + d.x * 0.1 * S, c0.y + d.y * 0.1 * S, c0.x + d.x * 0.5 * S, c0.y + d.y * 0.5 * S, kl, { w: 2.2, dash: [5, 3], head: 10 });
   }
   ctx.restore();
+  // verticale door het contactpunt en de hoek θ tussen de verticale en de (gedraaide) y-as, niet mee gedraaid (na het pakje getekend, zodat de hoek zichtbaar blijft)
+  if (th > 0.02) {
+    lijn(ctx, { x: cx, y: cy }, { x: cx, y: cy - 0.85 * S }, '#7a828c', 1.1, [4, 3]);
+    ctx.save(); ctx.strokeStyle = '#7a828c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, 0.68 * S, -Math.PI / 2, -Math.PI / 2 + th); ctx.stroke(); ctx.restore();
+    label(ctx, 'θ', '', cx + 0.8 * S * Math.sin(th / 2) - 4, cy - 0.8 * S * Math.cos(th / 2) + 5, '#4f5862', { vec: false, size: 15 });
+  }
   ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('band op de trommel (ruw)', 12, H - 12); ctx.restore();
   { const o = { x: 36, y: 52 }; assenLokaal(ctx, o, th, 22); }
   if (anim) {
@@ -286,6 +295,49 @@ function drawLoep() {
     ctx.save(); ctx.font = '600 14px Inter, sans-serif'; ctx.fillStyle = kl; ctx.textAlign = 'center';
     ctx.fillText((b.verh ? '✕ verhinderd' : '✓ mogelijk') + (b.twee ? ' (in beide zinnen)' : ''), W / 2, 18); ctx.restore();
   }
+}
+
+// ---------- blok "versnelling" (stap 2): welke versnelling heeft het pakje? ----------
+// Het pakje volgt de band: een cirkelbeweging met straal R en constante snelheid v_band (tot het begint te glijden).
+const VKEN = [
+  { id: 'grootte', tekst: 'grootte van de snelheid', uit: 'constant, gelijk aan <i>v</i><sub>band</sub> → <span style="color:#1c7ed6"><i>a<sub>t</sub></i> = 0</span>' },
+  { id: 'richting', tekst: 'richting van de snelheid', uit: 'draait mee rond de as van de trommel (cirkel met straal <i>R</i>) → <span style="color:#1c7ed6"><i>a<sub>n</sub></i> = <i>v</i><sub>band</sub>²/<i>R</i>, naar de as</span>' }];
+const VP = setup(document.getElementById('vloep'));
+function versnTabel() {
+  $('versnblok').style.display = stap === 2 ? '' : 'none';
+  if (stap !== 2) return;
+  $('vproef').innerHTML = VKEN.map(b => `<tr><td><button data-v="${b.id}">▶ bekijk</button></td><td>${b.tekst}</td><td>${vproeven[b.id] ? `<span class="uit vrij">✓</span> ${b.uit}` : '<span class="uit nog">nog niet bekeken</span>'}</td></tr>`).join('');
+  $('vproef').querySelectorAll('button').forEach(kn => kn.onclick = () => {
+    const id = kn.dataset.v; vproeven[id] = true; vanim = { id, t: 0, T: 3 }; vlicht = id; anim = null; licht = null; render();
+  });
+}
+function drawVLoep() {
+  const ctx = VP.ctx, W = VP.w, H = VP.h; ctx.clearRect(0, 0, W, H);
+  if (stap !== 2 || W < 40 || H < 40) return;
+  // trommel (bovenkant) met het pakje op hoek φ vanaf de top; de band loopt naar rechts, dus φ neemt toe in wijzerzin
+  const Rp = Math.min(W * 0.24, H * 0.5), o = { x: W * 0.45, y: H - 22 };
+  const P = (phi, r = Rp) => ({ x: o.x + r * Math.sin(phi), y: o.y - r * Math.cos(phi) });
+  const th0 = isNaN(thetaC()) ? 0 : thetaC();
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+  ctx.fillStyle = '#e3eef8'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(o.x, o.y, Rp, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#1f2a37'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(o.x, o.y, Rp, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.fillStyle = '#1f2a37'; ctx.beginPath(); ctx.arc(o.x, o.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  label(ctx, 'R', '', o.x - 16, o.y - Rp * 0.45, '#4f5862', { vec: false, size: 14 });
+  const id = vanim ? vanim.id : vlicht, u = vanim ? Math.min(vanim.t / vanim.T, 1) : 1;
+  const phi = vanim ? th0 - 0.55 + 0.55 * u : th0;   // het pakje schuift mee met de band naar de bestudeerde stand
+  const pakjeOp = (f, alfa) => { const q = P(f, Rp + 9); ctx.save(); ctx.globalAlpha = alfa; ctx.translate(q.x, q.y); ctx.rotate(f); ctx.fillStyle = '#c9ddf0'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.fillRect(-9, -9, 18, 18); ctx.strokeRect(-9, -9, 18, 18); ctx.restore(); };
+  const snelheid = (f, alfa, naam) => { const q = P(f, Rp + 9), tx = Math.cos(f), ty = Math.sin(f), L = 0.75 * Rp;
+    ctx.save(); ctx.globalAlpha = alfa; arrow(ctx, q.x, q.y, q.x + tx * L, q.y + ty * L, C.ink, { w: 2, head: 9 }); ctx.restore();
+    if (naam) label(ctx, 'v', '', q.x + tx * (L + 8) - 2, q.y + ty * (L + 8) - 4, C.ink, { size: 14 }); };
+  pakjeOp(phi, 1); snelheid(phi, 1, true);
+  if (id === 'richting' || vproeven.richting) {   // normaalversnelling naar de as, langs de straal
+    const q = P(phi, Rp + 9), nx = -Math.sin(phi), ny = Math.cos(phi), L = 0.55 * Rp;
+    lijn(ctx, q, o, '#7a828c', 1, [4, 3]);
+    if (dubbelPijl(ctx, q.x + nx * 12, q.y + ny * 12, q.x + nx * (12 + L), q.y + ny * (12 + L), KA, 2.2)) label(ctx, 'a', 'n', q.x + nx * (12 + 0.8 * L) + 12, q.y + ny * (12 + 0.8 * L) + 4, KA, { size: 14 });
+  }
+  if (id === 'grootte') TM1.formule(ctx, 'de grootte van $v$ blijft $v_{band}$  →  $a_t = 0$', W / 2, 20, { align: 'center', color: KA, size: 13 });
+  else if (id === 'richting') TM1.formule(ctx, 'de richting van $v$ draait mee  →  $a_n = v^2/R$, naar de as', W / 2, 20, { align: 'center', color: KA, size: 13 });
+  ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText('trommel met straal R', 12, H - 10); ctx.restore();
 }
 
 // ---------- formules onder het vrijlichaamsdiagram ----------
@@ -298,7 +350,8 @@ function vldFormules() {
   const delen = [`${kl(KN, '\\vec N')} = ${mk('in', kl(KN, 'N'))}${kl(KN, '\\begin{Bmatrix}0\\\\ 1\\end{Bmatrix}')}`, mk('uit', `${kl(KN, 'N')} \\ge 0`),
     `${kl(KW, '\\vec W')} = ${mk('x', kl(KW, 'W'))}${kl(KW, '\\begin{Bmatrix}-1\\\\ 0\\end{Bmatrix}')}`,
     `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}\\sin\\theta\\\\ -\\cos\\theta\\end{Bmatrix}')}`,
-    `${kl(KA, '\\vec a_n')} = ${kl(KA, '\\begin{Bmatrix}0\\\\ -a_n\\end{Bmatrix}')}`];
+    (() => { const mv = (id, s) => (stap === 2 && vlicht === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);   // oplichten vanuit het blok "versnelling"
+      return `${kl(KA, '\\vec a')} = \\begin{Bmatrix}${mv('grootte', kl(KA, '0'))}\\\\ ${mv('richting', kl(KA, '-a_n'))}\\end{Bmatrix}`; })()];
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
 
@@ -316,7 +369,7 @@ function proefTabel() {
   }).join('');
   $('proef').querySelectorAll('button').forEach(kn => kn.onclick = () => {
     const b = BEW.find(q => q.id === kn.dataset.b); proeven[b.id] = true;
-    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; render();
+    anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; vanim = null; vlicht = null; render();
   });
 }
 function res5() {
@@ -409,9 +462,9 @@ function tekenInt() {
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
-  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; openEval = -1; if (stap !== 5 && (v !== V0 || mu !== MU0)) { v = V0; mu = MU0; maakBaan(); } render(); });
+  $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; vanim = null; vlicht = null; openEval = -1; if (stap !== 5 && (v !== V0 || mu !== MU0)) { v = V0; mu = MU0; maakBaan(); } render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); }
+function render() { stapKnoppen(); stapInhoud(); proefTabel(); versnTabel(); drawScene(); drawLoep(); drawVLoep(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
@@ -422,12 +475,13 @@ sc.c.addEventListener('click', e => {
 });
 
 maakBaan();
-TM1.bijGrootte([sc, LP], render);
+TM1.bijGrootte([sc, LP, VP], render);
 TM1.lus(dt => {
   if (playing) { t += dt / VERTRAAG; if (t > baan.T) t = 0; }
   if (anim) { anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); }
+  if (vanim) { vanim.t += dt; if (vanim.t >= vanim.T) vanim = null; drawVLoep(); }
   drawScene();
-}, () => playing || !!anim);
+}, () => playing || !!anim || !!vanim);
 })();
 </script>
 </body>
