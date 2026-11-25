@@ -90,6 +90,13 @@
       opt: size (px, standaard 12), color, align ('left' | 'center' | 'right'). Basislijn op y. */
   const GRIEKS = { alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', Delta: 'Δ', theta: 'θ', omega: 'ω', Omega: 'Ω',
     phi: 'φ', varphi: 'φ', rho: 'ρ', pi: 'π', mu: 'μ', tau: 'τ', psi: 'ψ', cdot: '·' };
+  /** Getal met 3 beduidende cijfers (afspraak in de cursus), met een echt minteken; vanaf 1000 zonder decimalen. */
+  function drie(x) {
+    if (!isFinite(x)) return x > 0 ? "∞" : "−∞";
+    const s = Math.abs(x) >= 1000 ? x.toFixed(0) : Math.abs(x) < 1e-12 ? "0.00" : x.toPrecision(3);
+    return s.replace("-", "−");
+  }
+
   function formule(ctx, src, x, y, opt = {}) {
     const size = opt.size ?? 12, color = opt.color ?? css('--muted'), align = opt.align ?? 'left';
     const serif = '"Source Serif 4", Georgia, serif', sans = 'Inter, sans-serif', ms = size + 2;
@@ -167,12 +174,12 @@
   }
 
   /** Assen, raster en asbijschriften voor een grafiek. Geeft omzetfuncties X(x), Y(y) terug. */
-  function frame(G, xr, yr, xl, yl, xfmt) {
+  function frame(G, xr, yr, xl, yl, xfmt, xstap) {   // xstap: vaste afstand tussen de getallen op de x-as (optioneel)
     const C = kleuren();
     const ctx = G.ctx, w = G.w, h = G.h, m = { l: 44, r: 10, t: 10, b: 34 };
     ctx.clearRect(0, 0, w, h);
     ctx.font = '11px Inter, sans-serif'; ctx.lineWidth = 1;
-    const sx = niceStep(xr[1] - xr[0], 6), sy = niceStep(yr[1] - yr[0], 5);
+    const sx = xstap || niceStep(xr[1] - xr[0], 6), sy = niceStep(yr[1] - yr[0], 5);
     const dx = Math.max(0, -Math.floor(Math.log10(sx) + 1e-9)), dy = Math.max(0, -Math.floor(Math.log10(sy) + 1e-9));
     // linkermarge zo breed dat het asbijschrift niet over de getallen van de y-as valt (bv. 0.25, −0.05)
     let wy = 0;
@@ -316,13 +323,13 @@
         for (const k of ks) { const f = f0 + k * d, q = P(f), t = T(f); blokje(ctx, q.x, q.y, f, 0.25); snel(ctx, q.x, q.y, t.x, t.y, Lv * vRel(k) * (gr === 'rust' ? 1 : 1), 0.35, false); }
         const fNu = gr === 'rust' ? f0 : f0 - (1 - u) * d, q = P(fNu), t = T(fNu);
         blokje(ctx, q.x, q.y, fNu, 1); snel(ctx, q.x, q.y, t.x, t.y, gr === 'rust' ? 0 : Lv * vRel(-(1 - u)), 1, true);
-        const links = q.x < o.x, tekstje = (s, kleur, rij) => { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = kleur; ctx.textAlign = links ? 'right' : 'left'; ctx.fillText(s, q.x + (links ? -14 : 14), q.y - 22 + 15 * rij); ctx.restore(); };
-        if (gr === 'rust') tekstje('v = 0', C.ink, 0);
+        const links = q.x < o.x;
+        if (gr === 'rust') formule(ctx, '$v = 0$', q.x + (links ? -14 : 14), q.y - 22, { align: links ? 'right' : 'left', color: C.ink, size: 12 });
         if (toonN) {
           const nx = (o.x - q.x) / Rp, ny = (o.y - q.y) / Rp;
           ctx.save(); ctx.strokeStyle = '#9aa1a9'; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(o.x, o.y); ctx.stroke(); ctx.restore();
           if (cfg.straal) label(ctx, cfg.straal, '', (q.x + o.x) / 2 - 14 * ny, (q.y + o.y) / 2 + 14 * nx + 4, '#4f5862', { vec: false, size: 13 });
-          if (gr === 'rust') tekstje('a_n = 0', KA, 1);
+          if (gr === 'rust') formule(ctx, '$a_n = 0$', q.x + (links ? -14 : 14), q.y - 22 + 15, { align: links ? 'right' : 'left', color: KA, size: 12 });
           else if (dubbel(ctx, q.x + nx * 10, q.y + ny * 10, q.x + nx * (10 + 0.5 * Rp), q.y + ny * (10 + 0.5 * Rp))) label(ctx, 'a', 'n', q.x + nx * (10 + 0.62 * Rp) + 8, q.y + ny * (10 + 0.62 * Rp) + 4, KA, { size: 14 });
         }
         if (toonT && gr !== 'constant') {
@@ -346,7 +353,7 @@
         const q = pos(nu.s); blokje(ctx, q.x, q.y, 0, 1); snel(ctx, q.x, q.y, ux * Math.sign(nu.v || 1), uy * Math.sign(nu.v || 1), Lv * Math.abs(nu.v), 1, true);
         if (toonT) { const s = Math.sign(nu.a) || 1, L = gr === 'trilling' ? 0.3 * Ls * Math.abs(nu.a) : 0.18 * Ls, b = { x: q.x - uy * 18, y: q.y + ux * 18 };
           if (dubbel(ctx, b.x, b.y, b.x + s * ux * L, b.y + s * uy * L)) label(ctx, 'a', '', b.x + s * ux * (L + 8) - 2, b.y + s * uy * (L + 8) + 12, KA, { size: 14 }); }
-        if (toonN) { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KA; ctx.fillText('a_n = 0', q.x + uy * 22 + 6, q.y - ux * 22 - 4); ctx.restore(); }
+        if (toonN) { formule(ctx, '$a_n = 0$', q.x + uy * 22 + 6, q.y - ux * 22 - 4, { color: KA, size: 12 }); }
       }
       if (id && cfg.rijen[id].kop) formule(ctx, cfg.rijen[id].kop, W / 2, 18, { align: 'center', color: KA, size: 13 });
     }
@@ -395,6 +402,29 @@
   }
 
   /** Hertekent alle canvassen als de pagina van grootte verandert, en opnieuw als de lettertypes geladen zijn. */
+  /**
+   * Bedieningsbalk (afspelen, opnieuw, toon-knoppen) tussen de situatie (bovenste helft) en het
+   * vrijlichaamsdiagram (onderste helft) van een dynamicavoorbeeld: de knoppen horen bij de animatie.
+   * De figuur wordt even veel hoger als de balk, zodat beide helften hun grootte houden.
+   * Gebruik: in render() `BALK = TM1.balkTussen(sc)`; in de tekenfunctie `let H = (Hall - BALK) * 0.5`
+   * voor de situatie en `H += BALK` vóór het vrijlichaamsdiagram. Geeft de hoogte van de balk terug.
+   */
+  function balkTussen(G) {
+    const doek = G.c.closest('.doek'), bed = doek && doek.parentElement.querySelector('.bediening');
+    if (!doek || !bed) return 0;
+    if (bed.parentElement !== doek) doek.appendChild(bed);
+    Object.assign(bed.style, { position: 'absolute', left: '0', right: '0', zIndex: '1', background: '#fff',
+      borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', boxSizing: 'border-box' });
+    const h = bed.offsetHeight;
+    if (!G.c.dataset.ar) G.c.dataset.ar = getComputedStyle(G.c).aspectRatio;   // oorspronkelijke verhouding, bv. "98 / 112"
+    const [a, b] = G.c.dataset.ar.split('/').map(Number), w = G.c.clientWidth;
+    if (a && b && w) { const ar = `${w} / ${Math.round(w * b / a + h)}`; if (G.c.style.aspectRatio !== ar) G.c.style.aspectRatio = ar; }
+    G.c.style.maxHeight = `calc(var(--h, 680px) + ${80 + h}px)`;   // ook de bovengrens van de figuur (werkblad) groeit met de balk
+    if (Math.abs(G.c.clientHeight - G.h) > 0.5) G.resize();
+    bed.style.top = `${G.c.offsetTop + (G.c.clientHeight - h) / 2}px`;
+    return h;
+  }
+
   function bijGrootte(canvassen, render) {
     const doe = () => { canvassen.forEach(o => o.resize()); render(); };
     const ro = new ResizeObserver(doe);
@@ -641,6 +671,6 @@
   global.TM1 = Object.assign(global.TM1 || {}, {
     tex, werkblad, vastVak, vasteSchaal, driehoekLegende, breuk,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
-    frame, curve, dot, cursor, grafiekIn, versnelling, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
+    frame, curve, dot, cursor, grafiekIn, versnelling, drie, balkTussen, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });
 })(window);

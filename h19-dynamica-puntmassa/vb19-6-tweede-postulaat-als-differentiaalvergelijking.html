@@ -35,7 +35,7 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.9) */
   .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
   .stap .eval p{margin:3px 0}
   .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
@@ -59,12 +59,14 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.6 — Het tweede postulaat van Newton als differentiaalvergelijking</h1>
+    <h1>Voorbeeld 19.6 — Tweede postulaat als differentiaalvergelijking</h1>
     <span class="kicker">Dynamica van een puntmassa · een massa aan een veer trilt over een glad horizontaal oppervlak; de bewegingsvergelijking wordt een differentiaalvergelijking</span>
   </header>
 
   <div class="instructie card">
-    <p>Het tweede postulaat van Newton drukt een verband uit tussen de kracht op een puntmassa en haar versnelling, de tweede afgeleide van de positie. Als de kracht een functie is van de positie, de snelheid en/of de tijd, dan wordt het tweede postulaat een tweede-orde differentiaalvergelijking. Als illustratie: een puntmassa die met een veer (veerconstante <i>k</i>, rustlengte <i>l</i><sub>0</sub>) bevestigd is aan een vast punt O, beweegt zonder wrijving over een horizontaal oppervlak. Ze wordt uit de evenwichtspositie getrokken en vanuit rust losgelaten.</p>
+    <p>Een puntmassa is met een veer bevestigd aan een vast punt O en beweegt zonder wrijving over een horizontaal oppervlak. Ze wordt uit de evenwichtspositie getrokken en vanuit rust losgelaten.</p>
+    <p><b>Gegevens:</b> massa <i>m</i>, veerconstante <i>k</i>, rustlengte <i>l</i><sub>0</sub>.</p>
+    <p><b>Gevraagd: de differentiaalvergelijking die de positie <i>x</i>(<i>t</i>) van de massa beschrijft</b>, met <i>x</i> de verlenging van de veer.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -174,7 +176,7 @@ function loepCirkel(ctx, q, r) {
 }
 function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
-  const H = Hall * 0.5, x = xt(t), f = fase(t);
+  let H = (Hall - BALK) * 0.5; const x = xt(t), f = fase(t);
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie -----
   titel('Situatie', 18);
@@ -195,6 +197,7 @@ function drawScene() {
   if (stap <= 2) loepCirkel(ctx, { x: X(x) + hb / 2, y: yg }, 0.55 * hb + 10); else raak = null;
   ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right'; ctx.fillText(faseNaam(f), W - 12, 18); ctx.restore();
 
+  H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram op dit ogenblik -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); assenXYdown(ctx, 30, Hall - 60); return; }
@@ -319,7 +322,7 @@ function proefTabel() {
     anim = { b, t: 0, T: b.twee ? 2.6 : 1.5 }; licht = { b: b.id }; VB.reset(); render();
   });
 }
-function res5() { return `<i>ω</i> = √(<i>k</i>/<i>m</i>) = ${om().toFixed(2)} rad/s, periode <i>T</i> = 2π/<i>ω</i> = ${(2 * Math.PI / om()).toFixed(2)} s.`; }
+function res5() { return `<i>ω</i> = √(<i>k</i>/<i>m</i>) = ${TM1.drie(om())} rad/s, periode <i>T</i> = 2π/<i>ω</i> = ${TM1.drie((2 * Math.PI / om()))} s.`; }
 function faseLijst() {
   return `<table class="fasen" id="fasen">${FASEN.map((s, i) => {
     const c = i + 1, kleur = c % 2 ? FASEKLEUR[(c - 1) / 2] : 'transparent';
@@ -366,8 +369,8 @@ function stapInhoud() {
         <p>Met <i>k</i> = 50.0 N/m en <i>m</i> = 2.00 kg is <i>ω</i> = 5.00 rad/s en de periode <i>T</i> = 2π/<i>ω</i> = 1.26 s: een massa van enkele kilogram aan een gewone veer trilt inderdaad ongeveer één keer per seconde heen en weer.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de veerconstante en de massa:</p>
-        <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${k.toFixed(0)} N/m</b></div><input type="range" id="ksl" min="10" max="200" step="5" value="${k}"></div>
-        <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${m.toFixed(2)} kg</b></div><input type="range" id="msl" min="0.5" max="5" step="0.1" value="${m}"></div>
+        <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${TM1.drie(k)} N/m</b></div><input type="range" id="ksl" min="10" max="200" step="5" value="${k}"></div>
+        <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${TM1.drie(m)} kg</b></div><input type="range" id="msl" min="0.5" max="5" step="0.1" value="${m}"></div>
         <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>k</i> groter:</b> <i>ω</i> groter en <i>T</i> kleiner: een stijvere veer oefent bij dezelfde uitwijking een grotere kracht uit, de massa beweegt sneller heen en weer.</li>
@@ -403,7 +406,7 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
-  const upd = () => { t = 0; $('kval').textContent = `${k.toFixed(0)} N/m`; $('mval').textContent = `${m.toFixed(2)} kg`; $('res5').innerHTML = res5(); drawScene(); drawGrafiek(); syncTijd(); };
+  const upd = () => { t = 0; $('kval').textContent = `${TM1.drie(k)} N/m`; $('mval').textContent = `${TM1.drie(m)} kg`; $('res5').innerHTML = res5(); drawScene(); drawGrafiek(); syncTijd(); };
   const sk = $('ksl'); if (sk) sk.oninput = e => { k = +e.target.value; upd(); };
   const sm = $('msl'); if (sm) sm.oninput = e => { m = +e.target.value; upd(); };
   const p5 = $('play5'); if (p5) p5.onclick = () => zetSpelen(!playing);
@@ -413,7 +416,7 @@ function stapInhoud() {
 // tijdas van de grafiek (en van de tijdslider): twee periodes
 function grafiekDuur() { return 2 * (2 * Math.PI / om()); }
 const tijdNaarSlider = () => Math.round((t % grafiekDuur()) / grafiekDuur() * 1000);
-const tijdTekst = () => `${(t % grafiekDuur()).toFixed(2)} s`;
+const tijdTekst = () => `${TM1.drie((t % grafiekDuur()))} s`;
 function syncTijd() { const ts = $('tsl'); if (!ts) return; ts.value = tijdNaarSlider(); $('tval').textContent = tijdTekst(); }
 function zetSpelen(p) {
   playing = p; const s = p ? '⏸ Pauze' : '▶ Afspelen'; $('play').textContent = s; const p5 = $('play5'); if (p5) p5.textContent = s;
@@ -427,7 +430,8 @@ function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
   $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); laatsteFase = 0; openEval = -1; if (stap !== 5) { k = K0; m = M0; } render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); drawGrafiek(); vldFormules(); VB.toon(stap === 2); }
+let BALK = 0;   // hoogte van de bedieningsbalk tussen de situatie en het vrijlichaamsdiagram
+function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); drawGrafiek(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => zetSpelen(!playing);

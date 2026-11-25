@@ -16,6 +16,8 @@ sjabloon/
   voorbeeld.html           startpunt voor een nieuwe animatie van een puntmassa
 h01-vectoren/ … h27-opgaven-virtuele-arbeid/
                            één map per hoofdstuk, met daarin de pagina's van dat hoofdstuk
+oefenzittingen/            animaties bij oefeningen uit de oefeningenbundel
+uitbreidingen/             uitgebreidere versies van voorbeelden, bewaard voor later (TM1.uitbreidingen, niet in het overzicht)
 .gitlab-ci.yml             zet alles online via GitLab Pages
 ```
 
@@ -70,10 +72,18 @@ grafieken, denkvragen).
   de toon-opties naar een strook onder de figuur, de bediening naar een balk daaronder (extra schuifregelaars
   in "Meer instellingen"), de uitleestabel naar een dichtgeklapt onderdeel en de grafieken naar een kolom
   rechts. Op een gsm staat alles onder elkaar.
-- **Valversnelling**: rekenen met *g* = 10 m/s², zoals in de cursus.
+- **Valversnelling**: rekenen met *g* = 10.0 m/s², zoals in de cursus.
+- **3 beduidende cijfers** (afspraak in de cursus): elk getal in de opgave, de uitwerking en de controle krijgt
+  3 beduidende cijfers en een eenheid, bv. *v*<sub>0</sub> = 11.0 m/s, tan *α* = 0.150, *μ* = 0.00500, *θ* = 30.0°.
+  Ook uitlezingen in JavaScript (`toPrecision(3)` of een passend `toFixed`). Tellingen en nummers (Vb. 19.7, stap 3) niet.
+  Uitkomsten: eerst symbolisch, dan meteen de numerieke waarde, zonder lange reeksen tussenresultaten.
 - **Vectorschaal**: vast (niet afhankelijk van de schuifregelaars); elke scène toont linksonder een vaste legende, bv. 2 m/s en 5 m/s².
 - **Opgelegde beweging**: maak in de tekst duidelijk wanneer de beweging gegeven is (kinematica)
   en wanneer ze volgt uit krachten (dynamica).
+- **Dynamica (vanaf hoofdstuk 19)**: de bediening (afspelen, opnieuw, knoppen om snelheid en versnellingen te tonen)
+  staat in een balk tussen de situatie en het vrijlichaamsdiagram, niet eronder: `BALK = TM1.balkTussen(sc)` in `render()`,
+  de situatie getekend met `let H = (Hall - BALK) * 0.5` en `H += BALK` vóór het vrijlichaamsdiagram.
+  Pijlen voor snelheid en versnelling staan bij het laden uit en worden met een knop aangezet.
 - **Denkvragen** onderaan: een paar vragen die studenten met de animatie zelf kunnen beantwoorden.
 
 ## Lokaal bekijken

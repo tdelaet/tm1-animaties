@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.7 – Een pakje glijdt van een transportband</title>
+<title>Voorbeeld 19.9 – Een pakje glijdt van een transportband</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -55,12 +55,12 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.7 — Een pakje glijdt van een transportband</h1>
+    <h1>Voorbeeld 19.9 — Een pakje glijdt van een transportband</h1>
     <span class="kicker">Dynamica van een puntmassa · een pakje op een transportband gaat over een trommel; gevraagd: bij welke hoek begint het pakje net van de band te glijden?</span>
   </header>
 
   <div class="instructie card">
-    <p>Een transportband loopt met een constante snelheid <i>v</i><sub>band</sub> = 0.85 m/s over een trommel met straal <i>R</i> = 0.2 m. Een pakje met massa <i>m</i> = 0.1 kg ligt op de band; de wrijvingscoëfficiënt tussen pakje en band is <i>μ</i> = 1. Het pakje volgt de band over de trommel, tot het begint te glijden en in de bak valt. <b>Gevraagd: waar begint het pakje net van de band te glijden (bij welke hoek <i>θ</i>, gemeten vanaf de top van de trommel)?</b></p>
+    <p>Een transportband loopt met een constante snelheid <i>v</i><sub>band</sub> = 0.850 m/s over een trommel met straal <i>R</i> = 0.200 m. Een pakje met massa <i>m</i> = 0.100 kg ligt op de band; de wrijvingscoëfficiënt tussen pakje en band is <i>μ</i> = 1.00. Het pakje volgt de band over de trommel, tot het begint te glijden en in de bak valt. <b>Gevraagd: waar begint het pakje net van de band te glijden (bij welke hoek <i>θ</i>, gemeten vanaf de top van de trommel)?</b></p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -189,7 +189,7 @@ function loepCirkel(ctx, q, r) {
 }
 function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
-  const H = Hall * 0.5, tc = thetaC();
+  let H = (Hall - BALK) * 0.5; const tc = thetaC();
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie -----
   titel('Situatie', 18);
@@ -224,6 +224,7 @@ function drawScene() {
   { const s = st.fase <= 1 ? 'op de band' : st.fase === 2 ? 'volgt de band over de trommel' : st.fase === 3 ? 'glijdt over de band' : 'valt in de bak';
     ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = st.fase >= 3 ? '#c0392b' : C.accent; ctx.textAlign = 'right'; ctx.fillText(`pakje ${s}`, W - 12, 18); ctx.restore(); }
 
+  H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram in de stand waar het pakje net begint te glijden -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
@@ -374,8 +375,8 @@ function proefTabel() {
 }
 function res5() {
   const tc = thetaC(), vk = Math.sqrt(g * R);
-  if (v > vk + 1e-9) return `<b><i>v</i><sub>band</sub> &gt; √(<i>gR</i>) = ${vk.toFixed(2)} m/s:</b> al op de top is <i>N</i> = <i>m</i>(<i>g</i> − <i>v</i><sub>band</sub>²/<i>R</i>) &lt; 0. Het pakje komt meteen los van de band.`;
-  return `<i>θ</i> = ${deg(tc).toFixed(1)}°` + (v < 0.02 ? ` = atan <i>μ</i>.` : '.');
+  if (v > vk + 1e-9) return `<b><i>v</i><sub>band</sub> &gt; √(<i>gR</i>) = ${TM1.drie(vk)} m/s:</b> al op de top is <i>N</i> = <i>m</i>(<i>g</i> − <i>v</i><sub>band</sub>²/<i>R</i>) &lt; 0. Het pakje komt meteen los van de band.`;
+  return `<i>θ</i> = ${TM1.drie(deg(tc))}°` + (v < 0.02 ? ` = atan <i>μ</i>.` : '.');
 }
 function stapInhoud() {
   const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
@@ -405,9 +406,9 @@ function stapInhoud() {
       <p>Dit is een vergelijking van de vorm <span data-tex="a\\cos\\theta + b\\sin\\theta = c"></span> (zie toolbox 1), met <span data-tex="a = \\mu"></span>, <span data-tex="b = -1"></span> en <span data-tex="c = \\frac{\\mu\\,v_\\text{band}^2}{g\\,R}"></span>:</p>
       ${vv(`\\sqrt{\\mu^2 + 1}\\,\\cos(\\theta + \\varphi) = \\frac{\\mu\\,v_\\text{band}^2}{g\\,R} \\quad\\text{met}\\quad \\tan\\varphi = \\frac{-b}{a} = \\frac{1}{\\mu}`)}
       <div class="kader">${vv(TH)}</div>
-      <p>Met de gegevens (<i>μ</i> = 1, <i>v</i><sub>band</sub> = 0.85 m/s, <i>R</i> = 0.2 m):</p>
-      ${vv(`\\theta = \\operatorname{acos}\\left(\\frac{1\\cdot(0.85\\ \\text{m/s})^2}{10\\ \\text{m/s}^2\\cdot 0.2\\ \\text{m}\\cdot\\sqrt 2}\\right) - \\operatorname{atan} 1 = \\operatorname{acos}(0.255) - 45^\\circ = 75.2^\\circ - 45^\\circ = 30.2^\\circ`)}
-      <p class="noot">Controle van de voorwaarde <i>N</i> ≥ 0 (<span class="evaltag">teken controleren</span>): <span data-tex="${kl(KN, 'N')} = m\\,(g\\cos\\theta - v_\\text{band}^2/R) = 0.1\\ \\text{kg}\\cdot(8.64 - 3.61)\\ \\text{m/s}^2 = 0.50\\ \\text{N} \\ge 0"></span>: het pakje ligt nog tegen de band.</p>`;
+      <p>Met de gegevens (<i>μ</i> = 1.00, <i>v</i><sub>band</sub> = 0.850 m/s, <i>R</i> = 0.200 m):</p>
+      ${vv(`\\theta = \\operatorname{acos}\\left(\\frac{1.00\\cdot(0.850\\ \\text{m/s})^2}{10.0\\ \\text{m/s}^2\\cdot 0.200\\ \\text{m}\\cdot\\sqrt 2}\\right) - \\operatorname{atan} 1.00 = \\operatorname{acos}(0.255) - 45.0^\\circ = 75.2^\\circ - 45.0^\\circ = 30.2^\\circ`)}
+      <p class="noot">Controle van de voorwaarde <i>N</i> ≥ 0 (<span class="evaltag">teken controleren</span>): <span data-tex="${kl(KN, 'N')} = m\\,(g\\cos\\theta - v_\\text{band}^2/R) = 0.100\\ \\text{kg}\\cdot(8.64 - 3.61)\\ \\text{m/s}^2 = 0.503\\ \\text{N} \\ge 0"></span>: het pakje ligt nog tegen de band.</p>`;
   else h = `<div class="kader">${vv(TH)}</div>
       <p style="margin-top:10px"><b>Hoek <i>θ</i> waarbij het pakje begint te glijden, in functie van de bandsnelheid <i>v</i><sub>band</sub></b> (bij de gekozen <i>μ</i>; het bolletje is de gekozen <i>v</i><sub>band</sub>)</p>
       <canvas class="gint" id="gint"></canvas>
@@ -416,13 +417,13 @@ function stapInhoud() {
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p>Het argument van acos en atan moet zonder eenheid zijn. Dat klopt: <span data-tex="\\frac{\\mu\\,v_\\text{band}^2}{g\\,R\\,\\sqrt{\\mu^2 + 1}} \\;\\to\\; \\frac{(\\text{m/s})^2}{(\\text{m/s}^2)\\cdot\\text{m}} = 1"></span>, en <i>μ</i> heeft geen eenheid.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
-        <p><i>θ</i> = 30.2° is positief: het pakje glijdt voorbij de top, in de zin van de beweging. En <i>N</i> = 0.50 N ≥ 0: het pakje ligt nog tegen de band (zie stap 4).</p></div>
+        <p><i>θ</i> = 30.2° is positief: het pakje glijdt voorbij de top, in de zin van de beweging. En <i>N</i> = 0.503 N ≥ 0: het pakje ligt nog tegen de band (zie stap 4).</p></div>
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
         <p><i>θ</i> = 30.2° ligt tussen 0° en 90°: het pakje begint te glijden op het bovenste deel van de trommel, nog voor het de horizontale door de as bereikt. Dat strookt met de verwachting: voorbij de horizontale door de as kan de band het pakje niet meer dragen, zodat het daar sowieso al los zou zijn van de band, in vrije val.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de bandsnelheid en de wrijvingscoëfficiënt:</p>
-        <div class="slider"><div class="lab"><span>Snelheid van de band <span class="i">v</span><sub>band</sub></span><b id="vval">${v.toFixed(2)} m/s</b></div><input type="range" id="vsl" min="0" max="1.6" step="0.01" value="${v}"></div>
-        <div class="slider"><div class="lab"><span>Wrijvingscoëfficiënt <span class="i">μ</span></span><b id="muval">${mu.toFixed(2)}</b></div><input type="range" id="musl" min="0.2" max="1.5" step="0.05" value="${mu}"></div>
+        <div class="slider"><div class="lab"><span>Snelheid van de band <span class="i">v</span><sub>band</sub></span><b id="vval">${TM1.drie(v)} m/s</b></div><input type="range" id="vsl" min="0" max="1.6" step="0.01" value="${v}"></div>
+        <div class="slider"><div class="lab"><span>Wrijvingscoëfficiënt <span class="i">μ</span></span><b id="muval">${TM1.drie(mu)}</b></div><input type="range" id="musl" min="0.2" max="1.5" step="0.05" value="${mu}"></div>
         <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>v</i><sub>band</sub> groter:</b> het argument van acos wordt groter, dus acos(…) en daarmee <i>θ</i> kleiner. Een snellere band vraagt een grotere normaalversnelling <i>v</i><sub>band</sub>²/<i>R</i>, dus een kleinere <i>N</i> en een kleinere maximale wrijving: het pakje begint vroeger te glijden.</li>
@@ -449,7 +450,7 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
-  const upd = () => { $('vval').textContent = `${v.toFixed(2)} m/s`; $('muval').textContent = mu.toFixed(2); $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); vldFormules(); tekenInt(); };
+  const upd = () => { $('vval').textContent = `${TM1.drie(v)} m/s`; $('muval').textContent = mu.toFixed(2); $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); vldFormules(); tekenInt(); };
   const sv = $('vsl'); if (sv) sv.oninput = e => { v = +e.target.value; upd(); };
   const sm = $('musl'); if (sm) sm.oninput = e => { mu = +e.target.value; upd(); };
   tekenInt();
@@ -464,7 +465,8 @@ function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
   $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; vanim = null; vlicht = null; openEval = -1; if (stap !== 5 && (v !== V0 || mu !== MU0)) { v = V0; mu = MU0; maakBaan(); } render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); versnTabel(); drawScene(); drawLoep(); drawVLoep(); vldFormules(); }
+let BALK = 0;   // hoogte van de bedieningsbalk tussen de situatie en het vrijlichaamsdiagram
+function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proefTabel(); versnTabel(); drawScene(); drawLoep(); drawVLoep(); vldFormules(); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };

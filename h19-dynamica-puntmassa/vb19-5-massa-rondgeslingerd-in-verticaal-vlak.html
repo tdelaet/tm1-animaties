@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.5 – Een massa wordt rondgeslingerd in een verticaal vlak</title>
+<title>Voorbeeld 19.5 – Massa rondgeslingerd in verticaal vlak</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.9) */
   .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
   .stap .eval p{margin:3px 0}
   .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
@@ -51,7 +51,7 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.5 — Een massa wordt rondgeslingerd in een verticaal vlak</h1>
+    <h1>Voorbeeld 19.5 — Massa rondgeslingerd in verticaal vlak</h1>
     <span class="kicker">Dynamica van een puntmassa · een blok aan een touw draait in een verticaal vlak rond O; gevraagd: de minimale snelheid in het hoogste punt opdat het touw gespannen blijft</span>
   </header>
 
@@ -148,7 +148,7 @@ function loepCirkel(ctx, q, r) {
 }
 function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
-  const H = Hall * 0.5;
+  let H = (Hall - BALK) * 0.5;   // situatie boven de bedieningsbalk
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie (vaste schaal, zodat het langste touw LMAX nog past) -----
   titel('Situatie', 18);
@@ -177,6 +177,7 @@ function drawScene() {
   if (stap <= 2) loepCirkel(ctx, B, Math.max(16, 0.18 * S)); else raak = null;
   if (slap()) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('ω < √(g/l): het touw wordt bovenaan slap', W - 10, 18); ctx.restore(); }
 
+  H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram van het blok in het hoogste punt -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
@@ -279,9 +280,9 @@ function proefTabel() {
 }
 function res5() {
   const s = l * om * om / g - 1;
-  return `<i>ω</i><sub>min</sub> = √(<i>g</i>/<i>l</i>) = ${wmin().toFixed(2)} rad/s, dus <i>v</i><sub>min</sub> = <i>l ω</i><sub>min</sub> = √(<i>gl</i>) = ${Math.sqrt(g * l).toFixed(2)} m/s. ` +
-    (s >= -1e-9 ? `Bij <i>ω</i> = ${om.toFixed(2)} rad/s is <i>S</i> = <i>m</i>(<i>lω</i>² − <i>g</i>) = ${s.toFixed(2)} <i>mg</i>: het touw is gespannen.`
-      : `Bij <i>ω</i> = ${om.toFixed(2)} rad/s zou <i>S</i> = ${s.toFixed(2)} <i>mg</i> &lt; 0 moeten zijn: dat kan niet. Het touw wordt bovenaan slap en het blok verlaat de cirkelbaan.`);
+  return `<i>ω</i><sub>min</sub> = √(<i>g</i>/<i>l</i>) = ${TM1.drie(wmin())} rad/s, dus <i>v</i><sub>min</sub> = <i>l ω</i><sub>min</sub> = √(<i>gl</i>) = ${TM1.drie(Math.sqrt(g * l))} m/s. ` +
+    (s >= -1e-9 ? `Bij <i>ω</i> = ${TM1.drie(om)} rad/s is <i>S</i> = <i>m</i>(<i>lω</i>² − <i>g</i>) = ${TM1.drie(s)} <i>mg</i>: het touw is gespannen.`
+      : `Bij <i>ω</i> = ${TM1.drie(om)} rad/s zou <i>S</i> = ${TM1.drie(s)} <i>mg</i> &lt; 0 moeten zijn: dat kan niet. Het touw wordt bovenaan slap en het blok verlaat de cirkelbaan.`);
 }
 function stapInhoud() {
   const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
@@ -319,8 +320,8 @@ function stapInhoud() {
         <p>Met <i>l</i> = 1.00 m is <i>ω</i><sub>min</sub> = 3.16 rad/s, ongeveer een halve omwenteling per seconde, en <i>v</i><sub>min</sub> = 3.16 m/s. Dat strookt met de ervaring van een emmer water die je rondslingert: een halve omwenteling per seconde volstaat net.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de hoeksnelheid en de lengte van het touw:</p>
-        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="1" max="7" step="0.05" value="${om}"></div>
-        <div class="slider"><div class="lab"><span>Lengte van het touw <span class="i">l</span></span><b id="lval">${l.toFixed(2)} m</b></div><input type="range" id="lsl" min="0.3" max="${LMAX}" step="0.05" value="${l}"></div>
+        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${TM1.drie(om)} rad/s</b></div><input type="range" id="omsl" min="1" max="7" step="0.05" value="${om}"></div>
+        <div class="slider"><div class="lab"><span>Lengte van het touw <span class="i">l</span></span><b id="lval">${TM1.drie(l)} m</b></div><input type="range" id="lsl" min="0.3" max="${LMAX}" step="0.05" value="${l}"></div>
         <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>l</i> groter:</b> <i>ω</i><sub>min</sub> kleiner, maar <i>v</i><sub>min</sub> groter: met een langer touw mag het blok trager ronddraaien, maar het moet een grotere snelheid hebben.</li>
@@ -346,7 +347,7 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
-  const upd = () => { $('omval').textContent = `${om.toFixed(2)} rad/s`; $('lval').textContent = `${l.toFixed(2)} m`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  const upd = () => { $('omval').textContent = `${TM1.drie(om)} rad/s`; $('lval').textContent = `${TM1.drie(l)} m`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
   const so = $('omsl'); if (so) so.oninput = e => { om = +e.target.value; upd(); };
   const sl = $('lsl'); if (sl) sl.oninput = e => { l = +e.target.value; upd(); };
   tekenInt();
@@ -363,7 +364,8 @@ function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
   $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) { om = W0; l = L0; } render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
+let BALK = 0;   // hoogte van de bedieningsbalk tussen de situatie en het vrijlichaamsdiagram
+function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 const zetSpelen = p => { playing = p; playBtn.textContent = p ? '⏸ Pauze' : '▶ Afspelen'; };

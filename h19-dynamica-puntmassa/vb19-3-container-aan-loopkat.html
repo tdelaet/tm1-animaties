@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.3 – Een container hangt aan een loopkat</title>
+<title>Voorbeeld 19.3 – Container aan loopkat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.9) */
   .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
   .stap .eval p{margin:3px 0}
   .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
@@ -51,12 +51,12 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.3 — Een container hangt aan een loopkat</h1>
-    <span class="kicker">Dynamica van een puntmassa · loopkat en container versnellen samen horizontaal; gevraagd: de hoek van de kabel met de verticale en de kracht die de aandrijving moet leveren</span>
+    <h1>Voorbeeld 19.3 — Container aan loopkat</h1>
+    <span class="kicker">Dynamica van een puntmassa · loopkat en container versnellen samen horizontaal; gevraagd: de hoek van de kabel met de verticale en de kracht in de kabel</span>
   </header>
 
   <div class="instructie card">
-    <p>Een container hangt met een massaloze kabel van 5.00 m onder een loopkat. De container heeft een massa van 3.00 ton. Het geheel van loopkat en container beweegt met een constante horizontale versnelling van 0.800 m/s² naar rechts. <b>Gevraagd: welke hoek sluit de kabel in met de verticale? Hoe groot is de kracht die de aandrijving van de loopkat moet opwekken om de last horizontaal te verplaatsen met de gegeven versnelling?</b></p>
+    <p>Een container hangt met een massaloze kabel van 5.00 m onder een loopkat. De container heeft een massa van 3.00 ton. Het geheel van loopkat en container beweegt met een constante horizontale versnelling van 0.800 m/s² naar rechts. <b>Gevraagd: welke hoek sluit de kabel in met de verticale? Bepaal de kracht in de kabel (grootte en als vector).</b></p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -144,15 +144,17 @@ function loepCirkel(ctx, q, r) {
   raak = { x: q.x, y: q.y, r };
 }
 const XRIT = 7.0;                                       // afgelegde weg per cyclus [m]
-const Tcyc = () => Math.sqrt(2 * XRIT / Math.max(a, 0.05)) + 0.8;
+// bij een grote versnelling hangt de container ver achter de loopkat: de loopkat vertrekt dan verder rechts (en rijdt minder ver), zodat de container in beeld blijft
+const start = () => Math.max(2.0, 5.0 * Math.sin(phi()) + 1.3), weg = () => Math.min(XRIT, 11.4 - start());
+const Tcyc = () => Math.sqrt(2 * weg() / Math.max(a, 0.05)) + 0.8;
 function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
-  const H = Hall * 0.5, f = phi();
+  let H = (Hall - BALK) * 0.5; const f = phi();
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie -----
   titel('Situatie', 18);
   const S = Math.min(W / 12.5, (H - 50) / 7.2), x0 = W / 2 - 5.8 * S, yr = 40;
-  const tt = Math.min(t, Math.sqrt(2 * XRIT / Math.max(a, 0.05))), xk = x0 + (2.0 + 0.5 * a * tt * tt) * S;   // positie van de loopkat
+  const tt = Math.min(t, Math.sqrt(2 * weg() / Math.max(a, 0.05))), xk = x0 + (start() + 0.5 * a * tt * tt) * S;   // positie van de loopkat
   // rail (vast)
   ctx.save(); ctx.fillStyle = '#9aa1aa'; ctx.strokeStyle = '#5b6168'; ctx.lineWidth = 1.2; ctx.fillRect(x0, yr - 10, 12 * S, 10); ctx.strokeRect(x0, yr - 10, 12 * S, 10); ctx.restore();
   // loopkat: wagentje met wielen
@@ -174,12 +176,14 @@ function drawScene() {
   if (dubbelPijl(ctx, cc.x - 0.4 * S, cc.y + bh / 2 + 14, cc.x - 0.4 * S + 1.12 * S * Math.min(a / A0, 2.5), cc.y + bh / 2 + 14, KA, 2)) label(ctx, 'a', '', cc.x - 0.4 * S + 1.12 * S * Math.min(a / A0, 2.5) + 8, cc.y + bh / 2 + 20, KA, { size: 15 });
   if (stap <= 2) loepCirkel(ctx, pc, 0.7 * S); else raak = null;
 
+  H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram van de container -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
   titel('Vrijgemaakte container: kabel doorgesneden', H + 18);
-  const S2 = Math.min(W / 3.6, (Hall - H - 40) / 2.6), cx = W * 0.42, cy = H + 30 + (Hall - H - 40) * 0.5, k = 1.0 * S2;   // k: lengte van mg
   const Sl = Math.hypot(a, g) / g, al = a / g;
+  // k: lengte van mg; bij een grote versnelling worden alle krachten kleiner getekend, zodat S in beeld blijft
+  const S2 = Math.min(W / 3.6, (Hall - H - 40) / 2.6), cx = W * 0.42, cy = H + 30 + (Hall - H - 40) * 0.5, k = S2 * Math.min(1, 1.6 / Sl);
   const eS = { x: Math.sin(f), y: -Math.cos(f) };
   ctx.save(); ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.4; ctx.strokeRect(cx - 10, cy - 10, 20, 20); ctx.restore();
   lijn(ctx, { x: cx, y: cy }, { x: cx + eS.x * 1.5 * k, y: cy + eS.y * 1.5 * k }, '#b9bec5', 1.2, [3, 4]);
@@ -189,7 +193,8 @@ function drawScene() {
   if (gl) arrow(ctx, cx, cy, tipS.x, tipS.y, GLOED + (0.35 + 0.5 * gl) + ')', { w: 12, head: 22 });
   arrow(ctx, cx, cy, tipS.x, tipS.y, KS, { w: gl ? 3.6 : 2.8, head: gl ? 14 : 12 }); label(ctx, 'S', '', tipS.x + 8, tipS.y + 6, KS, { size: gl ? 17 : 15 });
   arrow(ctx, cx, cy, cx, cy + k, KG, { w: 2.8, head: 12 }); label(ctx, 'G', '', cx + 8, cy + k + 2, KG, { size: 15 });
-  if (dubbelPijl(ctx, cx + 18, cy, cx + 18 + Math.max(al, 0.02) * k * 3, cy, KA, 2)) label(ctx, 'a', '', cx + 18 + al * k * 3 + 8, cy + 6, KA, { size: 15 });
+  { const La = Math.min(Math.max(al, 0.02) * 3, 1.8) * S2;   // de versnelling: niet op schaal met de krachten, en begrensd
+    if (dubbelPijl(ctx, cx + 18, cy, cx + 18 + La, cy, KA, 2)) label(ctx, 'a', '', cx + 18 + La + 8, cy + 6, KA, { size: 15 }); }
   // hoek ϕ in het VLD
   if (f > 0.005) { const r = 0.55 * k; lijn(ctx, { x: cx, y: cy }, { x: cx, y: cy - 0.75 * k }, '#7a828c', 1, [3, 3]);
     ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + f); ctx.stroke(); ctx.restore();
@@ -280,9 +285,11 @@ function proefTabel() {
 }
 // zelfde afronding als in de oplossing (stap 4): ϕ in rad (4 decimalen) en in graden (2 decimalen), krachten op 3 beduidende cijfers
 const kN = x => (x / 1000).toPrecision(3);
+const AMAX = 200;   // grootste versnelling op de schuifknop in stap 5
+const aTekst = () => `${a.toFixed(a < 10 ? 2 : 1)} m/s²`;
 function res5() {
   const f = phi(), Sx = M * a, Sy = M * g;
-  return `<i>ϕ</i> = ${f.toFixed(4)} rad = ${deg(f).toFixed(2)}°, <i>S</i> = ${kN(Math.hypot(Sx, Sy))} kN, aandrijfkracht <i>S<sub>x</sub></i> = <i>ma</i> = ${kN(Sx)} kN${a < 1e-9 ? ' — zonder versnelling hangt de kabel verticaal en is <i>S</i> = <i>mg</i>, zoals in de statica.' : '.'}`;
+  return `<i>ϕ</i> = ${TM1.drie(f)} rad = ${TM1.drie(deg(f))}°, <i>S</i> = ${kN(Math.hypot(Sx, Sy))} kN, met componenten (${kN(Sx)} kN, ${kN(Sy)} kN)${a < 1e-9 ? ' — zonder versnelling hangt de kabel verticaal en is <i>S</i> = <i>mg</i>, zoals in de statica.' : '.'}`;
 }
 function stapInhoud() {
   const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
@@ -304,12 +311,13 @@ function stapInhoud() {
       <p class="noot">Twee vergelijkingen voor twee onbekenden: de kabelkracht <i>S</i> en de hoek <i>ϕ</i>.</p>`;
   else if (stap === 4) h = `${v(COMP)}
       ${v(`\\tan\\phi = \\frac{ma}{mg} = \\frac{0.800\\ \\text{m/s}^2}{10.0\\ \\text{m/s}^2} = 0.0800`)}
-      <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g} = 0.0798\\ \\text{rad} = 4.57^\\circ`)}${v(`${kl(KS, 'S')} = m\\sqrt{a^2 + g^2} = 30.1\\ \\text{kN}, \\qquad ${S_} = 2.40\\ \\text{kN}\\,\\vec e_x + 30.0\\ \\text{kN}\\,\\vec e_y`)}</div>
-      <p>De horizontale component van de krachtvector ${tx(S_)} is meteen de kracht die de aandrijving van de loopkat moet opwekken om de last te verplaatsen. Deze kracht bedraagt dus <b>2.40 kN</b>.</p>`;
+      <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g} = 0.0798\\ \\text{rad} = 4.57^\\circ`)}${v(`${kl(KS, 'S')} = m\\sqrt{a^2 + g^2} = 30.1\\ \\text{kN}, \\qquad ${S_} = 2.40\\ \\text{kN}\\,\\vec e_x + 30.0\\ \\text{kN}\\,\\vec e_y`)}</div>`;
   else h = `<p>Merk op dat, in tegenstelling tot de statica, de kracht in de kabel niet gelijk is aan het gewicht van de container: de kabel moet de container ook versnellen.</p>
       <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g}, \\qquad ${kl(KS, 'S')} = m\\sqrt{a^2 + g^2}`)}</div>
       <p style="margin-top:10px"><b><i>ϕ</i> en <i>S</i> in functie van de versnelling <i>a</i></b> (<i>m</i> = 3000 kg; het bolletje is de gekozen <i>a</i>)</p>
       <canvas class="gint" id="gint"></canvas><canvas class="gint" id="gint2"></canvas>
+      <div class="slider"><div class="lab"><span>Versnelling <span class="i">a</span></span><b id="aval">${aTekst()}</b></div><input type="range" id="asl" min="0" max="1" step="0.0025" value="${Math.sqrt(a / AMAX)}"></div>
+      <p id="res5">${res5()}</p>
       <p>Bij <i>a</i> = 0 hangt de kabel verticaal en is <i>S</i> = <i>mg</i>. Hoe sterker de loopkat versnelt, hoe schuiner de kabel (<i>ϕ</i> nadert 90°) en hoe groter de kabelkracht. Voor versnellingen die klein zijn tegenover <i>g</i> neemt <i>ϕ</i> bijna lineair toe, terwijl <i>S</i> nauwelijks groter wordt dan <i>mg</i>.</p>
       <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
@@ -317,14 +325,12 @@ function stapInhoud() {
       <div class="eval"><span class="evaltag">teken controleren</span>
         <p><i>ϕ</i> &gt; 0: de kabel helt naar achteren (de container hangt achter de loopkat), zodat de horizontale component van <span data-tex="${kl(KS, '\\vec S')}"></span> naar voren wijst, in de zin van de versnelling. En <i>S</i> &gt; 0: de kabel staat op trek.</p></div>
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
-        <p><i>a</i> = 0.800 m/s² is klein ten opzichte van <i>g</i>: de hoek is klein (4.57°) en <i>S</i> = 30.1 kN is maar iets groter dan het gewicht <i>mg</i> = 30.0 kN. De aandrijfkracht 2.40 kN is een kleine fractie van het gewicht.</p></div>
+        <p><i>a</i> = 0.800 m/s² is klein ten opzichte van <i>g</i>: de hoek is klein (4.57°) en <i>S</i> = 30.1 kN is maar iets groter dan het gewicht <i>mg</i> = 30.0 kN. De horizontale component van de kabelkracht (2.40 kN) is een kleine fractie van het gewicht.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
-        <p>Verander de versnelling:</p>
-        <div class="slider"><div class="lab"><span>Versnelling <span class="i">a</span></span><b id="aval">${a.toFixed(2)} m/s²</b></div><input type="range" id="asl" min="0" max="6" step="0.1" value="${a}"></div>
-        <p id="res5">${res5()}</p>
+        <p>Verander de versnelling met de schuifknop onder de grafieken hierboven.</p>
         <ul class="fa">
-          <li><b><i>a</i> groter:</b> <i>ϕ</i> groter, <i>S</i> groter en de aandrijfkracht <i>ma</i> groter.</li>
-          <li><b><i>m</i>:</b> komt niet voor in <i>ϕ</i>: een zwaardere container hangt onder dezelfde hoek. <i>S</i> en de aandrijfkracht zijn wel evenredig met <i>m</i>.</li>
+          <li><b><i>a</i> groter:</b> <i>ϕ</i> groter, <i>S</i> groter, met een grotere horizontale component <i>ma</i>.</li>
+          <li><b><i>m</i>:</b> komt niet voor in <i>ϕ</i>: een zwaardere container hangt onder dezelfde hoek. <i>S</i> is wel evenredig met <i>m</i>.</li>
           <li><b>Lengte van de kabel:</b> komt niet voor in <i>ϕ</i> of <i>S</i>.</li>
           <li><b><i>g</i> groter:</b> <i>ϕ</i> kleiner: het gewicht trekt de container sterker naar beneden.</li>
         </ul></div>
@@ -345,20 +351,26 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
-  const s = $('asl'); if (s) s.oninput = e => { a = +e.target.value; t = 0; $('aval').textContent = `${a.toFixed(2)} m/s²`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  // de schuifknop is kwadratisch: fijn bij kleine versnellingen, en toch tot 200 m/s² (ϕ nadert 90°)
+  const s = $('asl'); if (s) s.oninput = e => { const u = +e.target.value, w = AMAX * u * u; a = +w.toFixed(w < 10 ? 2 : 1); t = 0; $('aval').textContent = aTekst(); $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
   tekenInt();
 }
 // grafieken in de interpretatie: ϕ(a) en S(a), met de gekozen a
+// de a-as groeit mee met de gekozen versnelling: 6, 20, 50, 100 of 200 m/s²
 function tekenInt() {
   if (stap !== 5) return;
-  TM1.grafiekIn($('gint'), [0, 6], [0, 35], '$a$ [m/s²]', '$\\phi$ [°]', [{ f: x => deg(Math.atan(x / g)), kleur: '#4f5862' }], a);
-  TM1.grafiekIn($('gint2'), [0, 6], [29, 36], '$a$ [m/s²]', '$S$ [kN]', [{ f: x => M * Math.hypot(x, g) / 1000, kleur: KS }], a);
+  const xm = [6, 20, 50, 100, 200].find(x => a <= x) ?? 200, groot = xm > 6;
+  const Sm = M * Math.hypot(xm, g) / 1000;
+  TM1.grafiekIn($('gint'), [0, xm], groot ? [0, 95] : [0, 35], '$a$ [m/s²]', '$\\phi$ [°]',
+    [...(groot ? [{ f: () => 90, kleur: '#9aa1a9', dik: 1.2, stippel: true, bolletje: false, naam: 'ϕ = 90°' }] : []), { f: x => deg(Math.atan(x / g)), kleur: '#4f5862' }], a);
+  TM1.grafiekIn($('gint2'), [0, xm], groot ? [0, Math.ceil(Sm * 1.05 / 10) * 10] : [29, 36], '$a$ [m/s²]', '$S$ [kN]', [{ f: x => M * Math.hypot(x, g) / 1000, kleur: KS }], a);
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
   $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) a = A0; render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
+let BALK = 0;   // hoogte van de bedieningsbalk tussen de situatie en het vrijlichaamsdiagram
+function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };

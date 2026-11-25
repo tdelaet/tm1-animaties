@@ -58,7 +58,6 @@
   </div>
 
   <main id="lijst"></main>
-  <footer>De volgorde en titels volgen de inhoudstafel van het handboek (2026) en de oefeningenbundel.</footer>
 </div>
 
 <script src="catalogus.js"></script>
@@ -79,6 +78,9 @@
   const uitHash = () => ({ '#handboek': 'handboek', '#oefenzittingen': 'oefenzittingen' }[location.hash]);
   let bron = uitHash() || 'handboek';
   try { if (!uitHash() && localStorage.getItem('tm1-bron') === 'oefenzittingen') bron = 'oefenzittingen'; } catch (e) {}
+  // de oefenzittingen worden (nog) niet vrijgegeven aan studenten: zet op true om de knop en de lijst weer te tonen
+  const OEF_ZICHTBAAR = false;
+  if (!OEF_ZICHTBAAR) { bron = 'handboek'; document.getElementById('bron').style.display = 'none'; }
   const lijstVan = () => (bron === 'oefenzittingen' ? TM1.oefenzittingen : TM1.catalogus);
   function bovenkant() {
     document.querySelectorAll('#bron button').forEach(b => b.classList.toggle('actief', b.dataset.b === bron));
@@ -95,7 +97,7 @@
   });
   // een link met #handboek of #oefenzittingen werkt ook als de pagina al open staat
   window.addEventListener('hashchange', () => {
-    const b = uitHash(); if (!b || b === bron) return;
+    const b = uitHash(); if (!b || b === bron || !OEF_ZICHTBAAR) return;
     bron = b; try { localStorage.setItem('tm1-bron', bron); } catch (e) {}
     bovenkant(); render();
   });

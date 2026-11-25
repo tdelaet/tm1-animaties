@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.4 – Een massa aan een ronddraaiende veer</title>
+<title>Voorbeeld 19.4 – Massa aan ronddraaiende veer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.9) */
   .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
   .stap .eval p{margin:3px 0}
   .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
@@ -51,7 +51,7 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.4 — Een massa aan een ronddraaiende veer</h1>
+    <h1>Voorbeeld 19.4 — Massa aan ronddraaiende veer</h1>
     <span class="kicker">Dynamica van een puntmassa · een massa aan een veer draait met constante hoeksnelheid over een glad horizontaal vlak; gevraagd: de lengte van de veer</span>
   </header>
 
@@ -69,7 +69,7 @@
       <div class="card panel">
         <h2>Bediening</h2>
         <div class="btnrow" style="margin:0"><button class="primary" id="play">⏸ Pauze</button><button id="aanzicht">standaardaanzicht</button></div>
-        <div class="note">De massa draait in werkelijke tijd (<i>ω</i> = 2.00 rad/s: één omwenteling per 3.1 s). In stap 5 kun je <i>ω</i> veranderen.</div>
+        <div class="note">De massa draait in werkelijke tijd (<i>ω</i> = 2.00 rad/s: één omwenteling per 3.14 s). In stap 5 kun je <i>ω</i> veranderen.</div>
       </div>
     </div>
   </div>
@@ -166,7 +166,7 @@ function loepCirkel(ctx, q, r) {
 const HB = 0.06;                                        // halve ribbe van het blokje [m]
 function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
-  const H = Hall * 0.5, l = Math.min(lengte(), 3), R0 = Math.max(0.75, 1.1 * l);
+  let H = (Hall - BALK) * 0.5; const l = Math.min(lengte(), 3), R0 = Math.max(0.75, 1.1 * l);
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie -----
   titel('Situatie', 18);
@@ -192,6 +192,7 @@ function drawScene() {
   if (stap <= 2) loepCirkel(ctx, P(c), Math.max(16, 0.16 * S)); else raak = null;
   if (!isFinite(lengte())) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('ω ≥ √(k/m): geen evenwichtslengte', W - 10, 18); ctx.restore(); }
 
+  H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram (in het meedraaiende verticale vlak door O en de massa) -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
@@ -293,8 +294,8 @@ function proefTabel() {
 }
 function res5() {
   const l = lengte(), wg = Math.sqrt(K / M);
-  if (!isFinite(l)) return `<b><i>ω</i> ≥ √(<i>k</i>/<i>m</i>) = ${wg.toFixed(2)} rad/s:</b> de noemer <i>k</i> − <i>mω</i>² is niet meer positief; er bestaat geen lengte waarbij de veer de nodige kracht levert. De veer (ideaal lineair verondersteld) zou onbeperkt uitrekken.`;
-  return `<i>l</i> = ${l.toFixed(3)} m, <i>F<sub>v</sub></i> = <i>k</i>(<i>l</i> − <i>l</i><sub>0</sub>) = ${(K * (l - L0)).toFixed(2)} N${om < 1e-9 ? ': zonder rotatie is de veer onbelast, <i>l</i> = <i>l</i><sub>0</sub>.' : '.'}`;
+  if (!isFinite(l)) return `<b><i>ω</i> ≥ √(<i>k</i>/<i>m</i>) = ${TM1.drie(wg)} rad/s:</b> de noemer <i>k</i> − <i>mω</i>² is niet meer positief; er bestaat geen lengte waarbij de veer de nodige kracht levert. De veer (ideaal lineair verondersteld) zou onbeperkt uitrekken.`;
+  return `<i>l</i> = ${TM1.drie(l)} m, <i>F<sub>v</sub></i> = <i>k</i>(<i>l</i> − <i>l</i><sub>0</sub>) = ${TM1.drie((K * (l - L0)))} N${om < 1e-9 ? ': zonder rotatie is de veer onbelast, <i>l</i> = <i>l</i><sub>0</sub>.' : '.'}`;
 }
 function stapInhoud() {
   const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
@@ -323,17 +324,17 @@ function stapInhoud() {
   else h = `<div class="kader">${v(`l = \\frac{k\\,l_0}{k - m\\,\\omega^2}, \\qquad ${kl(KR, 'R')} = mg`)}</div>
       <p style="margin-top:10px"><b>Lengte <i>l</i> van de veer in functie van de hoeksnelheid <i>ω</i></b> (het bolletje is de gekozen <i>ω</i>)</p>
       <canvas class="gint" id="gint"></canvas>
-      <p>Bij <i>ω</i> = 0 heeft de veer haar rustlengte <i>l</i><sub>0</sub> = 0.500 m. Voor kleine <i>ω</i> wordt ze maar weinig langer, maar naarmate <i>ω</i> nadert tot √(<i>k</i>/<i>m</i>) = ${Math.sqrt(K / M).toFixed(2)} rad/s (stippellijn) groeit <i>l</i> onbeperkt: de veer kan de nodige naar O gerichte kracht dan niet meer leveren.</p>
+      <p>Bij <i>ω</i> = 0 heeft de veer haar rustlengte <i>l</i><sub>0</sub> = 0.500 m. Voor kleine <i>ω</i> wordt ze maar weinig langer, maar naarmate <i>ω</i> nadert tot √(<i>k</i>/<i>m</i>) = ${TM1.drie(Math.sqrt(K / M))} rad/s (stippellijn) groeit <i>l</i> onbeperkt: de veer kan de nodige naar O gerichte kracht dan niet meer leveren.</p>
       <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p>In de noemer moeten <i>k</i> en <i>mω</i>² dezelfde eenheid hebben: kg · (1/s)² = kg/s² = N/m, net als <i>k</i>. Dan heeft <i>l</i> = <i>kl</i><sub>0</sub>/(…) de eenheid van <i>l</i><sub>0</sub>: meter.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
         <p>Zolang <i>k</i> &gt; <i>mω</i>² is <i>l</i> positief, en ook groter dan <i>l</i><sub>0</sub>: de veer is uitgerekt en trekt de massa naar O, zoals nodig voor de cirkelbeweging (<i>F<sub>v</sub></i> = <i>k</i>(<i>l</i> − <i>l</i><sub>0</sub>) &gt; 0).</p></div>
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
-        <p><i>mω</i>² = 8 N/m is klein ten opzichte van <i>k</i> = 120 N/m: de veer rekt maar een beetje uit, van 0.500 m tot 0.536 m (7 %). De veerkracht 4.29 N is klein ten opzichte van het gewicht 20.0 N.</p></div>
+        <p><i>mω</i>² = 8.00 N/m is klein ten opzichte van <i>k</i> = 120 N/m: de veer rekt maar een beetje uit, van 0.500 m tot 0.536 m (7.20 %). De veerkracht 4.29 N is klein ten opzichte van het gewicht 20.0 N.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de hoeksnelheid:</p>
-        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="0" max="8" step="0.05" value="${om}"></div>
+        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${TM1.drie(om)} rad/s</b></div><input type="range" id="omsl" min="0" max="8" step="0.05" value="${om}"></div>
         <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>ω</i> groter:</b> de noemer wordt kleiner, dus <i>l</i> groter: hoe sneller de massa draait, hoe groter de nodige normaalversnelling <i>lω</i>², en hoe meer de veer moet uitrekken om die kracht te leveren.</li>
@@ -359,7 +360,7 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de slider bij het slepen niet verspringt
-  const s = $('omsl'); if (s) s.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  const s = $('omsl'); if (s) s.oninput = e => { om = +e.target.value; $('omval').textContent = `${TM1.drie(om)} rad/s`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
   tekenInt();
 }
 // grafiek in de interpretatie: l(ω), met de gekozen ω en de asymptoot ω = √(k/m)
@@ -374,7 +375,8 @@ function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
   $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) om = W0; render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
+let BALK = 0;   // hoogte van de bedieningsbalk tussen de situatie en het vrijlichaamsdiagram
+function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 $('aanzicht').onclick = () => { Object.assign(view, STANDAARD); drawScene(); };
 const playBtn = $('play');

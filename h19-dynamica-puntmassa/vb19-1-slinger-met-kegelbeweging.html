@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.1 – Een slinger beschrijft een kegelbeweging</title>
+<title>Voorbeeld 19.1 – Slinger met kegelbeweging</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.9) */
   .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
   .stap .eval p{margin:3px 0}
   .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
@@ -52,7 +52,7 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.1 — Een slinger beschrijft een kegelbeweging</h1>
+    <h1>Voorbeeld 19.1 — Slinger met kegelbeweging</h1>
     <span class="kicker">Dynamica van een puntmassa · een puntmassa aan een kabel draait met hoeksnelheid ω rond de verticale as; gevraagd: het verband tussen de hoek θ en ω</span>
   </header>
 
@@ -163,7 +163,7 @@ function loepCirkel(ctx, q, r) {
 }
 function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
-  const H = Hall * 0.5, th = theta(), R = L * Math.sin(th), yc = -L * Math.cos(th);
+  let H = (Hall - BALK) * 0.5; const th = theta(), R = L * Math.sin(th), yc = -L * Math.cos(th);
   const titel = (t, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(t.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie -----
   titel('Situatie', 18);
@@ -210,6 +210,7 @@ function drawScene() {
   if (stap <= 2) loepCirkel(ctx, pm, 0.17 * S); else raak = null;
   if (th === 0) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('ω ≤ √(g/L): geen kegelbeweging', W - 10, 18); ctx.restore(); }
 
+  H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram van de puntmassa, in het (meedraaiende) vlak van de kabel -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
@@ -348,7 +349,7 @@ function stapInhoud() {
     h = `<div class="kader">${v(`\\theta = \\operatorname{acos}\\frac{g}{L\\,\\omega^2}, \\qquad ${kl(KF, 'F_\\text{kabel}')} = m\\,\\omega^2 L`)}</div>
       <p style="margin-top:10px"><b><i>θ</i> en <i>F</i><sub>kabel</sub> in functie van de hoeksnelheid <i>ω</i></b> (bij <i>L</i> = 1.00 m; het bolletje is de gekozen <i>ω</i>)</p>
       <canvas class="gint" id="gint"></canvas><canvas class="gint" id="gint2"></canvas>
-      <p>Onder <i>ω</i> = √(<i>g</i>/<i>L</i>) = ${wg.toFixed(2)} rad/s is er geen kegelbeweging: de massa hangt verticaal (<i>θ</i> = 0, <i>F</i><sub>kabel</sub> = <i>mg</i>). Daarboven neemt <i>θ</i> eerst snel toe en nadert dan 90°, zonder het te bereiken. De kabelkracht groeit kwadratisch met <i>ω</i>.</p>
+      <p>Onder <i>ω</i> = √(<i>g</i>/<i>L</i>) = ${TM1.drie(wg)} rad/s is er geen kegelbeweging: de massa hangt verticaal (<i>θ</i> = 0, <i>F</i><sub>kabel</sub> = <i>mg</i>). Daarboven neemt <i>θ</i> eerst snel toe en nadert dan 90°, zonder het te bereiken. De kabelkracht groeit kwadratisch met <i>ω</i>.</p>
       <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
         <p>Het argument van acos moet zonder eenheid zijn: ${t('\\frac{g}{L\\,\\omega^2} \\;\\to\\; \\frac{\\text{m/s}^2}{\\text{m}\\cdot(1/\\text{s})^2} = 1')}. De kabelkracht heeft de eenheid van een kracht: ${t('\\text{kg}\\cdot(1/\\text{s})^2\\cdot\\text{m} = \\text{N}')}.</p></div>
@@ -358,7 +359,7 @@ function stapInhoud() {
         <p>Met <i>L</i> = 1.00 m en <i>ω</i> = 3.50 rad/s (ongeveer een halve omwenteling per seconde) is <i>θ</i> = 35.3° en <i>F</i><sub>kabel</sub> = 1.22 <i>mg</i>: een duidelijke maar geen extreme uitwijking, en een kabelkracht iets groter dan het gewicht.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de hoeksnelheid:</p>
-        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${om.toFixed(2)} rad/s</b></div><input type="range" id="omsl" min="1" max="8" step="0.05" value="${om}"></div>
+        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${TM1.drie(om)} rad/s</b></div><input type="range" id="omsl" min="1" max="8" step="0.05" value="${om}"></div>
         <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>ω</i> groter:</b> het argument van acos wordt kleiner, dus <i>θ</i> groter: de kabel komt horizontaler. <i>F</i><sub>kabel</sub> neemt toe met <i>ω</i>².</li>
@@ -367,7 +368,7 @@ function stapInhoud() {
           <li><b><i>m</i>:</b> komt niet voor in <i>θ</i>: zwaardere en lichtere massa's hangen onder dezelfde hoek. De kabelkracht is wel evenredig met <i>m</i>.</li>
         </ul></div>
       <div class="eval"><span class="evaltag">bijzondere gevallen</span>
-        <p><b><i>ω</i> = √(<i>g</i>/<i>L</i>)</b> = ${wg.toFixed(2)} rad/s: cos <i>θ</i> = 1, dus <i>θ</i> = 0. Voor kleinere <i>ω</i> zou cos <i>θ</i> &gt; 1 moeten zijn: er is dan geen kegelbeweging mogelijk. Enkel de oplossing sin <i>θ</i> = 0 blijft: de massa hangt verticaal, met <i>F</i><sub>kabel</sub> = <i>mg</i>.</p>
+        <p><b><i>ω</i> = √(<i>g</i>/<i>L</i>)</b> = ${TM1.drie(wg)} rad/s: cos <i>θ</i> = 1, dus <i>θ</i> = 0. Voor kleinere <i>ω</i> zou cos <i>θ</i> &gt; 1 moeten zijn: er is dan geen kegelbeweging mogelijk. Enkel de oplossing sin <i>θ</i> = 0 blijft: de massa hangt verticaal, met <i>F</i><sub>kabel</sub> = <i>mg</i>.</p>
         <p><b>Zeer snel</b> (<i>ω</i> → ∞): cos <i>θ</i> → 0, dus <i>θ</i> → 90°, en <i>F</i><sub>kabel</sub> → ∞. De kabel wordt nooit helemaal horizontaal: de verticale component van de kabelkracht moet het gewicht blijven dragen.</p></div>`;
   }
   el.innerHTML = h;
@@ -384,7 +385,7 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart opnieuw opbouwen), zodat de slider bij het slepen niet verspringt
-  const os = $('omsl'); if (os) os.oninput = e => { om = +e.target.value; $('omval').textContent = `${om.toFixed(2)} rad/s`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
+  const os = $('omsl'); if (os) os.oninput = e => { om = +e.target.value; $('omval').textContent = `${TM1.drie(om)} rad/s`; $('res5').innerHTML = res5(); drawScene(); tekenInt(); };
   tekenInt();
 }
 // grafieken in de interpretatie: θ(ω) en F_kabel(ω)/(mg), met de gekozen ω
@@ -396,14 +397,15 @@ function tekenInt() {
 }
 function res5() {
   const th = theta(), wg = Math.sqrt(g / L);
-  return th > 0 ? `<i>θ</i> = ${deg(th).toFixed(1)}°, <i>F</i><sub>kabel</sub> = <i>mg</i>/cos <i>θ</i> = ${(1 / Math.cos(th)).toFixed(2)} <i>mg</i>.`
-    : `<b>ω ≤ √(g/L) = ${wg.toFixed(2)} rad/s:</b> er is geen kegelbeweging mogelijk. Dan blijft enkel de oplossing sin <i>θ</i> = 0: de massa hangt verticaal onder het ophangpunt (en draait rond haar eigen as), met <i>F</i><sub>kabel</sub> = <i>mg</i>.`;
+  return th > 0 ? `<i>θ</i> = ${TM1.drie(deg(th))}°, <i>F</i><sub>kabel</sub> = <i>mg</i>/cos <i>θ</i> = ${TM1.drie((1 / Math.cos(th)))} <i>mg</i>.`
+    : `<b>ω ≤ √(g/L) = ${TM1.drie(wg)} rad/s:</b> er is geen kegelbeweging mogelijk. Dan blijft enkel de oplossing sin <i>θ</i> = 0: de massa hangt verticaal onder het ophangpunt (en draait rond haar eigen as), met <i>F</i><sub>kabel</sub> = <i>mg</i>.`;
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((t, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${t}</button>`).join('');
   $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; if (stap !== 5) om = W0; render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
+let BALK = 0;   // hoogte van de bedieningsbalk tussen de situatie en het vrijlichaamsdiagram
+function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); document.querySelectorAll('.instructie [data-tex]').forEach(e => window.katex && render1(e, e.dataset.tex)); });
 $('aanzicht').onclick = () => { Object.assign(view, STANDAARD); drawScene(); };
 const playBtn = $('play');

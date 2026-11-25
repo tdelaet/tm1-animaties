@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.9 – Een bobslee daalt en neemt een bocht</title>
+<title>Voorbeeld 19.7 – Een bobslee daalt en neemt een bocht</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.9) */
   .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
   .stap .eval p{margin:3px 0}
   .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
@@ -55,7 +55,7 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.9 — Een bobslee daalt en neemt een bocht</h1>
+    <h1>Voorbeeld 19.7 — Een bobslee daalt en neemt een bocht</h1>
     <span class="kicker">Dynamica van een puntmassa · een bobslee versnelt op een rechte helling en rijdt daarna hoog op de ijswand door een horizontale bocht; gevraagd: de lengte van de helling, de stand op de wand en de vertraging in de bocht</span>
   </header>
 
@@ -63,14 +63,13 @@
     <p>Een bob met bemanning (<i>m</i> = 400 kg) rijdt met een snelheid <i>v</i><sub>0</sub> = 11 m/s een recht stuk van de baan op, met een helling van 15 % (tan <i>α</i> = 0.15). De wrijvingscoëfficiënt tussen de bob en het ijs is <i>μ</i> = 0.005. Onderaan de helling rijdt de bob een horizontale bocht in, met straal <i>R</i> = 25 m. In de bocht rijdt hij hoog op de ijswand, op constante hoogte.</p>
     <ul>
       <li><b>Deel 1 (rechte helling):</b><br>(a) Wat is de versnelling <span data-tex="\vec a"></span> van de bob (als vector)?<br>(b) Hoe lang moet de helling zijn om de snelheid <i>v</i><sub>1</sub> = 25 m/s te bereiken?<br>Bepaal <span data-tex="\vec a"></span> en <i>L</i> eerst symbolisch en reken ze dan uit.</li>
-      <li><b>Deel 2 (bocht):</b><br>(a) Welke hoek <i>β</i> met de horizontale moet de ijswand hebben op de plaats waar de bob rijdt, zodat hij op constante hoogte blijft?<br>(b) Welke vertraging <i>a<sub>t</sub></i> treedt op?<br>Bepaal <i>β</i> en <i>a<sub>t</sub></i> eerst symbolisch, als functie van de snelheid <i>v</i>, en reken ze dan uit voor <i>v</i> = 25 m/s.</li>
+      <li><b>Deel 2 (bocht):</b><br>(a) Op welke plaats op de wand rijdt de bob bij een snelheid <i>v</i>? Geef die plaats aan met de hoek <i>β</i> die de ijswand daar met de horizontale maakt.<br>(b) Welke vertraging <i>a<sub>t</sub></i> treedt op?<br>Bepaal <i>β</i> en <i>a<sub>t</sub></i> eerst symbolisch, als functie van de snelheid <i>v</i>, en reken ze dan uit voor <i>v</i> = 25 m/s.</li>
     </ul>
     <p style="margin:0 0 2px;font-size:13px;color:var(--muted)">Aannames:</p>
     <ul style="font-size:13px;color:var(--muted)">
-      <li>de bob is een puntmassa;</li>
-      <li>geen luchtweerstand;</li>
-      <li>de wrijving is tegengesteld aan de bewegingsrichting;</li>
-      <li>in de bocht beschrijft de bob een cirkel met straal <i>R</i>, onafhankelijk van zijn plaats op de wand.</li>
+      <li>De bob is een puntmassa, zonder luchtweerstand;</li>
+      <li>Voor deel 2: door het vertragen zakt de bob geleidelijk op de wand, maar zo langzaam dat we zijn verticale snelheid en versnelling verwaarlozen. Zo werkt de wrijving horizontaal, tegengesteld aan de bewegingsrichting;</li>
+      <li>Voor deel 2: de bob beschrijft een cirkel met straal <i>R</i>, onafhankelijk van zijn plaats op de wand.</li>
     </ul>
     <div class="deelrij modus" id="delen"></div>
     <div class="stappen modus" id="stappen"></div>
@@ -106,7 +105,7 @@
 (() => {
 const { setup, arrow, label, deg } = TM1;
 const C = TM1.kleuren();
-const KG = '#e03131', KN = '#37b24d', KW = '#2b7a3d', KA = '#1c7ed6';   // kleuren zoals in Vb. 19.7: G rood, N lichtgroen, W groen, a blauw
+const KG = '#e03131', KN = '#37b24d', KW = '#2b7a3d', KA = '#1c7ed6';   // kleuren zoals in Vb. 19.9: G rood, N lichtgroen, W groen, a blauw
 const GLOED = 'rgba(255,196,0,';
 const g = 10.0, M = 400, MU0 = 0.005, HEL0 = 0.15, V0 = 11, V1 = 25, R0 = 25, L2 = 8, RW = 1.6;   // L2: lengte van de rechte stukken voor en na de bocht in het bovenaanzicht [m]; RW: kromtestraal van de ijswand in de doorsnede [m]
 let deel = 1, stap = 1, anim = null, licht = null, proeven = {}, playing = true, openEval = -1;
@@ -691,11 +690,11 @@ function inhoud2() {
   const KADER = `<div class="kader">${vv(BE)}${vv(AT)}</div>`;
   const COMP = `${kl(KN, '\\begin{Bmatrix}0\\\\ N\\sin\\beta\\\\ N\\cos\\beta\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}-W\\\\ 0\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ 0\\\\ -mg\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_t\\\\ v^2/R\\\\ 0\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\\\ (z)\\end{matrix}`;
   if (stap === 1) return `<p>We maken opnieuw de <b>bob, samen met de bemanning</b>, vrij als één puntmassa <i>m</i> = 400 kg: maak hem los van de ijswand. Zo worden de krachten van het ijs op de bob externe krachten, die voorkomen in de bewegingsvergelijking.</p>
-      <p class="noot">We bekijken de bob in de bocht, op de plaats waar hij de horizontale cirkel met straal <i>R</i> beschrijft, met een snelheid <i>v</i>. Ga daarna naar stap 2 om de bob vrij te maken.</p>`;
+      <p class="noot">We bekijken de bob in de bocht, op het ogenblik waarop hij een snelheid <i>v</i> heeft. Omdat hij maar langzaam zakt, beschrijft hij dan bij benadering een horizontale cirkel met straal <i>R</i>. Ga daarna naar stap 2 om de bob vrij te maken.</p>`;
   if (stap === 2) return '';   // de loep en de proeftabel volstaan
   if (stap === 3) return `<h4>Bewegingsvergelijking (bob)</h4>${vv(`${N_} + ${W_} + ${G_} = m${A_}`)}
       <h4>Bijkomende vergelijkingen</h4>
-      <p><b>Kinematica: natuurlijke componenten.</b> De bob beschrijft een horizontale cirkel met straal <i>R</i>. We kiezen de assen volgens de natuurlijke componenten: de <b><i>x</i>-as langs de baan</b>, in de zin van de snelheid (${tx('\\vec e_t')}); de <b><i>y</i>-as horizontaal naar het kromtemiddelpunt</b> (${tx('\\vec e_n')}); de <b><i>z</i>-as verticaal omhoog</b> (${tx('\\vec e_b')}). Dan is</p>
+      <p><b>Kinematica: natuurlijke componenten.</b> De bob beschrijft bij benadering een horizontale cirkel met straal <i>R</i> (hij zakt maar langzaam). We kiezen de assen volgens de natuurlijke componenten: de <b><i>x</i>-as langs de baan</b>, in de zin van de snelheid (${tx('\\vec e_t')}); de <b><i>y</i>-as horizontaal naar het kromtemiddelpunt</b> (${tx('\\vec e_n')}); de <b><i>z</i>-as verticaal omhoog</b> (${tx('\\vec e_b')}). Dan is</p>
       ${vv(`${A_} = ${AT_}\\,\\vec e_t + \\frac{v^2}{R}\\,\\vec e_n = ${AT_}${kl(KA, '\\begin{Bmatrix}1\\\\ 0\\\\ 0\\end{Bmatrix}')} + ${kl(KA, '\\frac{v^2}{R}\\begin{Bmatrix}0\\\\ 1\\\\ 0\\end{Bmatrix}')}`)}
       <p><b>Wrijving: de bob glijdt.</b> Wrijving, tegengesteld aan de bewegingsrichting (de <i>x</i>-as):</p>${vv(`${kl(KW, 'W')} = \\mu\\,${kl(KN, 'N')}`)}
       <h4>Voorwaarde uit de verbinding</h4>${vv(`${kl(KN, 'N')} \\ge 0`)}

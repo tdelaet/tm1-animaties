@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.8 – Een massa in een geleiding met een veer</title>
+<title>Voorbeeld 19.8 – Massa in geleiding met veer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -15,6 +15,8 @@
   .werkblad .scene .doek canvas{max-height:calc(var(--h) + 80px)}
   #loep{max-height:320px;touch-action:pan-y}
   #gat{width:100%;height:190px;display:block;margin:6px 0}
+  .stap .kromtog{display:flex;flex-wrap:wrap;gap:4px 16px;margin:8px 0 0}
+  .stap .kromtog label{font-size:12.5px}
   @media (min-width:901px){ .werkblad{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
   .instructie{padding:10px 16px;margin:0 0 14px}
   .instructie p{margin:0 0 8px;font-size:14px}
@@ -36,7 +38,7 @@
   .stap .noot{font-size:12.5px;color:var(--muted)}
   .stap .kader{border:1.5px solid #1d5c96;background:rgba(29,92,150,0.08);border-radius:8px;padding:6px 10px;margin:8px 0}
   .stap .slider{margin:6px 0}
-  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.7) */
+  /* evaluatiestrategieën: altijd met hun naam aangeduid, openklapbaar (zoals in Vb. 19.9) */
   .stap .eval{border-left:3px solid #8b6fd6;padding:2px 0 2px 10px;margin:8px 0}
   .stap .eval p{margin:3px 0}
   .stap .eval ul.fa{margin:4px 0;padding-left:18px} .stap .eval ul.fa li{margin:3px 0}
@@ -54,13 +56,12 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.8 — Een massa in een geleiding met een veer</h1>
-    <span class="kicker">Dynamica van een puntmassa · een massa in een cirkelvormige geleiding in een verticaal vlak, met een veer naar het punt B, wordt uit rust losgelaten; gevraagd: de tangentiële versnelling en de normaalkracht net na het loslaten</span>
+    <h1>Voorbeeld 19.8 — Massa in geleiding met veer</h1>
   </header>
 
   <div class="instructie card">
     <p>Een massa beweegt wrijvingsloos in een cirkelvormige geleiding met straal <i>r</i>, in een verticaal vlak. Een veer verbindt de massa met het punt B van de geleiding (rechts, op de horizontale door het middelpunt O); de rustlengte van de veer is gelijk aan de straal. De massa wordt in rust losgelaten in het punt A, onder een hoek <i>θ</i> onder de horizontale door O (aan de kant tegenover B).</p>
-    <p><b>Gegevens:</b> <i>m</i> = 0.4 kg, <i>k</i> = 10 N/m, <i>r</i> = 0.5 m, <i>ℓ</i><sub>0</sub> = <i>r</i>.</p>
+    <p><b>Gegevens:</b> <i>m</i> = 0.400 kg, <i>k</i> = 10.0 N/m, <i>r</i> = 0.500 m, <i>ℓ</i><sub>0</sub> = <i>r</i>.</p>
     <p><b>Gevraagd: de tangentiële versnelling van de massa en de normaalkracht van de geleiding, net na het loslaten</b>, via een algemene uitdrukking in functie van <i>θ</i> (tussen 0° en 180°); en de waarden voor <i>θ</i> = 30°.</p>
     <div class="stappen modus" id="stappen"></div>
   </div>
@@ -74,6 +75,12 @@
       <div class="card panel">
         <h2>Bediening</h2>
         <div class="btnrow" style="margin:0"><button class="primary" id="play">▶ Afspelen</button><button id="reset">↺ loslaten in A</button></div>
+        <div class="toggles" id="toon" style="margin-top:10px">
+          <label><input type="checkbox" data-t="v"> <span class="sw" style="background:var(--cv)"></span><span>snelheid <span class="v">v</span></span></label>
+          <label><input type="checkbox" data-t="a"> <span class="sw" style="background:var(--ca)"></span><span>versnelling <span class="v">a</span></span></label>
+          <label><input type="checkbox" data-t="at"> <span class="sw" style="background:var(--cat)"></span><span>tangentiële versnelling <span class="i">a<sub>t</sub></span></span></label>
+          <label><input type="checkbox" data-t="an"> <span class="sw" style="background:var(--can)"></span><span>normaalversnelling <span class="i">a<sub>n</sub></span></span></label>
+        </div>
         <div class="note">De massa wordt in A (<i>θ</i> = 30°) uit rust losgelaten en beweegt dan heen en weer, 2 keer vertraagd. Het vrijlichaamsdiagram toont de massa net na het loslaten, in A.</div>
       </div>
     </div>
@@ -113,19 +120,26 @@ function maakBaan() {
   const pts = [], dt = 0.001; let th = TH0, w = 0, s = 0;
   const f = (x) => at(x) / Rg;
   for (let i = 0; i < 20000; i++) {
-    pts.push({ t: s, th });
+    pts.push({ t: s, th, w });
     const k1 = [w, f(th)], k2 = [w + 0.5 * dt * k1[1], f(th + 0.5 * dt * k1[0])], k3 = [w + 0.5 * dt * k2[1], f(th + 0.5 * dt * k2[0])], k4 = [w + dt * k3[1], f(th + dt * k3[0])];
     th += dt / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]); w += dt / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]); s += dt;
     if (i > 200 && w < 0 && th < TH0 + 0.002) break;                  // terug in A: één volledige heen-en-weerbeweging
   }
-  baan = { pts, T: s };
+  // schalen voor de pijlen in de animatie: de grootste snelheid en versnelling tijdens de beweging
+  let vMax = 1e-6, aMax = 1e-6;
+  for (const p of pts) { const v = Math.abs(Rg * p.w), aT = Math.abs(at(p.th)), aN = Rg * p.w * p.w; vMax = Math.max(vMax, v); aMax = Math.max(aMax, Math.hypot(aT, aN)); }
+  baan = { pts, T: s, vMax, aMax };
 }
-function stand(tt) { const p = baan.pts, i = Math.min(p.length - 1, Math.max(0, Math.round(tt / 0.001))); return p[i].th; }
+const punt = tt => { const p = baan.pts; return p[Math.min(p.length - 1, Math.max(0, Math.round(tt / 0.001)))]; };
+function stand(tt) { return punt(tt).th; }
+// wat er in de animatie getoond wordt (knoppen in de bediening) en welke krommen in de grafiek
+const TOON = { v: false, at: false, an: false, a: false };
+const KROM = { gew: true, veer: true, tot: true };
 
 // ---------- tekenhulp ----------
 function lijn(ctx, p, q, kleur, w = 1.4, dash = null) { ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineCap = 'round'; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore(); }
-function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
-  if (kleur === KA && stap === 2 && VB.gloed(GLOEI)) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * VB.gloed(GLOEI)) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
+function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2, gloei = true) {
+  if (gloei && kleur === KA && stap === 2 && VB.gloed(GLOEI)) arrow(ctx, x0, y0, x1, y1, GLOED + (0.35 + 0.5 * VB.gloed(GLOEI)) + ')', { w: 14, head: 22 });   // oplichten vanuit het blok "versnelling"
   const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 4) return false;
   const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, h = 13, s = 4;
   ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -171,7 +185,7 @@ function loepCirkel(ctx, q, r) {
 }
 function drawScene() {
   const ctx = sc.ctx, W = sc.w, Hall = sc.h; ctx.clearRect(0, 0, W, Hall);
-  const H = Hall * 0.5;
+  let H = (Hall - BALK) * 0.5;   // situatie boven de bedieningsbalk
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie -----
   titel('Situatie', 18);
@@ -193,7 +207,17 @@ function drawScene() {
   veer(ctx, pB, pm);
   ctx.save(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(pm.x, pm.y, 0.08 * R, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
   if (stap <= 2) loepCirkel(ctx, pm, Math.max(16, 0.2 * R)); else raak = null;
+  // snelheid en versnelling van de massa tijdens de beweging (knoppen in de bediening)
+  { const p = punt(t), et = { x: Math.sin(p.th), y: Math.cos(p.th) }, en = { x: Math.cos(p.th), y: -Math.sin(p.th) };   // e_t: zin van stijgende θ; e_n: naar O
+    const v = Rg * p.w, aT = at(p.th), aN = Rg * p.w * p.w, Lv = 0.75 * R / baan.vMax, La = 0.85 * R / baan.aMax;
+    const tip = (d, naam, sub, kleur) => { const L = Math.hypot(d.x, d.y) || 1; label(ctx, naam, sub, pm.x + d.x + 12 * d.x / L - 5, pm.y + d.y + 12 * d.y / L + 6, kleur, { size: 15 }); };
+    if (TOON.a) { const d = { x: (aT * et.x + aN * en.x) * La, y: (aT * et.y + aN * en.y) * La }; if (dubbelPijl(ctx, pm.x, pm.y, pm.x + d.x, pm.y + d.y, KA, 2, false)) tip(d, 'a', '', KA); }
+    if (TOON.at) { const d = { x: aT * et.x * La, y: aT * et.y * La }; if (dubbelPijl(ctx, pm.x, pm.y, pm.x + d.x, pm.y + d.y, C.at, 2, false)) tip(d, 'a', 't', C.at); }
+    if (TOON.an) { const d = { x: aN * en.x * La, y: aN * en.y * La }; if (dubbelPijl(ctx, pm.x, pm.y, pm.x + d.x, pm.y + d.y, C.an, 2, false)) tip(d, 'a', 'n', C.an); else TM1.formule(ctx, '$a_n = 0$', pm.x + 16, pm.y - 16, { color: C.an, size: 12 }); }
+    if (TOON.v) { const d = { x: v * et.x * Lv, y: v * et.y * Lv }; if (Math.hypot(d.x, d.y) > 4) { arrow(ctx, pm.x, pm.y, pm.x + d.x, pm.y + d.y, C.v, { w: 2.6, head: 11 }); tip(d, 'v', '', C.v); } else TM1.formule(ctx, '$v = 0$', pm.x + 16, pm.y + (TOON.an ? 2 : -16), { color: C.v, size: 12 }); }
+  }
 
+  H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram in A, net na het loslaten (v = 0) -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
   if (stap === 1) { titel('Vrijlichaamsdiagram: kies eerst de vrij te maken puntmassa', H + 18); return; }
@@ -218,7 +242,7 @@ function drawScene() {
     ctx.save(); ctx.fillStyle = KA; ctx.beginPath(); ctx.arc(o.x, o.y, 2.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
     const Lt = 0.8 * k; if (dubbelPijl(ctx, o.x, o.y, o.x + et.x * Lt, o.y + et.y * Lt, KA, 2)) label(ctx, 'a', 't', o.x + et.x * Lt + 8, o.y + et.y * Lt + 4, KA, { size: 15 });
     // net na het loslaten is v = 0, dus a_n = v²/r = 0: geen normaalversnelling
-    ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KA; ctx.fillText('a_n = 0 (v = 0)', o.x - 30, o.y - 12); ctx.restore(); }
+    TM1.formule(ctx, '$a_n = 0$ ($v = 0$)', o.x - 30, o.y - 12, { color: KA, size: 12 }); }
   assenTN(ctx, { x: W - 70, y: Hall - 60 }, t0);
   if (stap === 2 && licht) {
     const b = BEW.find(q => q.id === licht.b);
@@ -308,17 +332,23 @@ function tekenAt() {
   const dpr = window.devicePixelRatio || 1; cv.width = r.width * dpr; cv.height = r.height * dpr;
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const G = { c: cv, ctx, w: r.width, h: r.height };
-  const F = frame(G, [0, 180], [-25, 17], '$\\theta$ [°]', '$a_t$ [m/s²]');
-  curve(ctx, F, 240, 0, 180, x => x, x => g * Math.cos(rad(x)), KG, 1.6);
-  curve(ctx, F, 240, 0, 180, x => x, x => (K * Rg / M) * (2 * Math.cos(rad(x) / 2) - 1) * Math.sin(rad(x) / 2), KV, 1.6);
-  curve(ctx, F, 240, 0, 180, x => x, x => at(rad(x)), KA, 2.4);
+  const F = frame(G, [0, 180], [-25, 17], '$\\theta$ [°]', '$a_t$ [m/s²]', undefined, 30);   // tot θ = 180°, met getallen om de 30°
+  // elke kromme apart aan en uit te zetten (knoppen boven de grafiek)
+  if (KROM.gew) curve(ctx, F, 240, 0, 180, x => x, x => g * Math.cos(rad(x)), KG, 1.6);
+  if (KROM.veer) curve(ctx, F, 240, 0, 180, x => x, x => aVeer(rad(x)), KV, 1.6);
+  if (KROM.tot) curve(ctx, F, 240, 0, 180, x => x, x => at(rad(x)), KA, 2.4);
   // gekozen hoek met de schuifknop (stap 5): stippellijn
-  if (stap === 5 && Math.abs(th5 - TH0) > 1e-6) { ctx.save(); ctx.strokeStyle = '#9aa1a9'; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(F.X(deg(th5)), F.Y(F.yr[0])); ctx.lineTo(F.X(deg(th5)), F.Y(F.yr[1])); ctx.stroke(); ctx.restore(); dot(ctx, F.X(deg(th5)), F.Y(at(th5)), '#9aa1a9', 4); }
-  // de massa in de animatie: a_t hangt enkel van de stand af, dus het bolletje volgt de beweging
-  const thA = stand(t); TM1.cursor(ctx, F, deg(thA)); dot(ctx, F.X(deg(thA)), F.Y(at(thA)), KA);
-  ctx.save(); ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'right';
-  ctx.fillStyle = KA; ctx.fillText('a_t (totaal)', G.w - 14, F.m.t + 12); ctx.fillStyle = KG; ctx.fillText('g cos θ (gewicht)', G.w - 14, F.m.t + 26); ctx.fillStyle = KV; ctx.fillText('bijdrage van de veer', G.w - 14, F.m.t + 40); ctx.restore();
+  if (stap === 5 && Math.abs(th5 - TH0) > 1e-6) { ctx.save(); ctx.strokeStyle = '#9aa1a9'; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(F.X(deg(th5)), F.Y(F.yr[0])); ctx.lineTo(F.X(deg(th5)), F.Y(F.yr[1])); ctx.stroke(); ctx.restore();
+    if (KROM.tot) dot(ctx, F.X(deg(th5)), F.Y(at(th5)), '#9aa1a9', 4); }
+  // de massa in de animatie: a_t hangt enkel van de stand af, dus de bolletjes volgen de beweging
+  const thA = stand(t); TM1.cursor(ctx, F, deg(thA));
+  if (KROM.gew) dot(ctx, F.X(deg(thA)), F.Y(g * Math.cos(thA)), KG, 4);
+  if (KROM.veer) dot(ctx, F.X(deg(thA)), F.Y(aVeer(thA)), KV, 4);
+  if (KROM.tot) dot(ctx, F.X(deg(thA)), F.Y(at(thA)), KA);
 }
+// knoppen boven de grafiek: welke bijdragen tot a_t getekend worden
+const kromKnoppen = () => `<div class="toggles kromtog">${[['gew', KG, 'bijdrage van het gewicht, <i>g</i> cos <i>θ</i>'], ['veer', KV, 'bijdrage van de veer'], ['tot', KA, '<i>a<sub>t</sub></i> (som)']]
+  .map(([id, kl, t]) => `<label><input type="checkbox" data-k="${id}"${KROM[id] ? ' checked' : ''}> <span class="sw" style="background:${kl}"></span><span>${t}</span></label>`).join('')}</div>`;
 
 // ---------- rechterkaart: inhoud per stap ----------
 const $ = id => document.getElementById(id);
@@ -344,7 +374,7 @@ function proefTabel() {
   });
 }
 const aVeer = th => (K * Rg / M) * (2 * Math.cos(th / 2) - 1) * Math.sin(th / 2);   // bijdrage van de veer tot a_t
-const res5 = () => `Bij <i>θ</i> = ${deg(th5).toFixed(0)}°: <i>a<sub>t</sub></i> = <span style="color:${KG}">${(g * Math.cos(th5)).toFixed(2).replace('-', '−')} m/s²</span> ${aVeer(th5) < 0 ? '−' : '+'} <span style="color:${KV}">${Math.abs(aVeer(th5)).toFixed(2)} m/s²</span> = <b>${at(th5).toFixed(2).replace('-', '−')} m/s²</b> (bijdrage van het gewicht + bijdrage van de veer); <i>N</i> = <b>${Nnorm(th5).toFixed(2).replace('-', '−')} N</b>.`;
+const res5 = () => `Bij <i>θ</i> = ${TM1.drie(deg(th5))}°: <i>a<sub>t</sub></i> = <span style="color:${KG}">${TM1.drie((g * Math.cos(th5)))} m/s²</span> ${aVeer(th5) < 0 ? '−' : '+'} <span style="color:${KV}">${TM1.drie(Math.abs(aVeer(th5)))} m/s²</span> = <b>${TM1.drie(at(th5))} m/s²</b> (bijdrage van het gewicht + bijdrage van de veer); <i>N</i> = <b>${TM1.drie(Nnorm(th5))} N</b>.`;
 function stapInhoud() {
   const el = $('stap'); $('loep').style.display = stap === 2 ? '' : 'none';
   $('rtitel').textContent = stap === 2 ? VERB[verb] : `Stap ${stap}: ${STAPPEN[stap - 1]}`;
@@ -382,15 +412,15 @@ function stapInhoud() {
       <h4>y-component (naar O)</h4>${v(`${kl(KV, 'F_v\\cos(\\theta/2)')} + ${kl(KN, 'N')} - ${kl(KG, 'mg\\sin\\theta')} = 0 \\;\\Rightarrow\\; ${kl(KN, 'N')} = ${kl(KG, 'mg\\sin\\theta')} - ${kl(KV, 'F_v\\cos(\\theta/2)')}`)}
       <p>Met ${tx(`${kl(KV, 'F_v')} = k\\,r\\,\\big(2\\cos(\\theta/2) - 1\\big)`)}:</p>
       <div class="kader">${v(AT)}${v(NN)}</div>
-      <p>Met de gegevens (<i>m</i> = 0.4 kg, <i>k</i> = 10 N/m, <i>r</i> = 0.5 m) bij <i>θ</i> = 30°:</p>
+      <p>Met de gegevens (<i>m</i> = 0.400 kg, <i>k</i> = 10.0 N/m, <i>r</i> = 0.500 m) bij <i>θ</i> = 30°:</p>
       ${v(`a_t = ${kl(KG, '8.66\\ \\text{m/s}^2')} + ${kl(KV, '3.01\\ \\text{m/s}^2')} = 11.7\\ \\text{m/s}^2`)}
       ${v(`${kl(KN, 'N')} = ${kl(KG, '2.00\\ \\text{N}')} - ${kl(KV, '4.50\\ \\text{N}')} = -2.50\\ \\text{N}`)}
       <p class="noot"><i>N</i> is negatief: de geleiding duwt de massa niet naar O, maar naar buiten, met een kracht van 2.50 N.</p>
       <p>De grafiek toont de bijdragen tot <i>a<sub>t</sub></i> en hun som in functie van <i>θ</i>. Omdat <i>a<sub>t</sub></i> enkel van de stand afhangt, volgt het bolletje de massa in de animatie (in rust: de stand <i>θ</i> = 30°).</p>
-      <canvas id="gat"></canvas>`;
+      ${kromKnoppen()}<canvas id="gat"></canvas>`;
   else h = `<div class="kader">${v(AT)}${v(NN)}</div>
       <p style="margin-top:10px"><b><i>a<sub>t</sub></i> in functie van <i>θ</i>, van 0° tot 180°</b> (met de bijdragen van het gewicht en de veer; het bolletje volgt de massa in de animatie, de stippellijn is de hoek van de schuifknop)</p>
-      <canvas id="gat"></canvas>
+      ${kromKnoppen()}<canvas id="gat"></canvas>
       <p>Tot 90° trekken het gewicht en de uitgerekte veer de massa allebei verder langs de geleiding. Voorbij 90° remt het gewicht af, en voorbij 120° is de veer ingedrukt en duwt ze terug: vanaf <i>θ</i> ≈ 104° is <i>a<sub>t</sub></i> negatief, en vertrekt de massa na het loslaten terug, in de zin van dalende <i>θ</i>.</p>
       <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
@@ -399,13 +429,13 @@ function stapInhoud() {
         <p><i>a<sub>t</sub></i>: voor <i>θ</i> tussen 0° en 90° zijn beide termen positief: het gewicht en de (uitgerekte) veer trekken de massa allebei verder langs de geleiding. De massa vertrekt dus naar beneden, zoals verwacht. Voorbij 90° wordt <i>g</i> cos <i>θ</i> negatief (het gewicht trekt terug naar de bodem), en voorbij 120° ook de bijdrage van de veer (2 cos(<i>θ</i>/2) − 1 &lt; 0: de veer is korter dan haar rustlengte en duwt).</p>
         <p><i>N</i> = −2.50 N is negatief: de geleiding duwt naar buiten. Dat klopt: de veer trekt de massa met 4.50 N naar O toe (component langs de y-as), terwijl het gewicht ze maar met 2.00 N van O weg trekt. Omdat de massa nog stilstaat (<i>a<sub>n</sub></i> = 0), moet de geleiding het verschil naar buiten leveren.</p></div>
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
-        <p><i>a<sub>t</sub></i> = 11.7 m/s² bij <i>θ</i> = 30°: iets groter dan <i>g</i>, omdat de veer meetrekt. De bijdrage van het gewicht (8.66 m/s²) is wat kleiner dan <i>g</i>, want de geleiding is daar al wat schuin. <i>N</i> = 2.50 N is van dezelfde grootteorde als het gewicht (4.0 N) en de veerkracht (4.66 N).</p></div>
+        <p><i>a<sub>t</sub></i> = 11.7 m/s² bij <i>θ</i> = 30°: iets groter dan <i>g</i>, omdat de veer meetrekt. De bijdrage van het gewicht (8.66 m/s²) is wat kleiner dan <i>g</i>, want de geleiding is daar al wat schuin. <i>N</i> = 2.50 N is van dezelfde grootteorde als het gewicht (4.00 N) en de veerkracht (4.66 N).</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de hoek <i>θ</i> waar de massa wordt losgelaten, de veerconstante, de massa en de straal:</p>
-        <div class="slider"><div class="lab"><span>Hoek <span class="i">θ</span></span><b id="thval">${deg(th5).toFixed(0)}°</b></div><input type="range" id="thsl" min="0" max="180" step="1" value="${deg(th5)}"></div>
-        <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${K.toFixed(1)} N/m</b></div><input type="range" id="ksl" min="0" max="30" step="0.5" value="${K}"></div>
-        <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${M.toFixed(2)} kg</b></div><input type="range" id="msl" min="0.1" max="1.2" step="0.05" value="${M}"></div>
-        <div class="slider"><div class="lab"><span>Straal <span class="i">r</span></span><b id="rval">${Rg.toFixed(2)} m</b></div><input type="range" id="rsl" min="0.1" max="1.0" step="0.05" value="${Rg}"></div>
+        <div class="slider"><div class="lab"><span>Hoek <span class="i">θ</span></span><b id="thval">${TM1.drie(deg(th5))}°</b></div><input type="range" id="thsl" min="0" max="180" step="1" value="${deg(th5)}"></div>
+        <div class="slider"><div class="lab"><span>Veerconstante <span class="i">k</span></span><b id="kval">${TM1.drie(K)} N/m</b></div><input type="range" id="ksl" min="0" max="30" step="0.5" value="${K}"></div>
+        <div class="slider"><div class="lab"><span>Massa <span class="i">m</span></span><b id="mval">${TM1.drie(M)} kg</b></div><input type="range" id="msl" min="0.1" max="1.2" step="0.05" value="${M}"></div>
+        <div class="slider"><div class="lab"><span>Straal <span class="i">r</span></span><b id="rval">${TM1.drie(Rg)} m</b></div><input type="range" id="rsl" min="0.1" max="1.0" step="0.05" value="${Rg}"></div>
         <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>k</i> groter:</b> de bijdrage van de veer is evenredig met <i>k</i>: een stijvere veer trekt bij dezelfde verlenging harder. De bijdrage van het gewicht verandert niet.</li>
@@ -416,9 +446,10 @@ function stapInhoud() {
         <p><b>Loslaten op de horizontale door O</b> (<i>θ</i> = 0): <i>a<sub>t</sub></i> = <i>g</i>. De veer is horizontaal en staat loodrecht op de geleiding (die daar verticaal is): enkel het gewicht versnelt de massa langs de geleiding. De veer trekt de massa met <i>kr</i> naar O; de geleiding duwt even hard terug: <i>N</i> = −<i>kr</i> = −5.0 N.</p>
         <p><b>Loslaten onderaan</b> (<i>θ</i> = 90°): <i>g</i> cos 90° = 0: het gewicht staat loodrecht op de geleiding; enkel de veer versnelt de massa nog: <span data-tex="a_t = \\frac{k\\,r}{m}(\\sqrt 2 - 1)\\sin 45^\\circ = 3.66\\ \\text{m/s}^2"></span>. De geleiding moet dan het grootste deel van het gewicht dragen: <i>N</i> = 2.54 N &gt; 0.</p>
         <p><b>Veer ontspannen</b> (<i>θ</i> = 120°): de veer heeft dan juist haar rustlengte, <i>ℓ</i> = 2<i>r</i> cos 60° = <i>r</i> = <i>ℓ</i><sub>0</sub>, en oefent geen kracht uit. Enkel het gewicht telt: <i>a<sub>t</sub></i> = <i>g</i> cos 120° = −5.0 m/s² (de massa vertrekt terug naar de bodem) en <i>N</i> = <i>mg</i> sin 120° = 3.46 N.</p>
-        <p><b>Loslaten in B</b> (<i>θ</i> = 180°): de veer is helemaal ingedrukt (<i>ℓ</i> = 0, een grensgeval dat een echte veer niet haalt) en duwt met <i>kr</i> = 5.0 N, rakend aan de geleiding. Ook het gewicht ligt langs de geleiding, die in B verticaal staat. Beide krachten werken dus langs de geleiding, naar beneden: <i>a<sub>t</sub></i> = −<i>g</i> − <i>kr</i>/<i>m</i> = −22.5 m/s², en de geleiding hoeft niets op te vangen: <i>N</i> = 0.</p>
+        <p><b>Loslaten in B</b> (<i>θ</i> = 180°): de veer is helemaal ingedrukt (<i>ℓ</i> = 0, een grensgeval dat een echte veer niet haalt) en duwt met <i>kr</i> = 5.00 N, rakend aan de geleiding. Ook het gewicht ligt langs de geleiding, die in B verticaal staat. Beide krachten werken dus langs de geleiding, naar beneden: <i>a<sub>t</sub></i> = −<i>g</i> − <i>kr</i>/<i>m</i> = −22.5 m/s², en de geleiding hoeft niets op te vangen: <i>N</i> = 0.</p>
         <p><b>Zonder veer</b> (<i>k</i> = 0): <i>a<sub>t</sub></i> = <i>g</i> cos <i>θ</i>, zoals voor een massa die enkel onder haar gewicht in een cirkelvormige geleiding glijdt.</p></div>`;
   el.innerHTML = h;
+  el.querySelectorAll('.kromtog input').forEach(i => i.onchange = () => { KROM[i.dataset.k] = i.checked; tekenAt(); });
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
   // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
   // (de kaart wordt opnieuw opgebouwd als de figuur van grootte verandert: welke strategie open staat, blijft bewaard in openEval)
@@ -432,15 +463,17 @@ function stapInhoud() {
   });
   toon();
   // sliders voor k, m en r (enkel de waarden bijwerken, zodat de sliders bij het slepen niet verspringen)
-  const upd = () => { $('thval').textContent = `${deg(th5).toFixed(0)}°`; tekenAt(); $('kval').textContent = `${K.toFixed(1)} N/m`; $('mval').textContent = `${M.toFixed(2)} kg`; $('rval').textContent = `${Rg.toFixed(2)} m`; $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); };
+  const upd = () => { $('thval').textContent = `${TM1.drie(deg(th5))}°`; tekenAt(); $('kval').textContent = `${TM1.drie(K)} N/m`; $('mval').textContent = `${TM1.drie(M)} kg`; $('rval').textContent = `${TM1.drie(Rg)} m`; $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); };
   [['thsl', x => { th5 = rad(x); }], ['ksl', x => { K = x; }], ['msl', x => { M = x; }], ['rsl', x => { Rg = x; }]].forEach(([id, zet]) => { const s = $(id); if (s) s.oninput = e => { zet(+e.target.value); upd(); }; });
 }
 function stapKnoppen() {
   $('stappen').innerHTML = STAPPEN.map((s, i) => `<button data-s="${i + 1}" class="${stap === i + 1 ? 'actief' : ''}"><span class="nr">${i + 1}.</span>${s}</button>`).join('');
   $('stappen').querySelectorAll('button').forEach(b => b.onclick = () => { stap = +b.dataset.s; anim = null; licht = null; VB.reset(); openEval = -1; verb = 'g'; th5 = TH0; if (stap !== 5 && (K !== K0 || M !== M0 || Rg !== R0)) { K = K0; M = M0; Rg = R0; maakBaan(); } render(); });
 }
-function render() { stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
+let BALK = 0;   // hoogte van de bedieningsbalk tussen de situatie en het vrijlichaamsdiagram
+function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proefTabel(); drawScene(); drawLoep(); vldFormules(); VB.toon(stap === 2); }
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
+document.querySelectorAll('#toon input').forEach(i => i.onchange = () => { TOON[i.dataset.t] = i.checked; drawScene(); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
 $('reset').onclick = () => { t = 0; drawScene(); };

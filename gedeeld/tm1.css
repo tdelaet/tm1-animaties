@@ -163,3 +163,6 @@ details li{margin:0 0 8px}
 
 /* grafiek in de interpretatie (stap 5) van de dynamicavoorbeelden */
 .stap canvas.gint{width:100%;height:190px !important;display:block;margin:6px 0 2px;cursor:default;touch-action:pan-y}
+/* bedieningsbalk tussen situatie en vrijlichaamsdiagram (TM1.balkTussen): toon-knoppen op één rij */
+.doek > .bediening .toggles{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 !important}
+.doek > .bediening .toggles label{font-size:12.5px;white-space:nowrap}
