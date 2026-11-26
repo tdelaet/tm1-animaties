@@ -52,7 +52,6 @@
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
     <h1>Voorbeeld 19.2 — Blok op versnellend platform</h1>
-    <span class="kicker">Dynamica van een puntmassa · een horizontaal platform versnelt verticaal, met een versnelling a naar boven; gevraagd: de verbindingskracht van het platform op het blok</span>
   </header>
 
   <div class="instructie card">
@@ -148,6 +147,7 @@ const BEW = [
 
 // ---------- figuur: situatie (boven) en vrijlichaamsdiagram (onder) ----------
 const sc = setup(document.getElementById('scene'));
+const TOON = TM1.vaKnoppen(['v', 'a'], () => drawScene());   // vinkjes: snelheid en versnelling van het blok in de situatie
 let raak = null;
 function loepCirkel(ctx, q, r) {
   const aan = stap === 2;
@@ -175,11 +175,12 @@ function drawScene() {
   platform(ctx, P, yp);
   kubus(ctx, P, -B, B, yb - 2 * B, yb, 0.45, 0.45 + 2 * B);
   const cB = P(V(0, yb - B, 0.45));                     // voorvlak, midden van het blok
-  // versnelling van het platform (onder het platform; a > 0 naar boven) en de y-as rechts (naar boven)
-  { const q = P(V(0.75, yp + 0.06, 0)), y1 = q.y + 4 - 0.75 * ag * S; if (dubbelPijl(ctx, q.x, q.y + 4, q.x, y1, KA, 2)) label(ctx, 'a', '', q.x + 9, y1 + (ag > 0 ? 8 : 0), KA, { size: 15 }); }
+  // snelheid en versnelling van het blok (vinkjes in de bediening; positief naar boven); de y-as rechts (naar boven)
+  { const ab = (st.los ? -1 : ag) * g, vb = ab * Math.min(t, Tval());
+    TM1.vaPijlen(ctx, cB.x, cB.y, { v: { x: 0, y: -0.25 * S * vb }, a: { x: 0, y: -0.075 * S * ab } }, TOON); }
   { const x = W - 34, y = 30 + 0.9 * S; arrow(ctx, x, y, x, y - 0.9 * S, '#6b737d', { w: 1.3, head: 8 }); label(ctx, 'y', '', x + 7, y - 0.9 * S + 12, '#6b737d', { vec: false, size: 14 }); }
   label(ctx, 'm', '', cB.x - 6, cB.y + 6, C.ink, { vec: false, size: 16 });
-  if (stap <= 2 && !st.los) loepCirkel(ctx, P(V(0, yb, 0.45)), 0.42 * S); else raak = null;
+  if (stap === 2 && !st.los) loepCirkel(ctx, P(V(0, yb, 0.45)), 0.42 * S); else raak = null;
   if (st.los && t > 0.05) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('a < −g: het blok komt los van het platform', W - 52, 18); ctx.restore(); }
 
   H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
@@ -206,7 +207,7 @@ function drawScene() {
   }
   arrow(ctx, cx, cy, cx, cy + k, KG, { w: 2.8, head: 12 }); label(ctx, 'G', '', cx + 8, cy + k + 2, KG, { size: 15 });
   ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
-  { const x = cx + 1.1 * k, a_ = -(st.los ? -1 : ag) * k; if (dubbelPijl(ctx, x, cy - 0.15 * k, x, cy - 0.15 * k + a_, KA, 2)) label(ctx, 'a', '', x + 9, cy - 0.15 * k + a_ + (a_ < 0 ? 8 : 0), KA, { size: 15 }); }   // a > 0: naar boven
+  { const a_ = -(st.los ? -1 : ag) * k; if (dubbelPijl(ctx, cx, cy, cx, cy + a_, KA, 2)) label(ctx, 'a', '', cx - 24, cy + a_ + (a_ < 0 ? 12 : 0), KA, { size: 15 }); }   // aangrijpend in de puntmassa; a > 0: naar boven
   if (stap === 2 && licht) {
     const b = BEW.find(x => x.id === licht.b);
     if (b && !b.verh) { const s = b.uit.replace(/<[^>]+>/g, ''); ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center'; ctx.fillText(s, W / 2, Hall - 10); ctx.restore(); }
@@ -291,12 +292,13 @@ function stapInhoud() {
       <p class="noot">Ga daarna naar stap 2 om het blok vrij te maken.</p>`;
   else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (blok)</h4>${v(`${R_} + ${G_} = m${A_}`)}
-      <h4>Bijkomende vergelijking: kinematica</h4>
-      <p>Het blok rust op het platform en beweegt mee: zolang het contact blijft bestaan, heeft het dezelfde versnelling als het platform, ${tx(`${A_} = ${kl(KA, 'a\\,\\vec e_y')}`)}.</p>
+      ${v(`${kl(KR, '\\begin{Bmatrix}0\\\\ R\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ -mg\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
+      <h4>Bijkomende vergelijking</h4>
+      <p><b>Kinematica.</b> Het blok beweegt mee met het platform, enkel volgens <i>y</i>: ${tx(`${kl(KA, 'a_x')} = 0`)} en ${tx(`${kl(KA, 'a_y')} = ${kl(KA, 'a')}`)}.</p>
       <h4>Voorwaarde uit de verbinding</h4>${v(`${kl(KR, 'R')} \\ge 0`)}
       <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
-      <h4>Bewegingsvergelijking in componenten (y-as naar boven)</h4>${v(COMP)}
-      <p class="noot">De <i>x</i>-vergelijking is identiek nul (0 = 0); de <i>y</i>-vergelijking bevat de enige onbekende ${tx(kl(KR, 'R'))}.</p>`;
+      <p class="noot">Met de versnelling ingevuld:</p>${v(`${COMP}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
+      <p class="noot">De (x)-vergelijking is identiek nul (0 = 0). Er blijft één vergelijking, (y), voor één onbekende: ${tx(kl(KR, 'R'))}; en één voorwaarde, ${tx(`${kl(KR, 'R')} \\ge 0`)}, om achteraf te controleren.</p>`;
   else if (stap === 4) h = `${v(COMP)}
       <h4>(y)</h4>${v(`${kl(KR, 'R')} - mg = ma`)}
       <div class="kader">${v(`${kl(KR, 'R')} = m\\,(g + a)`)}</div>
@@ -304,6 +306,8 @@ function stapInhoud() {
   else h = `<div class="kader">${v(`${kl(KR, 'R')} = m\\,(g + a)`)}</div>
       <p style="margin-top:10px"><b><i>R</i> in functie van de versnelling <i>a</i> van het platform</b> (het bolletje is de gekozen <i>a</i>)</p>
       <canvas class="gint" id="gint"></canvas>
+      <div class="slider"><div class="lab"><span>Versnelling van het platform <span class="i">a</span></span><b id="agval">${TM1.drie(ag * g)} m/s²</b></div><input type="range" id="agsl" min="-15" max="10" step="0.5" value="${ag * g}"></div>
+      <p id="res5">${res5()}</p>
       <p>De verbindingskracht stijgt lineair met <i>a</i>: 0 bij <i>a</i> = −<i>g</i>, <i>mg</i> bij <i>a</i> = 0 (platform in rust), en meer dan <i>mg</i> als het platform naar boven versnelt. Voor <i>a</i> &lt; −<i>g</i> zou de formule een negatieve <i>R</i> geven (stippellijn): dat kan niet, het blok komt los van het platform en <i>R</i> = 0.</p>
       <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
@@ -313,9 +317,7 @@ function stapInhoud() {
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
         <p>Met <i>a</i> = 0.500 <i>g</i> is <i>R</i> = 1.50 <i>mg</i>: anderhalve keer het gewicht. Dat klopt met de ervaring in een lift die naar boven vertrekt: je voelt je zwaarder. Vertrekt de lift naar beneden (<i>a</i> &lt; 0), dan voel je je lichter.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
-        <p>Verander de versnelling van het platform:</p>
-        <div class="slider"><div class="lab"><span>Versnelling van het platform <span class="i">a</span></span><b id="agval">${TM1.drie(ag * g)} m/s²</b></div><input type="range" id="agsl" min="-15" max="10" step="0.5" value="${ag * g}"></div>
-        <p id="res5">${res5()}</p>
+        <p>Verander de versnelling van het platform met de schuifknop onder de grafiek.</p>
         <ul class="fa">
           <li><b><i>a</i> groter:</b> <i>R</i> groter. Versnelt het platform naar beneden (<i>a</i> &lt; 0), dan moet het blok minder tegengehouden worden: een weegschaal tussen platform en blok meet minder dan het gewicht. Versnelt het naar boven (<i>a</i> &gt; 0), dan meet ze meer.</li>
           <li><b><i>m</i> groter:</b> <i>R</i> evenredig groter.</li>

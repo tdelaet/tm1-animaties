@@ -52,11 +52,11 @@
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
     <h1>Voorbeeld 19.5 — Massa rondgeslingerd in verticaal vlak</h1>
-    <span class="kicker">Dynamica van een puntmassa · een blok aan een touw draait in een verticaal vlak rond O; gevraagd: de minimale snelheid in het hoogste punt opdat het touw gespannen blijft</span>
   </header>
 
   <div class="instructie card">
-    <p>Een blok met massa <i>m</i> wordt aan een touw met lengte <i>l</i> rondgeslingerd in een verticaal vlak rond een horizontale as in het punt O. <b>Gevraagd: bereken de minimale snelheid die het blok in het hoogste punt van de baan moet hebben opdat het touw nog net gespannen zou blijven.</b></p>
+    <p>Een blok met massa <i>m</i> wordt aan een touw met lengte <i>l</i> rondgeslingerd in een verticaal vlak rond een horizontale as in het punt O.</p>
+    <p><b>Gevraagd: bereken de minimale snelheid die het blok in het hoogste punt van de baan moet hebben opdat het touw nog net gespannen zou blijven.</b></p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -136,6 +136,7 @@ const BEW = [
 
 // ---------- figuur: situatie (boven) en vrijlichaamsdiagram in het hoogste punt (onder) ----------
 const sc = setup(document.getElementById('scene'));
+const TOON = TM1.vaKnoppen(['v', 'a'], () => drawScene());   // vinkjes: snelheid en versnelling in de situatie (a = a_n bij constante ω)
 let raak = null;
 function loepCirkel(ctx, q, r) {
   const aan = stap === 2;
@@ -174,7 +175,11 @@ function drawScene() {
   // touwlengte l
   { const m = { x: (O.x + B.x) / 2, y: (O.y + B.y) / 2 }; label(ctx, 'l', '', m.x + 10 * Math.cos(psi) + 4, m.y + 10 * Math.sin(psi) + 4, C.ink, { vec: false, size: 15 }); }
   blok(ctx, B, 0.07 * S, psi); label(ctx, 'm', '', B.x + 0.1 * S, B.y - 0.1 * S, C.ink, { vec: false, size: 15 });
-  if (stap <= 2) loepCirkel(ctx, B, Math.max(16, 0.18 * S)); else raak = null;
+  if (stap === 2) loepCirkel(ctx, B, Math.max(16, 0.18 * S)); else raak = null;
+  // snelheid (raakt aan de cirkel, in de zin van de beweging) en versnelling (naar O)
+  { const B2 = pos(psi + 1e-3), tl = Math.hypot(B2.x - B.x, B2.y - B.y) || 1, rl = Math.hypot(O.x - B.x, O.y - B.y) || 1;
+    const lv = Math.min(0.25 * S * om * l, 1.2 * S), la = Math.min(0.035 * S * om * om * l, 1.2 * S);
+    TM1.vaPijlen(ctx, B.x, B.y, { v: { x: (B2.x - B.x) / tl * lv, y: (B2.y - B.y) / tl * lv }, a: { x: (O.x - B.x) / rl * la, y: (O.y - B.y) / rl * la } }, TOON); }
   if (slap()) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('ω < √(g/l): het touw wordt bovenaan slap', W - 10, 18); ctx.restore(); }
 
   H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
@@ -195,7 +200,7 @@ function drawScene() {
     arrow(ctx, xS, cy, xS, cy + Sv * k, KS, { w: gl ? 3.6 : 2.8, head: gl ? 14 : 12 }); label(ctx, 'S', '', xS - 22, cy + Sv * k, KS, { size: gl ? 17 : 15 }); }
   else { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = KS; ctx.textAlign = 'right'; ctx.fillText('S = 0', xS - 8, cy + 0.4 * k); ctx.restore(); }
   arrow(ctx, xG, cy, xG, cy + k, KG, { w: 2.8, head: 12 }); label(ctx, 'G', '', xG + 8, cy + k, KG, { size: 15 });
-  { const la = 0.9 * k; /* versnelling: eigen schaal (andere eenheid dan de krachten) */ if (dubbelPijl(ctx, cx + 0.9 * k, cy - 0.1 * k, cx + 0.9 * k, cy - 0.1 * k + la, KA, 2)) label(ctx, 'a', '', cx + 0.9 * k + 9, cy - 0.1 * k + la, KA, { size: 15 }); }
+  { const la = 0.9 * k; /* versnelling: eigen schaal (andere eenheid dan de krachten) */ if (dubbelPijl(ctx, cx, cy, cx, cy + la, KA, 2)) label(ctx, 'a', '', cx - 24, cy + la, KA, { size: 15 }); }   // aangrijpend in de puntmassa
   ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
   if (stap === 2 && licht) {
     const b = BEW.find(x => x.id === licht.b);
@@ -296,13 +301,13 @@ function stapInhoud() {
       <p class="noot">Ga daarna naar stap 2 om het blok vrij te maken.</p>`;
   else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (blok, hoogste punt)</h4>${v(`${S_} + ${G_} = m${A_}`)}
-      <h4>Bijkomende vergelijking: kinematica</h4>
-      <p>Als goede benadering beweegt het blok in de buurt van het hoogste punt met een constante grootte van de snelheid: het heeft dan enkel een normaalversnelling (zie ook hoofdstuk 13), naar het middelpunt O, dus volgens positieve <i>y</i>:</p>
-      ${v(`${kl(C.at, 'a_t')} = 0, \\qquad ${kl(C.an, 'a_n')} = \\frac{v^2}{\\rho} = \\frac{(l\\,\\omega)^2}{l} = l\\,\\omega^2`)}
+      ${v(`${kl(KS, '\\begin{Bmatrix}0\\\\ S\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ mg\\\\ 0\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\\\ a_z\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\\\ (z)\\end{matrix}`)}
+      <h4>Bijkomende vergelijking</h4>
+      <p><b>Kinematica.</b> In het hoogste punt, met (bij benadering) een constante grootte van de snelheid: ${tx(`${kl(KA, 'a_y')} = ${kl(C.an, 'a_n')} = l\\,\\omega^2`)} (naar O, dus volgens +<i>y</i>), ${tx(`${kl(KA, 'a_x')} = ${kl(C.at, 'a_t')} = 0`)} en ${tx(`${kl(KA, 'a_z')} = 0`)}.</p>
       <h4>Voorwaarde uit de verbinding</h4>${v(`${kl(KS, 'S')} \\ge 0`)}
       <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
-      <h4>Bewegingsvergelijking in componenten</h4>${v(COMP)}
-      <p class="noot">De component volgens <i>y</i>: ${tx(`${kl(KS, 'S')} + mg = m\\,l\\,\\omega^2`)}.</p>`;
+      <p class="noot">Met de versnelling ingevuld:</p>${v(`${COMP}\\quad \\begin{matrix}(x)\\\\ (y)\\\\ (z)\\end{matrix}`)}
+      <p class="noot">De (x)- en (z)-vergelijking zijn identiek nul (0 = 0). Er blijft één vergelijking, (y), met twee grootheden die we niet kennen: de spankracht ${tx(kl(KS, 'S'))} en de hoeksnelheid <i>ω</i>. De voorwaarde ${tx(`${kl(KS, 'S')} \\ge 0`)} bepaalt de kleinste <i>ω</i> waarbij het touw gespannen blijft.</p>`;
   else if (stap === 4) h = `${v(`${kl(KS, 'S')} + mg = m\\,l\\,\\omega^2 \\;\\Rightarrow\\; ${kl(KS, 'S')} = m\\,(l\\,\\omega^2 - g)`)}
       <p>Hoe trager het blok draait, hoe kleiner de touwkracht. De minimale snelheid wordt bereikt als de spankracht in het touw nul wordt (met <span data-tex="${kl(KS, 'S')} \\ge 0"></span>):</p>
       <div class="kader">${v(`${kl(KS, 'S')} = 0 \\;\\Rightarrow\\; \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = l\\,\\omega_\\text{min} = \\sqrt{g\\,l}`)}</div>
@@ -310,6 +315,8 @@ function stapInhoud() {
   else h = `<div class="kader">${v(`${kl(KS, 'S')} = m\\,(l\\,\\omega^2 - g), \\qquad \\omega_\\text{min} = \\sqrt{\\frac{g}{l}}, \\qquad v_\\text{min} = \\sqrt{g\\,l}`)}</div>
       <p style="margin-top:10px"><b>Touwkracht <i>S</i> in het hoogste punt in functie van de hoeksnelheid <i>ω</i></b> (bij de gekozen <i>l</i>; het bolletje is de gekozen <i>ω</i>)</p>
       <canvas class="gint" id="gint"></canvas>
+      <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${TM1.drie(om)} rad/s</b></div><input type="range" id="omsl" min="1" max="7" step="0.05" value="${om}"></div>
+      <p id="res5">${res5()}</p>
       <p>De touwkracht groeit kwadratisch met <i>ω</i>. Bij <i>ω</i><sub>min</sub> = √(<i>g</i>/<i>l</i>) is <i>S</i> = 0: het gewicht levert dan juist de nodige normaalversnelling. Daaronder zou <i>S</i> negatief moeten zijn (stippellijn): dat kan niet, het touw wordt slap.</p>
       <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
@@ -319,10 +326,8 @@ function stapInhoud() {
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
         <p>Met <i>l</i> = 1.00 m is <i>ω</i><sub>min</sub> = 3.16 rad/s, ongeveer een halve omwenteling per seconde, en <i>v</i><sub>min</sub> = 3.16 m/s. Dat strookt met de ervaring van een emmer water die je rondslingert: een halve omwenteling per seconde volstaat net.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
-        <p>Verander de hoeksnelheid en de lengte van het touw:</p>
-        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${TM1.drie(om)} rad/s</b></div><input type="range" id="omsl" min="1" max="7" step="0.05" value="${om}"></div>
+        <p>Verander de lengte van het touw (de hoeksnelheid met de schuifknop onder de grafiek):</p>
         <div class="slider"><div class="lab"><span>Lengte van het touw <span class="i">l</span></span><b id="lval">${TM1.drie(l)} m</b></div><input type="range" id="lsl" min="0.3" max="${LMAX}" step="0.05" value="${l}"></div>
-        <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>l</i> groter:</b> <i>ω</i><sub>min</sub> kleiner, maar <i>v</i><sub>min</sub> groter: met een langer touw mag het blok trager ronddraaien, maar het moet een grotere snelheid hebben.</li>
           <li><b><i>ω</i> groter:</b> <i>S</i> groter: het touw moet meer kracht leveren voor de cirkelbeweging.</li>

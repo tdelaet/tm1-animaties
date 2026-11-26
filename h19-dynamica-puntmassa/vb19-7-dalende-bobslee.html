@@ -57,12 +57,11 @@
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
     <h1>Voorbeeld 19.7 — Dalende bobslee</h1>
-    <span class="kicker">Dynamica van een puntmassa · een bobslee versnelt op een rechte helling; gevraagd: de versnelling en de lengte van de helling</span>
   </header>
 
   <div class="instructie card">
     <p>Een bob met bemanning (<i>m</i> = 400 kg) rijdt met een snelheid <i>v</i><sub>0</sub> = 11.0 m/s een recht stuk van de baan op, met een helling van 15.0 % (tan <i>α</i> = 0.150). De wrijvingscoëfficiënt tussen de bob en het ijs is <i>μ</i> = 0.00500.</p>
-    <p>(a) Wat is de versnelling <span data-tex="\vec a"></span> van de bob (als vector)?<br>(b) Hoe lang moet de helling zijn om de snelheid <i>v</i><sub>1</sub> = 25.0 m/s te bereiken?<br>Bepaal <span data-tex="\vec a"></span> en <i>L</i> eerst symbolisch en reken ze dan uit.</p>
+    <p><b>Gevraagd:</b><br>(a) Wat is de versnelling <span data-tex="\vec a"></span> van de bob (als vector)?<br>(b) Hoe lang moet de helling zijn om de snelheid <i>v</i><sub>1</sub> = 25.0 m/s te bereiken?<br>Bepaal <span data-tex="\vec a"></span> en <i>L</i> eerst symbolisch en reken ze dan uit.</p>
     <p style="margin:0 0 2px;font-size:13px;color:var(--muted)">Aannames:</p>
     <ul style="font-size:13px;color:var(--muted)">
       <li>De bob is een puntmassa, zonder luchtweerstand.</li>
@@ -80,7 +79,6 @@
       <div class="card panel">
         <h2>Bediening</h2>
         <div class="btnrow" style="margin:0"><button class="primary" id="play">⏸ Pauze</button><button id="reset">↺ opnieuw</button></div>
-        <label id="vavak" style="display:flex;gap:6px;align-items:center;margin:8px 0 0;font-size:13.5px;cursor:pointer"><input type="checkbox" id="toonva"> snelheid en versnelling tekenen</label>
         <div class="note" id="bnoot"></div>
       </div>
     </div>
@@ -112,8 +110,8 @@ const herstel = () => { hel = HEL0; mu = MU0; v1 = V1; Rb = R0; };
 
 // ---------- deel 1: rechte helling, eenparig versneld vanaf v0 (na de duwstart) ----------
 const alfa = () => Math.atan(hel);
-const a1 = () => g * (Math.sin(alfa()) - mu * Math.cos(alfa()));   // a_t = g(sin α − μ cos α)
-const Lh = () => (V1 * V1 - V0 * V0) / (2 * a1());                 // v1² = v0² + 2 a_t L
+const a1 = () => g * (Math.sin(alfa()) - mu * Math.cos(alfa()));   // a = g(sin α − μ cos α)
+const Lh = () => (V1 * V1 - V0 * V0) / (2 * a1());                 // v1² = v0² + 2 a L
 const tE = () => (V1 - V0) / a1();
 const pos1 = t => { const u = Math.min(t, tE()); return V0 * u + 0.5 * a1() * u * u; };
 const snel1 = t => V0 + a1() * Math.min(t, tE());
@@ -225,6 +223,7 @@ const BEW = {
 
 // ---------- figuur ----------
 const sc = setup(document.getElementById('scene'));
+const TOON = TM1.vaKnoppen(['v', 'a'], () => drawScene(), { v: C.ink, a: KA });   // legende in de kleuren van de tekening: v zwart, a blauw (zoals in het VLD)   // vinkjes: snelheid en versnelling in de situatie (rechte baan: a = a_t)
 let raak = null;
 function loepCirkel(ctx, q, r) {
   const aan = stap === 2;
@@ -278,11 +277,11 @@ function drawScene1(ctx, W, Hall) {
     label(ctx, 'α', '', p.x + r + 5, p.y + r * Math.sin(A) / 2 + 6, '#4f5862', { vec: false, size: 14 }); }
   // snelheid (enkele pijl) en versnelling (dubbele pijl) boven de bob, langs de helling (enkel met het vinkje in de bediening)
   const yv = Math.max(1.6, 34 / S), ya_ = yv + Math.max(0.65, 22 / S);   // hoogte van de pijlen boven het ijs [m], ook op een smal scherm uit elkaar
-  if (toonVA) { const L = (v / V1) * 2.4, q0 = P(0, yv), q1 = P(L, yv);
+  if (TOON.v) { const L = (v / V1) * 2.4, q0 = P(0, yv), q1 = P(L, yv);
     if (L * S > 3) { arrow(ctx, q0.x, q0.y, q1.x, q1.y, C.ink, { w: 2, head: 10 }); label(ctx, 'v', '', q1.x + 6, q1.y + 5, C.ink, { size: 15 }); } }
-  if (toonVA && rijdt) { const q0 = P(0, ya_), q1 = P(1.6 * a1(), ya_);
+  if (TOON.a && rijdt) { const q0 = P(0, ya_), q1 = P(1.6 * a1(), ya_);
     if (dubbelPijl(ctx, q0.x, q0.y, q1.x, q1.y, KA, 2)) label(ctx, 'a', '', q1.x + 6, q1.y + 5, KA, { size: 15 }); }
-  if (stap <= 2) loepCirkel(ctx, P(0.2, 0), Math.max(15, 0.5 * S)); else raak = null;
+  if (stap === 2) loepCirkel(ctx, P(0.2, 0), Math.max(15, 0.5 * S)); else raak = null;
   ctx.restore();
   { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right';
     ctx.fillText(`t = ${TM1.drie(Math.min(t1, tE()))} s    v = ${TM1.drie((3.6 * v))} km/h`, W - 12, 18); ctx.restore(); }
@@ -307,11 +306,14 @@ function drawScene1(ctx, W, Hall) {
     arrow(ctx, cx, cy, q.x, q.y, kleur, { w: g_ ? 3.6 : 2.8, head: g_ ? 14 : 12 }); label(ctx, naam, '', q.x + lx, q.y + ly, kleur, { size: g_ ? 17 : 15 }); return true; };
   kracht(ey, ca, KN, 'N', gl('in'), 8, 4);
   kracht({ x: 0, y: 1 }, 1, KG, 'G', 0, 8, 4);
-  // wrijving in het contactpunt, langs de helling omhoog; ze is zo klein dat we ze niet op schaal tekenen
-  { const lw = 0.4 * k, e = { x: cp.x - lw * ex.x, y: cp.y - lw * ex.y };
-    if (gl('x')) arrow(ctx, cp.x, cp.y, e.x, e.y, GLOED + (0.35 + 0.5 * gl('x')) + ')', { w: 12, head: 22 });
-    arrow(ctx, cp.x, cp.y, e.x, e.y, KW, { w: gl('x') ? 3.6 : 2.8, head: 12 }); label(ctx, 'W', '', e.x - 22, e.y + 6, KW, { size: 15 });
-    ctx.save(); ctx.font = '11.5px Inter, sans-serif'; ctx.fillStyle = KW; ctx.textAlign = 'right'; ctx.fillText('niet op schaal', e.x - 28, e.y + 26); ctx.restore(); }
+  // wrijving in het contactpunt, langs de helling omhoog; ze is zo klein dat we ze niet op schaal tekenen,
+  // maar haar lengte volgt wel W = μ mg cos α: bij de gegevens uit de opgave 0.4 k, en evenredig mee met μ en cos α
+  { const lw = 0.4 * k * (mu * Math.cos(A)) / (MU0 * Math.cos(Math.atan(HEL0))), e = { x: cp.x - lw * ex.x, y: cp.y - lw * ex.y };
+    if (lw >= 4) {
+      if (gl('x')) arrow(ctx, cp.x, cp.y, e.x, e.y, GLOED + (0.35 + 0.5 * gl('x')) + ')', { w: 12, head: 22 });
+      arrow(ctx, cp.x, cp.y, e.x, e.y, KW, { w: gl('x') ? 3.6 : 2.8, head: 12 }); label(ctx, 'W', '', e.x - 22, e.y + 6, KW, { size: 15 });
+    } else TM1.formule(ctx, '$W = 0$', cp.x - 52, cp.y + 4, { color: KW, size: 12 });   // verticale wand: N = 0, dus W = 0
+    if (lw >= 4) { ctx.save(); ctx.font = '11.5px Inter, sans-serif'; ctx.fillStyle = KW; ctx.textAlign = 'right'; ctx.fillText('niet op schaal', e.x - 28, e.y + 26); ctx.restore(); } }
   ctx.save(); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
   { const l = 0.6 * k * a1();   // versnelling in het massacentrum, eigen schaal
     if (dubbelPijl(ctx, cx, cy, cx + l * ex.x, cy + l * ex.y, KA, 2)) label(ctx, 'a', '', cx + l * ex.x + 6, cy + l * ex.y - 8, KA, { size: 15 }); }
@@ -358,7 +360,7 @@ function drawScene2(ctx, W, Hall) {
   { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.fillText('rijrichting ⊗ (het blad in)', Wl + 10, 38); ctx.restore(); }
   if (b > 0.03) { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(W - Wl < 250 ? '← kromtemiddelpunt' : '← naar het kromtemiddelpunt', Wl + 10, H - 10); ctx.restore(); }
   // geen waarde van β in de doorsnede: die is net wat gevraagd wordt
-  if (stap <= 2) loepCirkel(ctx, cps, Math.max(14, 0.42 * Sd)); else raak = null;
+  if (stap === 2) loepCirkel(ctx, cps, Math.max(14, 0.42 * Sd)); else raak = null;
 
   // ----- onder: vrijlichaamsdiagram van de bob in de doorsnede, bij het inrijden van de bocht -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();
@@ -469,7 +471,7 @@ function vldFormules() {
     ? [`${kl(KN, '\\vec N')} = ${mk('in', kl(KN, 'N'))}${kl(KN, '\\begin{Bmatrix}0\\\\ 1\\end{Bmatrix}')}`, mk('uit', `${kl(KN, 'N')} \\ge 0`),
        `${kl(KW, '\\vec W')} = ${mk('x', kl(KW, 'W'))}${kl(KW, '\\begin{Bmatrix}-1\\\\ 0\\end{Bmatrix}')}`, mk('x', `${kl(KW, 'W')} = \\mu ${kl(KN, 'N')}`),
        `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}\\sin\\alpha\\\\ -\\cos\\alpha\\end{Bmatrix}')}`,
-       `${kl(KA, '\\vec a')} = ${kl(KA, '\\begin{Bmatrix}a_t\\\\ 0\\end{Bmatrix}')}`]
+       `${kl(KA, '\\vec a')} = ${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\end{Bmatrix}')}`]
     : [`${kl(KN, '\\vec N')} = ${mk('in', kl(KN, 'N'))}${kl(KN, '\\begin{Bmatrix}0\\\\ \\sin\\beta\\\\ \\cos\\beta\\end{Bmatrix}')}`, mk('uit', `${kl(KN, 'N')} \\ge 0`),
        `${kl(KW, '\\vec W')} = ${mk('x', kl(KW, 'W'))}${kl(KW, '\\begin{Bmatrix}-1\\\\ 0\\\\ 0\\end{Bmatrix}')}`, mk('x', `${kl(KW, 'W')} = \\mu ${kl(KN, 'N')}`),
        `${kl(KG, '\\vec G')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ 0\\\\ -1\\end{Bmatrix}')}`,
@@ -484,7 +486,7 @@ const STAPPEN = ['Vrij te maken puntmassa', 'Vrijmaken', 'Opstellen van vergelij
 // ---------- blok "versnelling" onder de verbinding (stap 2), één per deel ----------
 const vbKlik = () => { anim = null; licht = null; render(); };
 const VB1 = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: de bob glijdt rechtdoor de helling af', soort: 'recht', grootte: 'toe', hoek: Math.atan(HEL0), kleur: KA,
-  rijen: { grootte: { uit: `neemt toe: de bob versnelt langs de helling → <span style="color:${KA}"><i>a<sub>t</sub></i>, langs de helling</span>`, kop: 'de grootte van $v$ neemt toe  →  $a_t$ langs de helling' },
+  rijen: { grootte: { uit: `neemt toe: de bob versnelt langs de helling → <span style="color:${KA}"><i>a</i>, langs de helling</span>`, kop: 'de grootte van $v$ neemt toe  →  $a$ langs de helling' },
            richting: { uit: `blijft langs de helling (een rechte baan) → <span style="color:${KA}"><i>a<sub>n</sub></i> = 0</span>`, kop: 'de richting van $v$ blijft gelijk  →  $a_n = 0$' } },
   bijKlik: vbKlik, tik: () => drawScene() });
 const VB2 = TM1.versnelling({ na: $('proef'), titel: 'Versnelling: de bob neemt de bocht', soort: 'cirkel', grootte: 'af', zin: -1, fase: 0, straal: 'R', kleur: KA,
@@ -509,12 +511,12 @@ function proefTabel() {
 }
 function res5() {
   if (deel === 1) {
-    if (a1() <= 0) return `<i>α</i> = ${TM1.drie(deg(alfa()))}°: tan <i>α</i> ≤ <i>μ</i>, dus <i>a<sub>t</sub></i> ≤ 0: de bob komt niet in beweging.`;
-    return `<i>α</i> = ${TM1.drie(deg(alfa()))}°, <i>a<sub>t</sub></i> = ${fmtA(a1())} m/s²: de bob gaat van 11.0 naar 25.0 m/s over <i>L</i> = ${TM1.drie(Lh())} m, in ${TM1.drie(tE())} s (hoogteverschil ${TM1.drie((Lh() * Math.sin(alfa())))} m).`;
+    if (a1() <= 0) return `<i>α</i> = ${TM1.drie(deg(alfa()))}°: tan <i>α</i> ≤ <i>μ</i>, dus <i>a</i> ≤ 0: de bob komt niet in beweging.`;
+    return `<i>α</i> = ${TM1.drie(deg(alfa()))}°, <i>a</i> = ${fmtA(a1())} m/s²: de bob gaat van 11.0 naar 25.0 m/s over <i>L</i> = ${TM1.drie(Lh())} m, in ${TM1.drie(tE())} s (hoogteverschil ${TM1.drie((Lh() * Math.sin(alfa())))} m).`;
   }
   return `<i>v</i>²/(<i>gR</i>) = ${TM1.drie((an(v1) / g))}: <i>β</i> = ${TM1.drie(deg(beta(v1)))}°, <i>N</i> = ${TM1.drie(nN(v1))} <i>mg</i> = ${TM1.drie((M * g * nN(v1) / 1000))} kN, <i>a<sub>t</sub></i> = ${fmtA(aT2(v1))} m/s².`;
 }
-// grafiek in stap 5 van deel 1: a_t(α) en L(α) bij de gekozen μ, met de gekozen helling aangeduid
+// grafiek in stap 5 van deel 1: a(α) en L(α) bij de gekozen μ, met de gekozen helling aangeduid
 function grafiek1() {
   const c = $('graf1'); if (!c || !c.clientWidth) return;
   const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
@@ -524,7 +526,7 @@ function grafiek1() {
   const atA = a => g * (Math.sin(rad(a)) - mu * Math.cos(rad(a))), LA = a => (V1 * V1 - V0 * V0) / (2 * atA(a));
   const LMAX = 1000;
   const panelen = [
-    { y0: 8, f: atA, lo: 0, hi: 10.5, ticks: [0, 2, 4, 6, 8, 10], kleur: KA, naam: '$a_t$ [m/s²]', fmt: x => x.toFixed(0), waarde: a => `${fmtA(atA(a))} m/s²` },
+    { y0: 8, f: atA, lo: 0, hi: 10.5, ticks: [0, 2, 4, 6, 8, 10], kleur: KA, naam: '$a$ [m/s²]', fmt: x => x.toFixed(0), waarde: a => `${fmtA(atA(a))} m/s²` },
     { y0: 8 + ph + GAP, f: LA, lo: 0, hi: LMAX, ticks: [0, 500, 1000], kleur: '#4f5862', naam: '$L$ [m]', fmt: x => x.toFixed(0), waarde: a => `${TM1.drie(LA(a))} m` }];
   const aNu = deg(alfa());
   ctx.font = '11px Inter, sans-serif';
@@ -533,7 +535,7 @@ function grafiek1() {
     ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.fillStyle = C.muted; ctx.textAlign = 'right';
     for (const t of p.ticks) { ctx.beginPath(); ctx.moveTo(ml, Y(t) + 0.5); ctx.lineTo(w - mr, Y(t) + 0.5); ctx.stroke(); ctx.fillText(p.fmt(t), ml - 6, Y(t) + 4); }
     for (let a = 0; a <= AM; a += 15) { ctx.beginPath(); ctx.moveTo(X(a) + 0.5, p.y0); ctx.lineTo(X(a) + 0.5, p.y0 + ph); ctx.stroke(); }
-    // asnaam waar de kromme niet komt: a_t links (de kromme stijgt), L rechts (de kromme daalt)
+    // asnaam waar de kromme niet komt: a links (de kromme stijgt), L rechts (de kromme daalt)
     if (p === panelen[1]) TM1.formule(ctx, p.naam, w - mr - 6, p.y0 + 13, { color: p.kleur, size: 11.5, align: 'right' }); else TM1.formule(ctx, p.naam, ml + 6, p.y0 + 13, { color: p.kleur, size: 11.5 });
     ctx.save(); ctx.beginPath(); ctx.rect(ml, p.y0, w - ml - mr, ph); ctx.clip(); ctx.strokeStyle = p.kleur; ctx.lineWidth = 2.2; ctx.beginPath();
     let aan = false;
@@ -622,30 +624,32 @@ function stapInhoud() {
 const helTekst = () => { const a = deg(alfa()); return `${TM1.drie(a)}°` + (a < 89.95 ? ` (helling ${TM1.drie((100 * hel))} %)` : ''); };
 const vv = t_ => `<div class="vgl" data-tex="${t_.replace(/"/g, '&quot;')}"></div>`;
 const tx = t_ => `<span data-tex="${t_.replace(/"/g, '&quot;')}"></span>`;
-const N_ = kl(KN, '\\vec N'), W_ = kl(KW, '\\vec W'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a'), AT_ = kl(KA, 'a_t');
+const N_ = kl(KN, '\\vec N'), W_ = kl(KW, '\\vec W'), G_ = kl(KG, '\\vec G'), A_ = kl(KA, '\\vec a'), AT_ = kl(KA, 'a');   // deel 1: versnelling a langs de helling (deel 2 gebruikt a_t)
 const EVAL_INTRO = '<h4>Controleren van de oplossing</h4>';
 const muSlider = () => `<div class="slider"><div class="lab"><span>Wrijvingscoëfficiënt <span class="i">μ</span></span><b id="muval">${fmtMu(mu)}</b></div><input type="range" id="musl" min="0.002" max="0.01" step="0.0005" value="${mu}"></div>`;
 
 function inhoud1() {
   const KADER = `<div class="kader">${vv(`${A_} = ${kl(KA, 'g\\,(\\sin\\alpha - \\mu\\cos\\alpha)\\begin{Bmatrix}1\\\\ 0\\end{Bmatrix}')}`)}${vv(`L = \\frac{v_1^2 - v_0^2}{2\\,${AT_}} = \\frac{v_1^2 - v_0^2}{2g\\,(\\sin\\alpha - \\mu\\cos\\alpha)}`)}</div>`;
-  const COMP = `${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}-W\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\sin\\alpha\\\\ -mg\\cos\\alpha\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_t\\\\ 0\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`;
+  const COMP = `${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}-W\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\sin\\alpha\\\\ -mg\\cos\\alpha\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a\\\\ 0\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`;
   if (stap === 1) return `<p>We maken de <b>bob, samen met de bemanning</b>, vrij als één puntmassa <i>m</i> = 400 kg: maak hem los van het ijs. Zo worden de krachten van het ijs op de bob externe krachten, die voorkomen in de bewegingsvergelijking.</p>
       <p class="noot">De bemanning beweegt mee met de bob; de krachten tussen de bemanning en de bob zijn interne krachten. Ga daarna naar stap 2 om de bob vrij te maken.</p>`;
   if (stap === 2) return '';   // de loep en de proeftabel volstaan
   if (stap === 3) return `<p class="deelkop">(a) De versnelling</p>
       <h4>Bewegingsvergelijking (bob)</h4>${vv(`${N_} + ${W_} + ${G_} = m${A_}`)}
+      ${vv(`${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}-W\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\sin\\alpha\\\\ -mg\\cos\\alpha\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
+      <p class="noot">De <i>x</i>-as wijst langs de helling naar beneden, de <i>y</i>-as loodrecht op de helling omhoog.</p>
       <h4>Bijkomende vergelijkingen</h4>
-      <p><b>Kinematica: natuurlijke componenten.</b> De versnelling heeft een component langs de baan en een component naar het kromtemiddelpunt:</p>
-      ${vv(`${A_} = ${AT_}\\,\\vec e_t + \\frac{v^2}{\\rho}\\,\\vec e_n`)}
-      <p>De baan is recht: de kromtestraal <i>ρ</i> is oneindig groot, dus <i>v</i>²/<i>ρ</i> = 0. De versnelling ligt langs de helling. We kiezen de <b><i>x</i>-as langs de helling naar beneden</b>, in de zin van de snelheid (${tx('\\vec e_t')}), en de <b><i>y</i>-as loodrecht op de helling, omhoog</b>. Het gewicht maakt dan een hoek <i>α</i> met de negatieve <i>y</i>-as, met tan <i>α</i> = 0.150.</p>
-      <p><b>Wrijving: de bob glijdt.</b> Wrijving, tegengesteld aan de snelheid:</p>${vv(`${kl(KW, 'W')} = \\mu\\,${kl(KN, 'N')}`)}
+      <p><b>Kinematica.</b> De bob beweegt enkel volgens de <i>x</i>-as: ${tx(`${kl(KA, 'a_x')} = ${kl(KA, 'a')}`)} en ${tx(`${kl(KA, 'a_y')} = 0`)}.</p>
+      <p><b>Wrijving.</b> De bob glijdt: ${tx(`${kl(KW, 'W')} = \\mu\\,${kl(KN, 'N')}`)}.</p>
       <h4>Voorwaarde uit de verbinding</h4>${vv(`${kl(KN, 'N')} \\ge 0`)}
-      <h4>Bewegingsvergelijking in componenten</h4>${vv(COMP)}
-      <p class="noot">Samen met <i>W</i> = <i>μN</i> zijn dat drie vergelijkingen, voor de onbekenden <i>N</i>, <i>W</i> en <i>a<sub>t</sub></i>.</p>
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
+      <p class="noot">Met de versnelling ingevuld:</p>${vv(COMP)}
+      <p class="noot">Samen met ${tx(`${kl(KW, 'W')} = \\mu\\,${kl(KN, 'N')}`)} zijn dat drie vergelijkingen voor drie onbekenden: ${tx(kl(KN, 'N'))}, ${tx(kl(KW, 'W'))} en ${tx(AT_)}; en één voorwaarde, ${tx(`${kl(KN, 'N')} \\ge 0`)}, om achteraf te controleren.</p>
       <p class="deelkop" style="border-top:1px solid var(--line);padding-top:10px;margin-top:14px">(b) De lengte van de helling</p>
-      <p><b>Kinematica langs de helling.</b> Als <i>a<sub>t</sub></i> uit (a) constant is (na te gaan in stap 4), beweegt de bob eenparig versneld. De snelheid gaat van <i>v</i><sub>0</sub> (na de duwstart) naar <i>v</i><sub>1</sub> over een afstand <i>L</i>, op een tijdstip <i>t</i><sub>1</sub>:</p>
+      <p><b>Kinematica langs de helling.</b> Als <i>a</i> uit deelvraag (a) constant is (na te gaan in stap 4), beweegt de bob eenparig versneld. De snelheid gaat van <i>v</i><sub>0</sub> (na de duwstart) naar <i>v</i><sub>1</sub> over een afstand <i>L</i>, op een tijdstip <i>t</i><sub>1</sub>:</p>
       ${vv(`x(t) = x_0 + v_0\\,t + ${AT_}\\,\\frac{t^2}{2}, \\qquad v(t) = v_0 + ${AT_}\\,t, \\qquad x(t_1) = L, \\quad v(t_1) = v_1`)}
-      <p class="noot">Met <i>a<sub>t</sub></i> uit (a) en <i>x</i><sub>0</sub> = 0 zijn dat twee vergelijkingen, voor de onbekenden <i>L</i> en <i>t</i><sub>1</sub>.</p>`;
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
+      <p class="noot">Met <i>a</i> uit deelvraag (a) en <i>x</i><sub>0</sub> = 0: twee vergelijkingen, <i>x</i>(<i>t</i><sub>1</sub>) = <i>L</i> en <i>v</i>(<i>t</i><sub>1</sub>) = <i>v</i><sub>1</sub>, voor twee onbekenden: <i>L</i> en <i>t</i><sub>1</sub>.</p>`;
   if (stap === 4) return `${vv(COMP)}
       <h4>(y)</h4>${vv(`${kl(KN, 'N')} = mg\\cos\\alpha \\qquad\\Rightarrow\\qquad ${kl(KW, 'W')} = \\mu\\,mg\\cos\\alpha`)}
       <h4>(x)</h4>${vv(`${kl(KG, 'mg\\sin\\alpha')} - ${kl(KW, '\\mu\\,mg\\cos\\alpha')} = m\\,${AT_} \\qquad\\Rightarrow\\qquad ${AT_} = g\\,(\\sin\\alpha - \\mu\\cos\\alpha)`)}
@@ -658,41 +662,42 @@ function inhoud1() {
       ${vv(`L = \\frac{v_1^2 - v_0^2}{2\\,${AT_}} = \\frac{v_1^2 - v_0^2}{2g\\,(\\sin\\alpha - \\mu\\cos\\alpha)} = 176\\ \\text{m}`)}
       ${KADER}`;
   return `${KADER}
-      <p style="margin-top:12px"><b><i>a<sub>t</sub></i> en <i>L</i> in functie van de hellingshoek <i>α</i></b> (bij de gekozen <i>μ</i>; het bolletje is de gekozen helling)</p>
-      <canvas id="graf1" style="width:100%;height:270px;display:block;margin:6px 0 4px" aria-label="Grafiek van de tangentiële versnelling a_t en de lengte L in functie van de hellingshoek alfa"></canvas>
+      <p style="margin-top:12px"><b><i>a</i> en <i>L</i> in functie van de hellingshoek <i>α</i></b> (bij de gekozen <i>μ</i>; het bolletje is de gekozen helling)</p>
+      <canvas id="graf1" style="width:100%;height:270px;display:block;margin:6px 0 4px" aria-label="Grafiek van de tangentiële versnelling a en de lengte L in functie van de hellingshoek alfa"></canvas>
       <div class="slider"><div class="lab"><span>Hellingshoek <span class="i">α</span> <button id="helreset" style="padding:1px 8px;font-size:12px;margin-left:6px">↺ 15.0 %</button></span><b id="helval">${helTekst()}</b></div><input type="range" id="helsl" min="0" max="90" step="0.5" value="${deg(alfa())}"></div>
-      <p>Hoe steiler de helling, hoe groter <i>a<sub>t</sub></i> en hoe kleiner de benodigde lengte <i>L</i>. Bij 90° valt de bob met de valversnelling <i>g</i>.</p>
+      <p>Hoe steiler de helling, hoe groter <i>a</i> en hoe kleiner de benodigde lengte <i>L</i>. Bij 90° valt de bob met de valversnelling <i>g</i>.</p>
       ${EVAL_INTRO}
       <div class="eval"><span class="evaltag">eenheden controleren</span>
-        <p>sin <i>α</i>, cos <i>α</i> en <i>μ</i> hebben geen eenheid, dus <i>a<sub>t</sub></i> heeft de eenheid van <i>g</i>: m/s². Dan heeft <i>L</i> (een verschil van twee snelheden in het kwadraat, gedeeld door een versnelling) de eenheid ${tx('\\frac{(\\text{m/s})^2}{\\text{m/s}^2} = \\text{m}')}, die van een lengte.</p></div>
+        <p>sin <i>α</i>, cos <i>α</i> en <i>μ</i> hebben geen eenheid, dus <i>a</i> heeft de eenheid van <i>g</i>: m/s². Dan heeft <i>L</i> (een verschil van twee snelheden in het kwadraat, gedeeld door een versnelling) de eenheid ${tx('\\frac{(\\text{m/s})^2}{\\text{m/s}^2} = \\text{m}')}, die van een lengte.</p></div>
       <div class="eval"><span class="evaltag">teken controleren</span>
-        <p><i>a<sub>t</sub></i> &gt; 0 zolang sin <i>α</i> &gt; <i>μ</i> cos <i>α</i>, dus tan <i>α</i> &gt; <i>μ</i>. Met tan <i>α</i> = 0.150 en <i>μ</i> = 0.00500 is dat ruim het geval: de bob versnelt, in de zin van de snelheid. De wrijving wijst langs de helling omhoog en maakt <i>a<sub>t</sub></i> kleiner. <i>N</i> = <i>mg</i> cos <i>α</i> &gt; 0: de bob blijft op het ijs.</p></div>
+        <p><i>a</i> &gt; 0 zolang sin <i>α</i> &gt; <i>μ</i> cos <i>α</i>, dus tan <i>α</i> &gt; <i>μ</i>. Met tan <i>α</i> = 0.150 en <i>μ</i> = 0.00500 is dat ruim het geval: de bob versnelt, in de zin van de snelheid. De wrijving wijst langs de helling omhoog en maakt <i>a</i> kleiner. <i>N</i> = <i>mg</i> cos <i>α</i> &gt; 0: de bob blijft op het ijs.</p></div>
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
-        <p><i>a<sub>t</sub></i> = 1.43 m/s² is ongeveer <i>g</i>/7. De wrijving speelt op de helling nauwelijks een rol: ze verkleint de versnelling met <i>μg</i> cos <i>α</i> ≈ 0.0494 m/s², ongeveer 3.33 %.</p>
-        <p><i>L</i> = 176 m is een klein deel van een bobsleebaan (1200 à 1650 m). De bob doet er ${tx('t = (v_1 - v_0)/a_t = 9.76\\ \\text{s}')} over, en daalt daarbij ${tx('L\\sin\\alpha = 26.1\\ \\text{m}')}. Op een echte baan liggen er tussen de rechte stukken bochten, en remt de luchtweerstand (die we verwaarlozen): de bob haalt zijn topsnelheid pas verderop in de baan.</p>
-        <p>Zonder duwstart zou ${tx('L = v_1^2/(2a_t) = 218\\ \\text{m}')} zijn: de duwstart spaart 42.2 m, ongeveer 19.4 %. De lengte hangt af van ${tx('v_1^2 - v_0^2')}: (11.0 m/s)² = 121 m²/s² tegenover (25.0 m/s)² = 625 m²/s².</p></div>
+        <p><i>a</i> = 1.43 m/s² is ongeveer <i>g</i>/7. De wrijving speelt op de helling nauwelijks een rol: ze verkleint de versnelling met <i>μg</i> cos <i>α</i> ≈ 0.0494 m/s², ongeveer 3.33 %.</p>
+        <p><i>L</i> = 176 m is een klein deel van een bobsleebaan (1200 à 1650 m). De bob doet er ${tx('t = (v_1 - v_0)/a = 9.76\\ \\text{s}')} over, en daalt daarbij ${tx('L\\sin\\alpha = 26.1\\ \\text{m}')}. Op een echte baan liggen er tussen de rechte stukken bochten, en remt de luchtweerstand (die we verwaarlozen): de bob haalt zijn topsnelheid pas verderop in de baan.</p>
+        <p>Zonder duwstart zou ${tx('L = v_1^2/(2a) = 218\\ \\text{m}')} zijn: de duwstart spaart 42.2 m, ongeveer 19.4 %. De lengte hangt af van ${tx('v_1^2 - v_0^2')}: (11.0 m/s)² = 121 m²/s² tegenover (25.0 m/s)² = 625 m²/s².</p></div>
       <div class="eval"><span class="evaltag">oplossing invullen</span>
-        <p>Met <i>t</i> = 9.76 s geeft de eenparig versnelde beweging ${tx('v = v_0 + a_t\\,t = 11.0\\ \\text{m/s} + 1.43\\ \\text{m/s}^2\\cdot 9.76\\ \\text{s} = 25.0\\ \\text{m/s}')} en ${tx('x = v_0\\,t + a_t\\,\\tfrac{t^2}{2} = 11.0\\ \\text{m/s}\\cdot 9.76\\ \\text{s} + 1.43\\ \\text{m/s}^2\\cdot\\tfrac{(9.76\\ \\text{s})^2}{2} = 176\\ \\text{m}')}: de gevraagde snelheid en de gevonden lengte.</p></div>
+        <p>Met <i>t</i> = 9.76 s geeft de eenparig versnelde beweging ${tx('v = v_0 + a\\,t = 11.0\\ \\text{m/s} + 1.43\\ \\text{m/s}^2\\cdot 9.76\\ \\text{s} = 25.0\\ \\text{m/s}')} en ${tx('x = v_0\\,t + a\\,\\tfrac{t^2}{2} = 11.0\\ \\text{m/s}\\cdot 9.76\\ \\text{s} + 1.43\\ \\text{m/s}^2\\cdot\\tfrac{(9.76\\ \\text{s})^2}{2} = 176\\ \\text{m}')}: de gevraagde snelheid en de gevonden lengte.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
         <p>Verander de wrijvingscoëfficiënt hieronder, en de hellingshoek met de schuifknop onder de grafiek:</p>
         ${muSlider()}
         <p id="res5">${res5()}</p>
         <ul class="fa">
-          <li><b>Helling groter:</b> sin <i>α</i> groter, dus <i>a<sub>t</sub></i> groter en <i>L</i> korter. Bij kleine hoeken is <i>L</i> ongeveer omgekeerd evenredig met de helling: een twee keer steilere helling vraagt ongeveer de halve lengte.</li>
-          <li><b><i>μ</i> groter:</b> <i>a<sub>t</sub></i> iets kleiner, <i>L</i> iets langer. Binnen de gemeten waarden (0.004 à 0.007) verandert <i>L</i> maar enkele procent.</li>
+          <li><b>Helling groter:</b> sin <i>α</i> groter, dus <i>a</i> groter en <i>L</i> korter. Bij kleine hoeken is <i>L</i> ongeveer omgekeerd evenredig met de helling: een twee keer steilere helling vraagt ongeveer de halve lengte.</li>
+          <li><b><i>μ</i> groter:</b> <i>a</i> iets kleiner, <i>L</i> iets langer. Binnen de gemeten waarden (0.004 à 0.007) verandert <i>L</i> maar enkele procent.</li>
           <li><b><i>v</i><sub>0</sub> en <i>v</i><sub>1</sub>:</b> <i>L</i> is evenredig met <i>v</i><sub>1</sub>² − <i>v</i><sub>0</sub>². Een snellere duwstart maakt de helling korter; door de kwadraten weegt elke m/s extra bij de start zwaarder door naarmate <i>v</i><sub>0</sub> dichter bij <i>v</i><sub>1</sub> ligt.</li>
           <li><b><i>m</i>:</b> de massa komt niet voor: het gewicht en de wrijving zijn allebei evenredig met <i>m</i>. Zware en lichte bobs versnellen even sterk.</li>
         </ul></div>
       <div class="eval"><span class="evaltag">bijzondere gevallen</span>
-        <p><b>Geen wrijving</b> (<i>μ</i> = 0): <i>a<sub>t</sub></i> = <i>g</i> sin <i>α</i> en ${tx('L = \\frac{v_1^2 - v_0^2}{2g\\sin\\alpha} = 170\\ \\text{m}')}: iets korter.</p>
-        <p><b>Geen duwstart</b> (<i>v</i><sub>0</sub> = 0): ${tx('L = \\frac{v_1^2}{2\\,a_t} = 218\\ \\text{m}')}.</p>
+        <p><b>Geen wrijving</b> (<i>μ</i> = 0): <i>a</i> = <i>g</i> sin <i>α</i> en ${tx('L = \\frac{v_1^2 - v_0^2}{2g\\sin\\alpha} = 170\\ \\text{m}')}: iets korter.</p>
+        <p><b>Geen duwstart</b> (<i>v</i><sub>0</sub> = 0): ${tx('L = \\frac{v_1^2}{2\\,a} = 218\\ \\text{m}')}.</p>
         <p><b><i>v</i><sub>0</sub> = <i>v</i><sub>1</sub></b>: <i>L</i> = 0, er is geen helling nodig.</p>
-        <p><b>Verticale wand</b> (<i>α</i> = 90°): <i>N</i> = 0, dus ook <i>W</i> = 0, en <i>a<sub>t</sub></i> = <i>g</i>: een vrije val.</p>
-        <p><b>tan <i>α</i> = <i>μ</i></b> (<i>α</i> = 0.286°): <i>a<sub>t</sub></i> = 0. De bob behoudt de snelheid van de duwstart en haalt 25.0 m/s nooit: <i>L</i> → ∞.</p>
-        <p><b>Horizontaal stuk</b> (<i>α</i> = 0): <i>a<sub>t</sub></i> = −<i>μg</i> = −0.0500 m/s² voor een bob die al glijdt: hij vertraagt, en zou vanaf 90.0 km/h pas na 500 s stilstaan.</p></div>`;
+        <p><b>Verticale wand</b> (<i>α</i> = 90°): <i>N</i> = 0, dus ook <i>W</i> = 0, en <i>a</i> = <i>g</i>: een vrije val.</p>
+        <p><b>tan <i>α</i> = <i>μ</i></b> (<i>α</i> = 0.286°): <i>a</i> = 0. De bob behoudt de snelheid van de duwstart en haalt 25.0 m/s nooit: <i>L</i> → ∞.</p>
+        <p><b>Horizontaal stuk</b> (<i>α</i> = 0): <i>a</i> = −<i>μg</i> = −0.0500 m/s² voor een bob die al glijdt: hij vertraagt, en zou vanaf 90.0 km/h pas na 500 s stilstaan.</p></div>`;
 }
 
 function inhoud2() {
+  const AT_ = kl(KA, 'a_t');   // in de bocht: tangentiële versnelling
   const BE = `\\beta = \\operatorname{atan}\\frac{v^2}{g\\,R}`, AT = `${AT_} = -\\mu\\sqrt{g^2 + \\left(\\frac{v^2}{R}\\right)^2}`;
   const KADER = `<div class="kader">${vv(BE)}${vv(AT)}</div>`;
   const COMP = `${kl(KN, '\\begin{Bmatrix}0\\\\ N\\sin\\beta\\\\ N\\cos\\beta\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}-W\\\\ 0\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ 0\\\\ -mg\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_t\\\\ v^2/R\\\\ 0\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\\\ (z)\\end{matrix}`;
@@ -755,7 +760,6 @@ function inhoud2() {
 
 function bediening() {
   // enkel de rechte helling (deel 1); de volledige versie met de bocht staat in uitbreidingen/
-  $('vavak').style.display = 'flex'; $('toonva').checked = toonVA;
   const eigen = hel !== HEL0 || mu !== MU0 || v1 !== V1 || Rb !== R0;
   $('bnoot').innerHTML = (deel === 1
     ? `De bob rijdt de helling op met 11.0 m/s en bereikt 25.0 m/s na ${a1() > 0 ? TM1.drie(tE()) : '∞'} s. De animatie loopt aan echte snelheid.`
@@ -771,7 +775,6 @@ window.addEventListener('load', () => { vldFormules(); stapInhoud(); document.qu
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
 $('reset').onclick = () => { t1 = 0; s2 = L2; drawScene(); if (deel === 2 && stap === 5) grafiek(); };   // ook de grafiek springt terug naar de startsnelheid
-$('toonva').onchange = e => { toonVA = e.target.checked; s2 = L2; drawScene(); };
 sc.c.addEventListener('click', e => {
   if (!raak || stap === 2) return; const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
   if (Math.hypot(raak.x - x, raak.y - y) < raak.r * 1.4) { stap = 2; anim = null; licht = null; render(); }

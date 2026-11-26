@@ -53,11 +53,11 @@
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
     <h1>Voorbeeld 19.1 — Slinger met kegelbeweging</h1>
-    <span class="kicker">Dynamica van een puntmassa · een puntmassa aan een kabel draait met hoeksnelheid ω rond de verticale as; gevraagd: het verband tussen de hoek θ en ω</span>
   </header>
 
   <div class="instructie card">
-    <p>Een puntmassa <i>m</i> volgt een cirkelvormige baan in een horizontaal vlak, met hoeksnelheid <i>ω</i> rond de verticale as. Ze hangt aan een massaloze kabel met lengte <i>L</i>, in een wrijvingsloos bolgewricht, in het zwaartekrachtveld <span data-tex="\vec g"></span>. De kabel sluit een hoek <i>θ</i> in met de as van symmetrie. <b>Bepaal het verband tussen de hoek <i>θ</i> en de hoeksnelheid <i>ω</i>.</b></p>
+    <p>Een puntmassa <i>m</i> volgt een cirkelvormige baan in een horizontaal vlak, met hoeksnelheid <i>ω</i> rond de verticale as. Ze hangt aan een massaloze kabel met lengte <i>L</i>, in een wrijvingsloos bolgewricht, in het zwaartekrachtveld <span data-tex="\vec g"></span>. De kabel sluit een hoek <i>θ</i> in met de as van symmetrie.</p>
+    <p><b>Gevraagd: bepaal het verband tussen de hoek <i>θ</i> en de hoeksnelheid <i>ω</i>.</b></p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -130,9 +130,10 @@ function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
   ctx.beginPath(); ctx.moveTo(x1 - ux * h + nx * h * 0.75, y1 - uy * h + ny * h * 0.75); ctx.lineTo(x1, y1); ctx.lineTo(x1 - ux * h - nx * h * 0.75, y1 - uy * h - ny * h * 0.75); ctx.stroke();
   ctx.restore(); return true;
 }
-function assen2(ctx, x, y, Lp = 26) {
+function assen2(ctx, x, y, Lp = 26) {   // x naar de as, y omhoog, z loodrecht op het vlak van de kabel (naar de kijker, schuin getekend)
   arrow(ctx, x, y, x + Lp, y, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'x', '', x + Lp + 4, y + 5, '#6b737d', { vec: false, size: 13 });
   arrow(ctx, x, y, x, y - Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'y', '', x - 13, y - Lp + 4, '#6b737d', { vec: false, size: 13 });
+  arrow(ctx, x, y, x - 0.45 * Lp, y + 0.3 * Lp, '#6b737d', { w: 1.3, head: 7 }); label(ctx, 'z', '', x - 0.45 * Lp - 12, y + 0.3 * Lp + 6, '#6b737d', { vec: false, size: 13 });
 }
 function ophanging(ctx, q, s = 1) {
   ctx.save(); ctx.fillStyle = '#7a828c'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - 8 * s, q.y - 12 * s); ctx.lineTo(q.x + 8 * s, q.y - 12 * s); ctx.closePath(); ctx.fill();
@@ -151,6 +152,7 @@ const BEW = [
 
 // ---------- figuur: situatie (boven) en vrijlichaamsdiagram (onder) ----------
 const sc = setup(document.getElementById('scene'));
+const TOON = TM1.vaKnoppen(['v', 'a'], () => drawScene());   // vinkjes: snelheid en versnelling in de situatie (a = a_n, want a_t = 0)
 let raak = null;
 function loepCirkel(ctx, q, r) {
   const aan = stap === 2;
@@ -207,7 +209,13 @@ function drawScene() {
     label(ctx, 'ω', '', pts[15].x - 6, pts[15].y - 10, KW, { vec: false, size: 16 });
   }
   bol(ctx, pm, 7); label(ctx, 'm', '', pm.x - 18, pm.y + 18, '#c2410c', { vec: false, size: 16 });
-  if (stap <= 2) loepCirkel(ctx, pm, 0.17 * S); else raak = null;
+  // snelheid (raakt aan de cirkel) en versnelling (naar de as): lengtes t.o.v. de waarden bij ω = 3.50 rad/s
+  if (R > 1e-3) {
+    const kv = 0.6 / (W0 * L), ka = 0.6 / (W0 * W0 * L), raak = V(Math.sin(phi), 0, Math.cos(phi));
+    const sd = w => { const q = P(add(M, w)); return { x: q.x - pm.x, y: q.y - pm.y }; };
+    TM1.vaPijlen(ctx, pm.x, pm.y, { v: sd(mul(raak, om * R * kv)), a: sd(mul(hor, -om * om * R * ka)) }, TOON);
+  }
+  if (stap === 2) loepCirkel(ctx, pm, 0.17 * S); else raak = null;
   if (th === 0) { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right'; ctx.fillText('ω ≤ √(g/L): geen kegelbeweging', W - 10, 18); ctx.restore(); }
 
   H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
@@ -229,7 +237,7 @@ function drawScene() {
   label(ctx, 'F', 'kabel', tipF.x + 8, tipF.y + 6, KF, { size: gl ? 17 : 15 });
   arrow(ctx, cx, cy, cx, cy + k, KG, { w: 2.8, head: 12 }); label(ctx, 'm', '', cx + 8, cy + k + 2, KG, { vec: false, size: 15 }); label(ctx, 'g', '', cx + 21, cy + k + 2, KG, { size: 15 });
   // versnelling (dubbele pijl), naar de as
-  if (al > 1e-3) { const x0 = cx + 18; if (dubbelPijl(ctx, x0, cy, x0 + al * k, cy, KA, 2)) label(ctx, 'a', '', x0 + al * k + 8, cy + 6, KA, { size: 15 }); }
+  if (al > 1e-3) { const x0 = cx; if (dubbelPijl(ctx, x0, cy, x0 + al * k, cy, KA, 2)) label(ctx, 'a', '', x0 + al * k + 8, cy + 6, KA, { size: 15 }); }   // aangrijpend in de puntmassa
   bol(ctx, pmv, 7); label(ctx, 'm', '', cx - 20, cy - 8, '#c2410c', { vec: false, size: 16 });
   // richting van de as (naar rechts) ter oriëntatie
   ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.fillText('→ naar de as', W - 12, cy - 18); ctx.restore();
@@ -237,7 +245,7 @@ function drawScene() {
     const b = BEW.find(x => x.id === licht.b);
     if (b && !b.verh) { const s = b.uit.replace(/<[^>]+>/g, ''); ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = '#2f7d3a'; ctx.textAlign = 'center'; ctx.fillText(s.length > 70 ? s.slice(0, s.indexOf('→')).trim() : s, W / 2, Hall - 10); ctx.restore(); }
   }
-  assen2(ctx, 28, Hall - 22);
+  assen2(ctx, 40, Hall - 40);   // hoger, zodat de schuine z-as in beeld blijft
 }
 
 // ---------- loep op de verbinding kabel–puntmassa (stap 2) ----------
@@ -287,10 +295,10 @@ function vldFormules() {
   const el = document.getElementById('vldf'); if (!window.katex) return;
   if (stap === 1) { el.innerHTML = ''; return; }
   const mk = (id, s) => (stap === 2 && licht && licht.b === id ? `\\colorbox{#ffe08a}{$${s}$}` : s);
-  const delen = [`${kl(KF, '\\vec F_\\text{kabel}')} = ${mk('weg', kl(KF, 'F'))}${kl(KF, '\\begin{Bmatrix}\\sin\\theta\\\\ \\cos\\theta\\end{Bmatrix}')}`,
+  const delen = [`${kl(KF, '\\vec F_\\text{kabel}')} = ${mk('weg', kl(KF, 'F'))}${kl(KF, '\\begin{Bmatrix}\\sin\\theta\\\\ \\cos\\theta\\\\ 0\\end{Bmatrix}')}`,
     mk('naar', `${kl(KF, 'F')} \\ge 0`),
-    `${kl(KG, 'm\\vec g')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ -1\\end{Bmatrix}')}`,
-    `${kl(KA, '\\vec a')} = ${kl(KA, 'a\\begin{Bmatrix}1\\\\ 0\\end{Bmatrix}')}`];
+    `${kl(KG, 'm\\vec g')} = ${kl(KG, 'mg\\begin{Bmatrix}0\\\\ -1\\\\ 0\\end{Bmatrix}')}`,
+    `${kl(KA, '\\vec a')} = ${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\\\ a_z\\end{Bmatrix}')}`];
   if (stap === 2) for (let i = 0; i < delen.length; i++) if (delen[i].includes('\\vec a')) delen[i] = VB.mk(GLOEI, delen[i]);
   el.innerHTML = delen.map(() => '<span></span>').join(''); [...el.children].forEach((s, i) => render1(s, delen[i]));
 }
@@ -331,14 +339,17 @@ function stapInhoud() {
       <p class="noot">Ga daarna naar stap 2 om de puntmassa vrij te maken.</p>`;
   else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (puntmassa)</h4>${v(BEWV)}
+      ${v(`${kl(KG, '\\begin{Bmatrix}0\\\\ -mg\\\\ 0\\end{Bmatrix}')} + ${kl(KF, '\\begin{Bmatrix}F\\sin\\theta\\\\ F\\cos\\theta\\\\ 0\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\\\ a_z\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\\\ (z)\\end{matrix}`)}
+      <p class="noot">De <i>x</i>-as wijst horizontaal naar de as, de <i>y</i>-as omhoog en de <i>z</i>-as loodrecht op het vlak van de kabel, langs de snelheid.</p>
       <h4>Bijkomende vergelijking: kinematica</h4>
-      <p>De puntmassa beschrijft een cirkel in een horizontaal vlak, met straal ${t('\\rho = L\\sin\\theta')} en constante hoeksnelheid <i>ω</i>, dus met een constante grootte van de snelheid ${t('v = \\omega L\\sin\\theta')}. In natuurlijke componenten:</p>
-      ${v(`${kl(C.at, 'a_t')} = \\frac{\\mathrm{d}v}{\\mathrm{d}t} = 0, \\qquad ${kl(C.an, 'a_n')} = \\frac{v^2}{\\rho} = \\frac{(\\omega L\\sin\\theta)^2}{L\\sin\\theta} = \\omega^2 L\\sin\\theta`)}
-      <p class="noot">De normaalversnelling is naar het middelpunt van de cirkel gericht, dus horizontaal naar de as: ${t(`${A_} = ${kl(KA, '\\omega^2 L\\sin\\theta\\begin{Bmatrix}1\\\\ 0\\end{Bmatrix}')}`)}.</p>
+      <p>De puntmassa beschrijft een cirkel in een horizontaal vlak (het <i>xz</i>-vlak), met straal ${t('\\rho = L\\sin\\theta')} en constante hoeksnelheid <i>ω</i>, dus met een constante grootte van de snelheid ${t('v = \\omega L\\sin\\theta')}:</p>
+      ${v(`${kl(KA, 'a_x')} = ${kl(C.an, 'a_n')} = \\frac{v^2}{\\rho} = \\frac{(\\omega L\\sin\\theta)^2}{L\\sin\\theta} = \\omega^2 L\\sin\\theta, \\qquad ${kl(KA, 'a_z')} = ${kl(C.at, 'a_t')} = \\frac{\\mathrm{d}v}{\\mathrm{d}t} = 0, \\qquad ${kl(KA, 'a_y')} = 0`)}
+      <p class="noot"><i>a<sub>y</sub></i> = 0 omdat de beweging in het horizontale <i>xz</i>-vlak blijft; de normaalversnelling wijst naar het middelpunt van de cirkel, dus volgens <i>x</i>.</p>
       <h4>Voorwaarde uit de verbinding</h4>${v(`${kl(KF, 'F')} \\ge 0`)}
       <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
-      <h4>Bewegingsvergelijking in componenten</h4>${v(COMP)}
-      <p class="noot">Twee vergelijkingen voor twee onbekenden: de kabelkracht <i>F</i> en de hoek <i>θ</i> (bij gegeven <i>ω</i>).</p>`;
+      <p class="noot">Met de versnelling ingevuld is de (z)-vergelijking identiek nul (0 = 0). Er blijven twee vergelijkingen:</p>
+      ${v(`${COMP}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
+      <p class="noot">voor twee onbekenden: de kabelkracht ${t(kl(KF, 'F'))} en de hoek <i>θ</i> (bij gegeven <i>ω</i>); en één voorwaarde, ${t(`${kl(KF, 'F')} \\ge 0`)}, om achteraf te controleren.</p>`;
   else if (stap === 4) h = `${v(COMP)}
       <h4>y-component</h4>${v(`${kl(KF, 'F')}\\cos\\theta - mg = 0 \\;\\Rightarrow\\; ${kl(KF, 'F_\\text{kabel}')} = \\frac{mg}{\\cos\\theta}`)}
       <h4>x-component</h4>${v(`${kl(KF, 'F')}\\sin\\theta = m\\,\\omega^2 L\\sin\\theta \\;\\Rightarrow\\; ${kl(KF, 'F')} = m\\,\\omega^2 L \\quad (\\sin\\theta \\neq 0)`)}
@@ -349,6 +360,8 @@ function stapInhoud() {
     h = `<div class="kader">${v(`\\theta = \\operatorname{acos}\\frac{g}{L\\,\\omega^2}, \\qquad ${kl(KF, 'F_\\text{kabel}')} = m\\,\\omega^2 L`)}</div>
       <p style="margin-top:10px"><b><i>θ</i> en <i>F</i><sub>kabel</sub> in functie van de hoeksnelheid <i>ω</i></b> (bij <i>L</i> = 1.00 m; het bolletje is de gekozen <i>ω</i>)</p>
       <canvas class="gint" id="gint"></canvas><canvas class="gint" id="gint2"></canvas>
+      <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${TM1.drie(om)} rad/s</b></div><input type="range" id="omsl" min="1" max="8" step="0.05" value="${om}"></div>
+      <p id="res5">${res5()}</p>
       <p>Onder <i>ω</i> = √(<i>g</i>/<i>L</i>) = ${TM1.drie(wg)} rad/s is er geen kegelbeweging: de massa hangt verticaal (<i>θ</i> = 0, <i>F</i><sub>kabel</sub> = <i>mg</i>). Daarboven neemt <i>θ</i> eerst snel toe en nadert dan 90°, zonder het te bereiken. De kabelkracht groeit kwadratisch met <i>ω</i>.</p>
       <p>We evalueren de oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
@@ -358,9 +371,7 @@ function stapInhoud() {
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
         <p>Met <i>L</i> = 1.00 m en <i>ω</i> = 3.50 rad/s (ongeveer een halve omwenteling per seconde) is <i>θ</i> = 35.3° en <i>F</i><sub>kabel</sub> = 1.22 <i>mg</i>: een duidelijke maar geen extreme uitwijking, en een kabelkracht iets groter dan het gewicht.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
-        <p>Verander de hoeksnelheid:</p>
-        <div class="slider"><div class="lab"><span>Hoeksnelheid <span class="i">ω</span></span><b id="omval">${TM1.drie(om)} rad/s</b></div><input type="range" id="omsl" min="1" max="8" step="0.05" value="${om}"></div>
-        <p id="res5">${res5()}</p>
+        <p>Verander de hoeksnelheid met de schuifknop onder de grafieken.</p>
         <ul class="fa">
           <li><b><i>ω</i> groter:</b> het argument van acos wordt kleiner, dus <i>θ</i> groter: de kabel komt horizontaler. <i>F</i><sub>kabel</sub> neemt toe met <i>ω</i>².</li>
           <li><b><i>L</i> groter:</b> eveneens een grotere <i>θ</i> en een grotere kabelkracht.</li>

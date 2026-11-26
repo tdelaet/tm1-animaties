@@ -129,7 +129,8 @@ TM1.catalogus = [
       { id: '19.5', titel: 'Massa rondgeslingerd in verticaal vlak', status: 'klaar' },
       { id: '19.6', titel: 'Tweede postulaat als differentiaalvergelijking', status: 'klaar' },
       { id: '19.7', titel: 'Dalende bobslee', status: 'klaar', opmerking: 'uit les groep B' },
-      { id: '19.8', titel: 'Massa in geleiding met veer', status: 'klaar', opmerking: 'uit les groep B' }]},
+      { id: '19.8', titel: 'Massa in geleiding met veer', status: 'klaar', opmerking: 'uit les groep B' },
+      { id: '19.9', titel: 'Pakje glijdt van transportband', status: 'klaar', opmerking: 'uit les groep B' }]},
     { nr: 20, titel: 'Dynamica van star lichaam in vlakke beweging', map: 'h20-dynamica-star-lichaam', items: [
       { id: '20.1', titel: 'Traagheidsmoment van een halter' },
       { id: '20.2', titel: 'Traagheidsmoment van een dunne staaf' },
@@ -196,11 +197,9 @@ TM1.oefenzittingen = [
 /* Uitbreidingen: uitgebreidere versies van voorbeelden, bewaard voor later. Ze staan (nog) niet in het overzicht.
    - 19.7 met deel 2 (de bob in een horizontale bocht, hoog op de ijswand): de hoek β van de wand en de vertraging a_t
      in functie van v. Uit het overzicht gehaald omdat de bob in de bocht door het vertragen zakt, wat de vraagstelling
-     (constante hoogte) en de aanname over de wrijving minder zuiver maakt.
-   - 19.9 een pakje glijdt van een transportband (uit les groep B): voorlopig uit het overzicht gehaald. */
+     (constante hoogte) en de aanname over de wrijving minder zuiver maakt. */
 TM1.uitbreidingen = [
-  { id: '19.7', titel: 'Een bobslee daalt en neemt een bocht', pad: 'uitbreidingen/vb19-7-een-bobslee-daalt-en-neemt-een-bocht.html' },
-  { id: '19.9', titel: 'Een pakje glijdt van een transportband', pad: 'uitbreidingen/vb19-9-een-pakje-glijdt-van-een-transportband.html' }
+  { id: '19.7', titel: 'Een bobslee daalt en neemt een bocht', pad: 'uitbreidingen/vb19-7-een-bobslee-daalt-en-neemt-een-bocht.html' }
 ];
 
 /** Maakt van een titel een bestandsnaamdeel: kleine letters, zonder accenten of leestekens. */

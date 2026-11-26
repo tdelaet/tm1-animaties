@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voorbeeld 19.9 – Een pakje glijdt van een transportband</title>
+<title>Voorbeeld 19.9 – Pakje glijdt van transportband</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
@@ -55,12 +55,12 @@
 <div class="wrap">
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
-    <h1>Voorbeeld 19.9 — Een pakje glijdt van een transportband</h1>
-    <span class="kicker">Dynamica van een puntmassa · een pakje op een transportband gaat over een trommel; gevraagd: bij welke hoek begint het pakje net van de band te glijden?</span>
+    <h1>Voorbeeld 19.9 — Pakje glijdt van transportband</h1>
   </header>
 
   <div class="instructie card">
-    <p>Een transportband loopt met een constante snelheid <i>v</i><sub>band</sub> = 0.850 m/s over een trommel met straal <i>R</i> = 0.200 m. Een pakje met massa <i>m</i> = 0.100 kg ligt op de band; de wrijvingscoëfficiënt tussen pakje en band is <i>μ</i> = 1.00. Het pakje volgt de band over de trommel, tot het begint te glijden en in de bak valt. <b>Gevraagd: waar begint het pakje net van de band te glijden (bij welke hoek <i>θ</i>, gemeten vanaf de top van de trommel)?</b></p>
+    <p>Een transportband loopt met een constante snelheid <i>v</i><sub>band</sub> = 0.850 m/s over een trommel met straal <i>R</i> = 0.200 m. Een pakje met massa <i>m</i> = 0.100 kg ligt op de band; de wrijvingscoëfficiënt tussen pakje en band is <i>μ</i> = 1.00. Het pakje volgt de band over de trommel, tot het begint te glijden en in de bak valt.</p>
+    <p><b>Gevraagd: waar begint het pakje net van de band te glijden (bij welke hoek <i>θ</i>, gemeten vanaf de top van de trommel)?</b></p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -72,7 +72,8 @@
     <div class="side">
       <div class="card panel">
         <h2>Bediening</h2>
-        <div class="btnrow" style="margin:0"><button class="primary" id="play">⏸ Pauze</button><button id="reset">↺ opnieuw</button></div>
+        <div class="btnrow" style="margin:0;align-items:center"><button class="primary" id="play">⏸ Pauze</button><button id="reset">↺ opnieuw</button>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;flex:1;min-width:150px"><span class="i">t</span><input type="range" id="tijdsl" min="0" max="1000" step="1" value="0" style="flex:1"><b id="tijdval" style="font:500 12.5px 'JetBrains Mono',monospace;min-width:52px">0.00 s</b></label></div>
         <div class="note">De animatie is 4 keer vertraagd. Het vrijlichaamsdiagram toont het pakje in de stand waar het net begint te glijden. In stap 5 kun je <i>v</i><sub>band</sub> en <i>μ</i> veranderen.</div>
       </div>
     </div>
@@ -114,7 +115,7 @@ function thetaC() {
 // ---------- baan van het pakje (wereld: x naar rechts, y omhoog; trommelas in de oorsprong) ----------
 // 1: op de vlakke band naar de trommel; 2: met de band mee over de trommel tot θc; 3: glijden over de trommel
 // (kinetische wrijving μN tegen de beweging t.o.v. de band) tot N = 0; 4: vrije val
-const X0 = -0.45;
+const X0 = -0.30;   // begin van de vlakke band (kort, zodat de trommel groot in beeld komt)
 let baan = null;
 function maakBaan() {
   const pts = [], dt = 0.002, tc = thetaC(), va = Math.max(v, 0.05);   // va: animatiesnelheid (een stilstaande band zou het pakje nooit tot de trommel brengen)
@@ -141,7 +142,7 @@ function maakBaan() {
   pts.push({ t: tt, x, y: Math.max(y, BAK.bodem + HP), th, fase: 5 });
   baan = { pts, T: tt + 0.35 };
 }
-const BAK = { x0: 0.26, x1: 0.62, top: -0.16, bodem: -0.34 };
+const BAK = { x0: 0.23, x1: 0.44, top: -0.10, bodem: -0.20 };   // kleine bak vlak onder de trommel (vangt het pakje voor v_band tot 1.41 m/s)
 function stand(tt) {
   const p = baan.pts; if (tt <= 0) return p[0]; if (tt >= p[p.length - 1].t) return p[p.length - 1];
   let lo = 0, hi = p.length - 1; while (hi - lo > 1) { const md = (lo + hi) >> 1; if (p[md].t <= tt) lo = md; else hi = md; } return p[lo];
@@ -177,6 +178,7 @@ const BEW = [
 
 // ---------- figuur: situatie (boven) en vrijlichaamsdiagram (onder) ----------
 const sc = setup(document.getElementById('scene'));
+const TOON = TM1.vaKnoppen(['v', 'a', 'at', 'an'], () => drawScene());   // vinkjes: snelheid, versnelling en haar natuurlijke componenten
 let raak = null;
 function loepCirkel(ctx, q, r) {
   const aan = stap === 2;
@@ -193,18 +195,18 @@ function drawScene() {
   const titel = (s, y) => { ctx.save(); ctx.font = '600 11px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(s.toUpperCase(), 12, y); ctx.restore(); };
   // ----- boven: situatie -----
   titel('Situatie', 18);
-  const S = Math.min(W / 1.32, (H - 40) / 0.78), ox = W * 0.47, oy = 32 + 0.36 * S;
+  const S = Math.min(W / 0.95, (H - 40) / 0.58), ox = W * 0.44, oy = 32 + 0.30 * S;   // trommel zo groot mogelijk
   const P = (x, y) => ({ x: ox + x * S, y: oy - y * S });
   // trommel (draait mee met de band) en band
   const c0 = P(0, 0), rr = R * S, rot = (v / R) * t;
   ctx.save(); ctx.fillStyle = '#5b9bd5'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(c0.x, c0.y, rr, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 1.2; for (let k = 0; k < 6; k++) { const a = rot + k * Math.PI / 3; ctx.beginPath(); ctx.moveTo(c0.x, c0.y); ctx.lineTo(c0.x + 0.85 * rr * Math.sin(a), c0.y - 0.85 * rr * Math.cos(a)); ctx.stroke(); }
   ctx.fillStyle = '#1f2a37'; ctx.beginPath(); ctx.arc(c0.x, c0.y, 3.5, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
-  ctx.save(); ctx.strokeStyle = '#1f2a37'; ctx.lineWidth = 2; ctx.beginPath(); const xl = P(-0.62, 0).x;
+  ctx.save(); ctx.strokeStyle = '#1f2a37'; ctx.lineWidth = 2; ctx.beginPath(); const xl = P(-0.38, 0).x;
   ctx.moveTo(xl, c0.y - rr); ctx.lineTo(c0.x, c0.y - rr); ctx.arc(c0.x, c0.y, rr, -Math.PI / 2, Math.PI / 2); ctx.lineTo(xl, c0.y + rr); ctx.stroke(); ctx.restore();
   // pijlen v_band
-  { const a = P(-0.5, R + 0.05), b = P(-0.33, R + 0.05); arrow(ctx, a.x, a.y, b.x, b.y, C.ink, { w: 1.6, head: 8 }); label(ctx, 'v', 'band', b.x + 6, b.y + 5, C.ink, { vec: false, size: 13 });
-    const c = P(-0.33, -R - 0.06), d = P(-0.5, -R - 0.06); arrow(ctx, c.x, c.y, d.x, d.y, C.ink, { w: 1.6, head: 8 }); }
+  { const a = P(-0.35, R + 0.05), b = P(-0.22, R + 0.05); arrow(ctx, a.x, a.y, b.x, b.y, C.ink, { w: 1.6, head: 8 }); label(ctx, 'v', 'band', b.x + 6, b.y + 5, C.ink, { vec: false, size: 13 });
+    const c = P(-0.22, -R - 0.06), d = P(-0.35, -R - 0.06); arrow(ctx, c.x, c.y, d.x, d.y, C.ink, { w: 1.6, head: 8 }); }
   // bak
   { const q = [P(BAK.x0, BAK.top), P(BAK.x0, BAK.bodem), P(BAK.x1, BAK.bodem), P(BAK.x1, BAK.top)], w = 0.03 * S;
     ctx.save(); ctx.fillStyle = '#6fa8dc'; ctx.strokeStyle = '#2f5d80'; ctx.lineWidth = 1.2;
@@ -220,7 +222,13 @@ function drawScene() {
   }
   // pakje
   const st = stand(t), pq = P(st.x, st.y); pakje(ctx, pq, HP * S, st.fase <= 3 ? st.th : st.th);
-  if (stap <= 2 && st.fase <= 2) loepCirkel(ctx, pq, Math.max(15, 0.09 * S)); else raak = null;
+  if (stap === 2 && st.fase <= 2) loepCirkel(ctx, pq, Math.max(15, 0.09 * S)); else raak = null;
+  // snelheid en versnelling (numeriek uit de baan), met de versnelling ook opgesplitst in a_t (langs v) en a_n (loodrecht erop)
+  { const dt = 0.02, p0 = stand(Math.max(0, t - dt)), p1 = stand(t + dt), v = { x: (p1.x - p0.x) / (2 * dt), y: (p1.y - p0.y) / (2 * dt) };
+    const a = { x: (p1.x - 2 * st.x + p0.x) / (dt * dt), y: (p1.y - 2 * st.y + p0.y) / (dt * dt) }, vl = Math.hypot(v.x, v.y);
+    const e = vl > 1e-6 ? { x: v.x / vl, y: v.y / vl } : { x: 0, y: 0 }, aT = a.x * e.x + a.y * e.y, at_ = { x: aT * e.x, y: aT * e.y }, an_ = { x: a.x - at_.x, y: a.y - at_.y };
+    const kv = 0.25 * S, ka = 0.04 * S, cap = (q, k, m) => { const l = Math.hypot(q.x, q.y) * k, f = l > m ? m / l : 1; return { x: q.x * k * f, y: -q.y * k * f }; };   // wereld (y omhoog) → scherm
+    TM1.vaPijlen(ctx, pq.x, pq.y, { v: cap(v, kv, 0.5 * S), a: cap(a, ka, 0.5 * S), at: cap(at_, ka, 0.5 * S), an: cap(an_, ka, 0.5 * S) }, TOON); }
   { const s = st.fase <= 1 ? 'op de band' : st.fase === 2 ? 'volgt de band over de trommel' : st.fase === 3 ? 'glijdt over de band' : 'valt in de bak';
     ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = st.fase >= 3 ? '#c0392b' : C.accent; ctx.textAlign = 'right'; ctx.fillText(`pakje ${s}`, W - 12, 18); ctx.restore(); }
 
@@ -242,7 +250,7 @@ function drawScene() {
   kracht(ey, Nv, KN, 'N', gl('in'), 6, -4);
   kracht({ x: -ex.x, y: -ex.y }, Wv, KW, 'W', gl('x'), -22, -4);
   kracht({ x: 0, y: 1 }, 1, KG, 'G', 0, 8, 4);
-  { const L = 0.8 * k, x0 = cx - ey.x * 18, y0 = cy - ey.y * 18;
+  { const L = 0.8 * k, x0 = cx, y0 = cy;   // aangrijpend in de puntmassa
     const gA = stap === 2 && vlicht === 'richting' ? (vanim ? 0.5 + 0.5 * Math.sin(vanim.t * 9) : 1) : 0;   // gloed vanuit het blok "versnelling"
     if (gA) arrow(ctx, x0, y0, x0 - ey.x * L, y0 - ey.y * L, GLOED + (0.35 + 0.5 * gA) + ')', { w: 14, head: 22 });
     if (dubbelPijl(ctx, x0, y0, x0 - ey.x * L, y0 - ey.y * L, KA, 2)) label(ctx, 'a', 'n', x0 - ey.x * L - 24, y0 - ey.y * L + 6, KA, { size: 15 }); }
@@ -392,26 +400,26 @@ function stapInhoud() {
       <p class="noot">We bestuderen het pakje op de trommel, in de stand <i>θ</i> waar het net begint te glijden. Ga daarna naar stap 2 om het pakje vrij te maken.</p>`;
   else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (pakje)</h4>${vv(`${N_} + ${W_} + ${G_} = m${A_}`)}
+      ${vv(`${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}-W\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\sin\\theta\\\\ -mg\\cos\\theta\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
       <h4>Bijkomende vergelijkingen</h4>
-      <p><b>Kinematica: het pakje volgt nog net de band.</b> Het beschrijft een cirkel met straal <i>R</i> aan de constante snelheid van de band:</p>
-      ${vv(`\\|${A_}\\| = \\frac{v_\\text{band}^2}{R}, \\qquad \\|${kl(KA, '\\vec a_t')}\\| = 0`)}
-      <p><b>Wrijving: het pakje glijdt nog net niet.</b> In dat grensgeval is de wrijving maximaal:</p>${vv(`${kl(KW, 'W')} = \\mu\\,${kl(KN, 'N')}`)}
+      <p><b>Kinematica.</b> Het pakje volgt nog net de band: een cirkel met straal <i>R</i> aan constante snelheid. Dus ${tx(`${kl(KA, 'a_x')} = ${kl(KA, 'a_t')} = 0`)} en ${tx(`${kl(KA, 'a_y')} = -${kl(KA, 'a_n')} = -v_\\text{band}^2/R`)} (de <i>y</i>-as wijst van het middelpunt weg).</p>
+      <p><b>Wrijving.</b> Het pakje glijdt nog net niet, dus de wrijving is maximaal: ${tx(`${kl(KW, 'W')} = \\mu\\,${kl(KN, 'N')}`)}.</p>
       <h4>Voorwaarde uit de verbinding</h4>${vv(`${kl(KN, 'N')} \\ge 0`)}
       <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
-      <h4>Bewegingsvergelijking in componenten</h4>${vv(COMP)}
-      <p class="noot">Twee vergelijkingen voor twee onbekenden: <i>θ</i> en <i>N</i>.</p>`;
+      <p class="noot">Met de versnelling ingevuld:</p>${vv(`${kl(KN, '\\begin{Bmatrix}0\\\\ N\\end{Bmatrix}')} + ${kl(KW, '\\begin{Bmatrix}-W\\\\ 0\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}mg\\sin\\theta\\\\ -mg\\cos\\theta\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}0\\\\ -v_\\text{band}^2/R\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
+      <p class="noot">Samen met de wrijving zijn dat drie vergelijkingen, (x), (y) en ${tx(`${kl(KW, 'W')} = \\mu\\,${kl(KN, 'N')}`)}, voor drie onbekenden: <i>θ</i>, ${tx(kl(KN, 'N'))} en ${tx(kl(KW, 'W'))}; en één voorwaarde, ${tx(`${kl(KN, 'N')} \\ge 0`)}, om achteraf te controleren.</p>`;
   else if (stap === 4) h = `${vv(COMP)}
       <h4>(x)</h4>${vv(`${kl(KN, 'N')} = \\frac{mg\\sin\\theta}{\\mu}`)}
       <h4>(y), met N uit (x)</h4>${vv(`\\frac{mg\\sin\\theta}{\\mu} - mg\\cos\\theta = -\\frac{m\\,v_\\text{band}^2}{R} \\;\\Leftrightarrow\\; \\mu\\cos\\theta - \\sin\\theta = \\frac{\\mu\\,v_\\text{band}^2}{g\\,R}`)}
       <p>Dit is een vergelijking van de vorm <span data-tex="a\\cos\\theta + b\\sin\\theta = c"></span> (zie toolbox 1), met <span data-tex="a = \\mu"></span>, <span data-tex="b = -1"></span> en <span data-tex="c = \\frac{\\mu\\,v_\\text{band}^2}{g\\,R}"></span>:</p>
       ${vv(`\\sqrt{\\mu^2 + 1}\\,\\cos(\\theta + \\varphi) = \\frac{\\mu\\,v_\\text{band}^2}{g\\,R} \\quad\\text{met}\\quad \\tan\\varphi = \\frac{-b}{a} = \\frac{1}{\\mu}`)}
-      <div class="kader">${vv(TH)}</div>
-      <p>Met de gegevens (<i>μ</i> = 1.00, <i>v</i><sub>band</sub> = 0.850 m/s, <i>R</i> = 0.200 m):</p>
-      ${vv(`\\theta = \\operatorname{acos}\\left(\\frac{1.00\\cdot(0.850\\ \\text{m/s})^2}{10.0\\ \\text{m/s}^2\\cdot 0.200\\ \\text{m}\\cdot\\sqrt 2}\\right) - \\operatorname{atan} 1.00 = \\operatorname{acos}(0.255) - 45.0^\\circ = 75.2^\\circ - 45.0^\\circ = 30.2^\\circ`)}
-      <p class="noot">Controle van de voorwaarde <i>N</i> ≥ 0 (<span class="evaltag">teken controleren</span>): <span data-tex="${kl(KN, 'N')} = m\\,(g\\cos\\theta - v_\\text{band}^2/R) = 0.100\\ \\text{kg}\\cdot(8.64 - 3.61)\\ \\text{m/s}^2 = 0.503\\ \\text{N} \\ge 0"></span>: het pakje ligt nog tegen de band.</p>`;
+      <div class="kader">${vv(`${TH} = 30.2^\\circ`)}</div>
+      <p class="noot">Controle van de voorwaarde <i>N</i> ≥ 0 (<span class="evaltag">teken controleren</span>): <span data-tex="${kl(KN, 'N')} = m\\,(g\\cos\\theta - v_\\text{band}^2/R) = 0.503\\ \\text{N} \\ge 0"></span>: het pakje ligt nog tegen de band.</p>`;
   else h = `<div class="kader">${vv(TH)}</div>
       <p style="margin-top:10px"><b>Hoek <i>θ</i> waarbij het pakje begint te glijden, in functie van de bandsnelheid <i>v</i><sub>band</sub></b> (bij de gekozen <i>μ</i>; het bolletje is de gekozen <i>v</i><sub>band</sub>)</p>
       <canvas class="gint" id="gint"></canvas>
+      <div class="slider"><div class="lab"><span>Snelheid van de band <span class="i">v</span><sub>band</sub></span><b id="vval">${TM1.drie(v)} m/s</b></div><input type="range" id="vsl" min="0" max="1.6" step="0.01" value="${v}"></div>
+      <p id="res5">${res5()}</p>
       <p>Hoe sneller de band, hoe vroeger het pakje begint te glijden: <i>θ</i> daalt van atan <i>μ</i> (een trage band, enkel het gewicht en de wrijving tellen) tot 0 bij <i>v</i><sub>band</sub> = √(<i>gR</i>), waar het pakje al op de top loskomt.</p>
       <p>We evalueren de symbolische oplossing uit stap 4 met verschillende evaluatiestrategieën. Klik op een strategie om ze open te klappen.</p>
       <div class="eval"><span class="evaltag">eenheden controleren</span>
@@ -421,10 +429,8 @@ function stapInhoud() {
       <div class="eval"><span class="evaltag">grootteorde controleren</span>
         <p><i>θ</i> = 30.2° ligt tussen 0° en 90°: het pakje begint te glijden op het bovenste deel van de trommel, nog voor het de horizontale door de as bereikt. Dat strookt met de verwachting: voorbij de horizontale door de as kan de band het pakje niet meer dragen, zodat het daar sowieso al los zou zijn van de band, in vrije val.</p></div>
       <div class="eval"><span class="evaltag">functionele afhankelijkheden</span>
-        <p>Verander de bandsnelheid en de wrijvingscoëfficiënt:</p>
-        <div class="slider"><div class="lab"><span>Snelheid van de band <span class="i">v</span><sub>band</sub></span><b id="vval">${TM1.drie(v)} m/s</b></div><input type="range" id="vsl" min="0" max="1.6" step="0.01" value="${v}"></div>
+        <p>Verander de wrijvingscoëfficiënt (de bandsnelheid met de schuifknop onder de grafiek):</p>
         <div class="slider"><div class="lab"><span>Wrijvingscoëfficiënt <span class="i">μ</span></span><b id="muval">${TM1.drie(mu)}</b></div><input type="range" id="musl" min="0.2" max="1.5" step="0.05" value="${mu}"></div>
-        <p id="res5">${res5()}</p>
         <ul class="fa">
           <li><b><i>v</i><sub>band</sub> groter:</b> het argument van acos wordt groter, dus acos(…) en daarmee <i>θ</i> kleiner. Een snellere band vraagt een grotere normaalversnelling <i>v</i><sub>band</sub>²/<i>R</i>, dus een kleinere <i>N</i> en een kleinere maximale wrijving: het pakje begint vroeger te glijden.</li>
           <li><b><i>μ</i> groter:</b> beide termen veranderen. De term atan(1/<i>μ</i>) wordt kleiner, wat <i>θ</i> groter maakt; het argument van acos wordt groter, wat <i>θ</i> kleiner maakt. Met de slider zie je dat het eerste effect overheerst: hoe ruwer de band, hoe later het pakje glijdt.</li>
@@ -434,8 +440,7 @@ function stapInhoud() {
         </ul></div>
       <div class="eval"><span class="evaltag">bijzondere gevallen</span>
         <p><b>Stilstaande band</b> (<i>v</i><sub>band</sub> = 0): <span data-tex="\\theta = \\operatorname{acos}(0) - \\operatorname{atan}\\frac{1}{\\mu} = 90^\\circ - \\operatorname{atan}\\frac{1}{\\mu} = \\operatorname{atan}\\mu"></span>, dus tan <i>θ</i> = <i>μ</i>, zoals bij een blok op een hellend vlak.</p>
-        <p><b><i>v</i><sub>band</sub> = √(<i>gR</i>)</b> = 1.41 m/s: het argument van acos wordt <span data-tex="\\frac{\\mu}{\\sqrt{\\mu^2 + 1}} = \\cos\\left(\\operatorname{atan}\\frac{1}{\\mu}\\right)"></span>, dus <i>θ</i> = 0: het pakje glijdt al op de top, waar ook <i>N</i> = 0. Voor een snellere band geeft de formule een negatieve hoek: dan is <i>N</i> al op de top negatief en komt het pakje meteen los van de band.</p>
-        <p><b>Zeer ruwe band</b> (<i>μ</i> → ∞): <span data-tex="\\operatorname{atan}\\frac{1}{\\mu} \\to 0"></span> en <span data-tex="\\frac{\\mu}{\\sqrt{\\mu^2 + 1}} \\to 1"></span>, dus <span data-tex="\\theta \\to \\operatorname{acos}\\frac{v_\\text{band}^2}{g\\,R}"></span>: dat is de stand waar <i>N</i> = 0 wordt. Het pakje glijdt dan niet, maar komt los van de band.</p></div>`;
+        <p><b><i>v</i><sub>band</sub> = √(<i>gR</i>)</b> = 1.41 m/s: het argument van acos wordt <span data-tex="\\frac{\\mu}{\\sqrt{\\mu^2 + 1}} = \\cos\\left(\\operatorname{atan}\\frac{1}{\\mu}\\right)"></span>, dus <i>θ</i> = 0: het pakje glijdt al op de top, waar ook <i>N</i> = 0. Voor een snellere band geeft de formule een negatieve hoek: dan is <i>N</i> al op de top negatief en komt het pakje meteen los van de band.</p></div>`;
   el.innerHTML = h;
   if (window.katex) el.querySelectorAll('[data-tex]').forEach(e => render1(e, e.dataset.tex));
   // controlestrategieën openklappen: klik op het paarse label; de andere klappen dan dicht
@@ -450,7 +455,7 @@ function stapInhoud() {
   });
   toon();
   // enkel de waarden bijwerken (niet de hele kaart), zodat de sliders bij het slepen niet verspringen
-  const upd = () => { $('vval').textContent = `${TM1.drie(v)} m/s`; $('muval').textContent = mu.toFixed(2); $('res5').innerHTML = res5(); maakBaan(); t = 0; drawScene(); vldFormules(); tekenInt(); };
+  const upd = () => { $('vval').textContent = `${TM1.drie(v)} m/s`; $('muval').textContent = TM1.drie(mu); $('res5').innerHTML = res5(); maakBaan(); t = 0; zetTijd(); drawScene(); vldFormules(); tekenInt(); };
   const sv = $('vsl'); if (sv) sv.oninput = e => { v = +e.target.value; upd(); };
   const sm = $('musl'); if (sm) sm.oninput = e => { mu = +e.target.value; upd(); };
   tekenInt();
@@ -470,7 +475,10 @@ function render() { BALK = TM1.balkTussen(sc); stapKnoppen(); stapInhoud(); proe
 window.addEventListener('load', () => { vldFormules(); stapInhoud(); });
 const playBtn = $('play');
 playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pauze' : '▶ Afspelen'; };
-$('reset').onclick = () => { t = 0; drawScene(); };
+$('reset').onclick = () => { t = 0; drawScene(); zetTijd(); };
+// tijdslider: de beweging stapsgewijs doorlopen (zet het afspelen stil)
+const tijdsl = $('tijdsl'), zetTijd = () => { tijdsl.value = Math.round(t / baan.T * 1000); $('tijdval').textContent = `${TM1.drie(t)} s`; };
+tijdsl.oninput = e => { if (playing) playBtn.click(); t = +e.target.value / 1000 * baan.T; $('tijdval').textContent = `${TM1.drie(t)} s`; drawScene(); };
 sc.c.addEventListener('click', e => {
   if (!raak || stap === 2) return; const r = sc.c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
   if (Math.hypot(raak.x - x, raak.y - y) < raak.r * 1.4) { stap = 2; anim = null; licht = null; render(); }
@@ -479,7 +487,7 @@ sc.c.addEventListener('click', e => {
 maakBaan();
 TM1.bijGrootte([sc, LP, VP], render);
 TM1.lus(dt => {
-  if (playing) { t += dt / VERTRAAG; if (t > baan.T) t = 0; }
+  if (playing) { t += dt / VERTRAAG; if (t > baan.T) t = 0; zetTijd(); }
   if (anim) { anim.t += dt; if (anim.t >= anim.T) anim = null; drawLoep(); }
   if (vanim) { vanim.t += dt; if (vanim.t >= vanim.T) vanim = null; drawVLoep(); }
   drawScene();

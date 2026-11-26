@@ -56,7 +56,6 @@
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
     <h1>Voorbeeld 19.7 — Een bobslee daalt en neemt een bocht</h1>
-    <span class="kicker">Dynamica van een puntmassa · een bobslee versnelt op een rechte helling en rijdt daarna hoog op de ijswand door een horizontale bocht; gevraagd: de lengte van de helling, de stand op de wand en de vertraging in de bocht</span>
   </header>
 
   <div class="instructie card">
@@ -283,7 +282,7 @@ function drawScene1(ctx, W, Hall) {
     if (L * S > 3) { arrow(ctx, q0.x, q0.y, q1.x, q1.y, C.ink, { w: 2, head: 10 }); label(ctx, 'v', '', q1.x + 6, q1.y + 5, C.ink, { size: 15 }); } }
   if (rijdt) { const q0 = P(0, ya_), q1 = P(1.6 * a1(), ya_);
     if (dubbelPijl(ctx, q0.x, q0.y, q1.x, q1.y, KA, 2)) label(ctx, 'a', '', q1.x + 6, q1.y + 5, KA, { size: 15 }); }
-  if (stap <= 2) loepCirkel(ctx, P(0.2, 0), Math.max(15, 0.5 * S)); else raak = null;
+  if (stap === 2) loepCirkel(ctx, P(0.2, 0), Math.max(15, 0.5 * S)); else raak = null;
   ctx.restore();
   { ctx.save(); ctx.font = '600 12.5px Inter, sans-serif'; ctx.fillStyle = C.accent; ctx.textAlign = 'right';
     ctx.fillText(`t = ${Math.min(t1, tE()).toFixed(1)} s    v = ${(3.6 * v).toFixed(1)} km/h`, W - 12, 18); ctx.restore(); }
@@ -358,7 +357,7 @@ function drawScene2(ctx, W, Hall) {
   { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.ink; ctx.fillText('rijrichting ⊗ (het blad in)', Wl + 10, 38); ctx.restore(); }
   if (b > 0.03) { ctx.save(); ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.muted; ctx.fillText(W - Wl < 250 ? '← kromtemiddelpunt' : '← naar het kromtemiddelpunt', Wl + 10, H - 10); ctx.restore(); }
   // geen waarde van β in de doorsnede: die is net wat gevraagd wordt
-  if (stap <= 2) loepCirkel(ctx, cps, Math.max(14, 0.42 * Sd)); else raak = null;
+  if (stap === 2) loepCirkel(ctx, cps, Math.max(14, 0.42 * Sd)); else raak = null;
 
   // ----- onder: vrijlichaamsdiagram van de bob in de doorsnede, bij het inrijden van de bocht -----
   ctx.save(); ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(W, H + 0.5); ctx.stroke(); ctx.restore();

@@ -425,6 +425,54 @@
     return h;
   }
 
+  /** Dubbele pijl (⇒) voor een versnelling. Geeft false terug als ze te kort is om te tekenen. */
+  function dubbelPijl(ctx, x0, y0, x1, y1, kleur, w = 2) {
+    const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 4) return false;
+    const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, h = 13, s = 4;
+    ctx.save(); ctx.strokeStyle = kleur; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x0 + k * s * nx, y0 + k * s * ny); ctx.lineTo(x1 - ux * h * 0.55 + k * s * nx, y1 - uy * h * 0.55 + k * s * ny); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(x1 - ux * h + nx * h * 0.75, y1 - uy * h + ny * h * 0.75); ctx.lineTo(x1, y1); ctx.lineTo(x1 - ux * h - nx * h * 0.75, y1 - uy * h - ny * h * 0.75); ctx.stroke();
+    ctx.restore(); return true;
+  }
+
+  /**
+   * Vinkjes om in de situatie de snelheid en de versnelling(en) te tonen (dynamica). Ze staan bij het laden uit.
+   * soorten: deelverzameling van ['v', 'a', 'at', 'an'] (a_t en a_n enkel als die opsplitsing relevant is).
+   * De vinkjes komen in de bediening, na de afspeelknoppen; opnieuw() wordt opgeroepen bij elke wijziging.
+   * Geeft een object terug met per soort true/false (lees het in de tekenfunctie, samen met TM1.vaPijlen).
+   */
+  function vaKnoppen(soorten, opnieuw, kleur = {}) {   // kleur: optioneel een eigen kleur per soort (dezelfde als in de tekening)
+    // enkel het symbool (vector met pijl, componenten cursief), zonder woorden
+    const namen = { v: ['--cv', '<span class="v">v</span>'], a: ['--ca', '<span class="v">a</span>'],
+      at: ['--cat', '<span class="i">a<sub>t</sub></span>'], an: ['--can', '<span class="i">a<sub>n</sub></span>'] };
+    const toon = {}; soorten.forEach(s => { toon[s] = false; });
+    const box = document.createElement('div'); box.className = 'toggles'; box.id = 'toon';
+    box.innerHTML = soorten.map(s => `<label><input type="checkbox" data-t="${s}"> <span class="sw" style="background:${kleur[s] || `var(${namen[s][0]})`}"></span><span>${namen[s][1]}</span></label>`).join('');
+    const bed = document.querySelector('.scene .bediening') || document.querySelector('.side .panel');
+    const rij = bed && bed.querySelector('.btnrow'); if (rij) rij.after(box); else if (bed) bed.appendChild(box);
+    box.querySelectorAll('input').forEach(i => { i.onchange = () => { toon[i.dataset.t] = i.checked; opnieuw(); }; });
+    return toon;
+  }
+
+  /**
+   * Teken de aangevinkte snelheid (enkele pijl) en versnellingen (dubbele pijlen) in het punt (x, y) van de situatie.
+   * d = { v, a, at, an }: verschuivingen op het scherm in pixels ({x, y}); een te korte vector wordt "= 0".
+   */
+  function vaPijlen(ctx, x, y, d, toon) {
+    const C = kleuren(), kl = { a: C.a, at: C.at, an: C.an };
+    const lab = (q, naam, sub, k) => { const L = Math.hypot(q.x, q.y) || 1; label(ctx, naam, sub, x + q.x + 12 * q.x / L - 5, y + q.y + 12 * q.y / L + 6, k, { size: 15 }); };
+    let nul = 0; const nulTekst = (s, k) => { formule(ctx, s, x + 16, y - 16 + 15 * nul++, { color: k, size: 12 }); };
+    for (const s of ['a', 'at', 'an']) {
+      if (!toon[s] || !d[s]) continue;
+      if (dubbelPijl(ctx, x, y, x + d[s].x, y + d[s].y, kl[s], 2)) lab(d[s], 'a', s === 'a' ? '' : s.slice(1), kl[s]);
+      else nulTekst(s === 'a' ? '$a = 0$' : `$a_${s.slice(1)} = 0$`, kl[s]);
+    }
+    if (toon.v && d.v) {
+      if (Math.hypot(d.v.x, d.v.y) >= 4) { arrow(ctx, x, y, x + d.v.x, y + d.v.y, C.v, { w: 2.6, head: 11 }); lab(d.v, 'v', '', C.v); }
+      else nulTekst('$v = 0$', C.v);
+    }
+  }
+
   function bijGrootte(canvassen, render) {
     const doe = () => { canvassen.forEach(o => o.resize()); render(); };
     const ro = new ResizeObserver(doe);
@@ -671,6 +719,6 @@
   global.TM1 = Object.assign(global.TM1 || {}, {
     tex, werkblad, vastVak, vasteSchaal, driehoekLegende, breuk,
     kleuren, fmt, deg, rad, setup, arrow, label, formule, tipLabel, niceStep, niceNum,
-    frame, curve, dot, cursor, grafiekIn, versnelling, drie, balkTussen, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
+    frame, curve, dot, cursor, grafiekIn, versnelling, drie, balkTussen, dubbelPijl, vaKnoppen, vaPijlen, scrub, afgeleide, tweedeAfgeleide, lus, bijGrootte, schaalLegende, uitlezing
   });
 })(window);

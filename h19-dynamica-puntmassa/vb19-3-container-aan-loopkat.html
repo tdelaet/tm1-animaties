@@ -52,11 +52,11 @@
   <a class="terug" href="../index.html#handboek">← Alle animaties</a>
   <header>
     <h1>Voorbeeld 19.3 — Container aan loopkat</h1>
-    <span class="kicker">Dynamica van een puntmassa · loopkat en container versnellen samen horizontaal; gevraagd: de hoek van de kabel met de verticale en de kracht in de kabel</span>
   </header>
 
   <div class="instructie card">
-    <p>Een container hangt met een massaloze kabel van 5.00 m onder een loopkat. De container heeft een massa van 3.00 ton. Het geheel van loopkat en container beweegt met een constante horizontale versnelling van 0.800 m/s² naar rechts. <b>Gevraagd: welke hoek sluit de kabel in met de verticale? Bepaal de kracht in de kabel (grootte en als vector).</b></p>
+    <p>Een container hangt met een massaloze kabel van 5.00 m onder een loopkat. De container heeft een massa van 3.00 ton. Het geheel van loopkat en container beweegt met een constante horizontale versnelling van 0.800 m/s² naar rechts.</p>
+    <p><b>Gevraagd: welke hoek sluit de kabel in met de verticale? Bepaal de kracht in de kabel (grootte en als vector).</b></p>
     <div class="stappen modus" id="stappen"></div>
   </div>
 
@@ -133,6 +133,7 @@ const BEW = [
 
 // ---------- figuur: situatie (boven) en vrijlichaamsdiagram (onder) ----------
 const sc = setup(document.getElementById('scene'));
+const TOON = TM1.vaKnoppen(['v', 'a'], () => drawScene());   // vinkjes: snelheid en versnelling van de container in de situatie
 let raak = null;
 function loepCirkel(ctx, q, r) {
   const aan = stap === 2;
@@ -173,8 +174,9 @@ function drawScene() {
   const bw = 2.4 * S, bh = 1.0 * S, cc = { x: pc.x, y: pc.y + bh / 2 };
   container(ctx, cc.x, cc.y, bw, bh);
   label(ctx, 'm', '', cc.x - 6, cc.y + 6, '#1f3f5a', { vec: false, size: 16 });
-  if (dubbelPijl(ctx, cc.x - 0.4 * S, cc.y + bh / 2 + 14, cc.x - 0.4 * S + 1.12 * S * Math.min(a / A0, 2.5), cc.y + bh / 2 + 14, KA, 2)) label(ctx, 'a', '', cc.x - 0.4 * S + 1.12 * S * Math.min(a / A0, 2.5) + 8, cc.y + bh / 2 + 20, KA, { size: 15 });
-  if (stap <= 2) loepCirkel(ctx, pc, 0.7 * S); else raak = null;
+  // snelheid en versnelling van de container (vinkjes in de bediening), horizontaal naar rechts
+  TM1.vaPijlen(ctx, cc.x, cc.y, { v: { x: Math.min(0.5 * S * a * tt, 3 * S), y: 0 }, a: { x: 1.12 * S * Math.min(a / A0, 2.5), y: 0 } }, TOON);
+  if (stap === 2) loepCirkel(ctx, pc, 0.7 * S); else raak = null;
 
   H += BALK;   // het vrijlichaamsdiagram staat onder de bedieningsbalk
   // ----- onder: vrijlichaamsdiagram van de container -----
@@ -194,7 +196,7 @@ function drawScene() {
   arrow(ctx, cx, cy, tipS.x, tipS.y, KS, { w: gl ? 3.6 : 2.8, head: gl ? 14 : 12 }); label(ctx, 'S', '', tipS.x + 8, tipS.y + 6, KS, { size: gl ? 17 : 15 });
   arrow(ctx, cx, cy, cx, cy + k, KG, { w: 2.8, head: 12 }); label(ctx, 'G', '', cx + 8, cy + k + 2, KG, { size: 15 });
   { const La = Math.min(Math.max(al, 0.02) * 3, 1.8) * S2;   // de versnelling: niet op schaal met de krachten, en begrensd
-    if (dubbelPijl(ctx, cx + 18, cy, cx + 18 + La, cy, KA, 2)) label(ctx, 'a', '', cx + 18 + La + 8, cy + 6, KA, { size: 15 }); }
+    if (dubbelPijl(ctx, cx, cy, cx + La, cy, KA, 2)) label(ctx, 'a', '', cx + La + 8, cy + 6, KA, { size: 15 }); }   // aangrijpend in de puntmassa
   // hoek ϕ in het VLD
   if (f > 0.005) { const r = 0.55 * k; lijn(ctx, { x: cx, y: cy }, { x: cx, y: cy - 0.75 * k }, '#7a828c', 1, [3, 3]);
     ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + f); ctx.stroke(); ctx.restore();
@@ -303,12 +305,13 @@ function stapInhoud() {
       <p class="noot">Ga daarna naar stap 2 om de container vrij te maken.</p>`;
   else if (stap === 2) h = '';   // de loep en de proeftabel volstaan
   else if (stap === 3) h = `<h4>Bewegingsvergelijking (container)</h4>${v(`${S_} + ${G_} = m${A_}`)}
-      <h4>Bijkomende vergelijking: kinematica</h4>
-      <p>Het geheel van loopkat en container beweegt samen, met dezelfde constante horizontale versnelling: ${tx(`${A_} = ${kl(KA, 'a\\,\\vec e_x')}`)}, met <i>a</i> = 0.800 m/s².</p>
+      ${v(`${kl(KS, '\\begin{Bmatrix}S\\sin\\phi\\\\ S\\cos\\phi\\end{Bmatrix}')} + ${kl(KG, '\\begin{Bmatrix}0\\\\ -mg\\end{Bmatrix}')} = m${kl(KA, '\\begin{Bmatrix}a_x\\\\ a_y\\end{Bmatrix}')}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
+      <h4>Bijkomende vergelijking</h4>
+      <p><b>Kinematica.</b> De container beweegt mee met de loopkat, enkel volgens <i>x</i>: ${tx(`${kl(KA, 'a_x')} = ${kl(KA, 'a')}`)} (= 0.800 m/s²) en ${tx(`${kl(KA, 'a_y')} = 0`)}.</p>
       <h4>Voorwaarde uit de verbinding</h4>${v(`${kl(KS, 'S')} \\ge 0`)}
       <hr style="border:0;border-top:1px solid var(--line);margin:12px 0 4px">
-      <h4>Bewegingsvergelijking in componenten</h4>${v(COMP)}
-      <p class="noot">Twee vergelijkingen voor twee onbekenden: de kabelkracht <i>S</i> en de hoek <i>ϕ</i>.</p>`;
+      <p class="noot">Met de versnelling ingevuld:</p>${v(`${COMP}\\quad \\begin{matrix}(x)\\\\ (y)\\end{matrix}`)}
+      <p class="noot">Twee vergelijkingen, (x) en (y), voor twee onbekenden: de kabelkracht ${tx(kl(KS, 'S'))} en de hoek <i>ϕ</i>; en één voorwaarde, ${tx(`${kl(KS, 'S')} \\ge 0`)}, om achteraf te controleren.</p>`;
   else if (stap === 4) h = `${v(COMP)}
       ${v(`\\tan\\phi = \\frac{ma}{mg} = \\frac{0.800\\ \\text{m/s}^2}{10.0\\ \\text{m/s}^2} = 0.0800`)}
       <div class="kader">${v(`\\phi = \\operatorname{atan}\\frac{a}{g} = 0.0798\\ \\text{rad} = 4.57^\\circ`)}${v(`${kl(KS, 'S')} = m\\sqrt{a^2 + g^2} = 30.1\\ \\text{kN}, \\qquad ${S_} = 2.40\\ \\text{kN}\\,\\vec e_x + 30.0\\ \\text{kN}\\,\\vec e_y`)}</div>`;

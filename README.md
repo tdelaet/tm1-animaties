@@ -83,7 +83,22 @@ grafieken, denkvragen).
 - **Dynamica (vanaf hoofdstuk 19)**: de bediening (afspelen, opnieuw, knoppen om snelheid en versnellingen te tonen)
   staat in een balk tussen de situatie en het vrijlichaamsdiagram, niet eronder: `BALK = TM1.balkTussen(sc)` in `render()`,
   de situatie getekend met `let H = (Hall - BALK) * 0.5` en `H += BALK` vóór het vrijlichaamsdiagram.
-  Pijlen voor snelheid en versnelling staan bij het laden uit en worden met een knop aangezet.
+  In de situatie altijd vinkjes om de snelheid en de versnelling te tonen (`TM1.vaKnoppen(['v', 'a', …])` en
+  `TM1.vaPijlen(…)` in `gedeeld/tm1.js`); waar relevant ook de versnelling opgesplitst in *a*<sub>t</sub> en *a*<sub>n</sub>.
+  Bij de vinkjes staat enkel het symbool (vector *v* en *a* met pijl, *a*<sub>t</sub>, *a*<sub>n</sub>), niet de woorden.
+  De pijlen staan bij het laden uit.
+  Het vergrootglas (loep op de verbindingen) verschijnt pas in stap 2, niet in stap 1.
+  In het vrijlichaamsdiagram grijpt de versnelling (dubbele pijl) altijd aan in de puntmassa, niet in een apart punt ernaast.
+  **Grafiek → schuifknop**: onder elke grafiek staat meteen een schuifknop voor de variabele op de x-as (met de
+  uitlezing eronder). Die knop past ook de animatie, het vrijlichaamsdiagram … aan (niet enkel de grafiek).
+  Geen ondertitel (`kicker`) onder de titel; in de opgave staat **Gevraagd:** altijd op een nieuwe lijn (eigen alinea).
+  **Stap 3 (opstellen van vergelijkingen)**: eerst alle vergelijkingen verzamelen, zonder tussentijds in te vullen:
+  de vectoriële bewegingsvergelijking met meteen daaronder haar componenten, met de versnelling nog als
+  *a*<sub>x</sub>, *a*<sub>y</sub> (, *a*<sub>z</sub>) en de krachten nog niet ingevuld (bv. *W*, niet *μN*);
+  dan de bijkomende vergelijkingen: eerst beknopt de kinematica (bv. "beweegt enkel volgens *x*: *a*<sub>x</sub> = *a*, *a*<sub>y</sub> = 0"),
+  dan wrijving, veerwet …, en de voorwaarde(n) uit de verbinding.
+  Onder een streep: de componenten met de versnelling ingevuld, en dan tellen: hoeveel vergelijkingen, voor welke
+  onbekenden, en welke voorwaarden achteraf te controleren zijn.
 - **Denkvragen** onderaan: een paar vragen die studenten met de animatie zelf kunnen beantwoorden.
 
 ## Lokaal bekijken
